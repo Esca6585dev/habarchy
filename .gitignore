@@ -25,3 +25,8 @@ mobile/build/
 mobile/.dart_tool/
 mobile/.flutter-plugins
 mobile/.flutter-plugins-dependencies
+
+# Build / test artefacts
+backend/coverage.out
+*.test
+*.log

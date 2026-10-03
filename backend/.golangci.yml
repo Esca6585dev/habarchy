@@ -1,0 +1,41 @@
+version: "2"
+run:
+  timeout: 5m
+  tests: true
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - copyloopvar
+    - errorlint
+    - gocritic
+    - gosec
+    - misspell
+    - nilerr
+    - noctx
+    - prealloc
+    - revive
+    - unconvert
+    - unparam
+    - whitespace
+  exclusions:
+    generated: lax
+    paths:
+      - internal/adapters/postgres/sqlcgen
+    rules:
+      - path: _test\.go
+        linters: [gosec, noctx, bodyclose, errcheck]
+      - linters: [revive]
+        text: "package-comments|exported"
+      - linters: [gosec]
+        text: "G115"   # integer conversions reviewed per call site
+      - linters: [staticcheck]
+        text: "QF1008" # cfg.HTTP.Addr reads better than cfg.Addr
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/Esca6585dev/habarchy

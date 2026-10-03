@@ -15,7 +15,36 @@
 
 ## Status
 
-Planning stage. The full build specification lives in [PROMPT.md](PROMPT.md).
+In progress — built step by step from [PROMPT.md](PROMPT.md).
+
+| Step | Scope | Status |
+|------|-------|--------|
+| 1 | Monorepo skeleton, backend config, migrations, domain models, sqlc | ✅ done |
+| 2 | Auth (admin JWT + API keys), projects, templates | ⏳ |
+| 3 | Messages API, asynq workers, providers, fallback, webhooks, OTP | ⏳ |
+| 4 | Admin API, SSE, usage aggregation | ⏳ |
+| 5 | Next.js admin panel | ⏳ |
+| 6 | Flutter app | ⏳ |
+| 7 | SDKs, docs, docker, CI | ⏳ |
+
+## Development
+
+```sh
+# dependencies
+docker compose -f deploy/docker-compose.dev.yml up -d   # Postgres 16 + Redis 7
+make -C backend tools                                     # sqlc, goose
+
+# backend
+cp backend/.env.example backend/.env                      # set JWT_SECRET and MASTER_KEY
+cd backend
+go run ./cmd/api -genkey                                  # prints a HABARCHY_MASTER_KEY
+make migrate                                              # goose up
+make run                                                  # API on :8080  (/healthz, /readyz)
+make test                                                 # unit tests; set HABARCHY_TEST_DATABASE_URL for integration tests
+make lint
+```
+
+See [docs/architecture.md](docs/architecture.md) for the component and data-model diagrams.
 
 ## Quick example (planned API)
 
