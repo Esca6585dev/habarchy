@@ -39,7 +39,10 @@ void main() {
 
     expect(find.text('Durdy'), findsOneWidget); // default locale tk
     expect(find.text('http://10.0.2.2:8080'), findsOneWidget);
+    // The log sits at the bottom of the lazily built list: scroll it into view.
+    await tester.dragUntilVisible(find.textContaining('connected'), find.byType(ListView), const Offset(0, -300));
     expect(find.textContaining('connected'), findsOneWidget);
+    await tester.dragUntilVisible(find.byKey(const Key('toggle')), find.byType(ListView), const Offset(0, 300));
 
     await tester.tap(find.byKey(const Key('toggle')));
     await tester.pumpAndSettle();
