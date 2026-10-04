@@ -15,6 +15,9 @@ class GatewayStatus {
     required this.lastPollAt,
     required this.lastHeartbeatAt,
     required this.lastError,
+    this.forwardInbound = false,
+    this.serverInboundEnabled = true,
+    this.inboundActive = false,
   });
 
   factory GatewayStatus.fromMap(Map<Object?, Object?> m) => GatewayStatus(
@@ -30,6 +33,9 @@ class GatewayStatus {
         lastPollAt: _time(m['lastPollAt']),
         lastHeartbeatAt: _time(m['lastHeartbeatAt']),
         lastError: (m['lastError'] as String?) ?? '',
+        forwardInbound: m['forwardInbound'] == true,
+        serverInboundEnabled: m['serverInboundEnabled'] != false,
+        inboundActive: m['inboundActive'] == true,
       );
 
   static const empty = GatewayStatus(
@@ -54,6 +60,9 @@ class GatewayStatus {
   final DateTime? lastPollAt;
   final DateTime? lastHeartbeatAt;
   final String lastError;
+  final bool forwardInbound;
+  final bool serverInboundEnabled;
+  final bool inboundActive;
 }
 
 class GatewayConfig {
@@ -88,4 +97,6 @@ class GatewayChannel {
   Future<bool> isIgnoringBatteryOptimizations() async => (await _ch.invokeMethod<bool>('isIgnoringBatteryOptimizations')) ?? true;
   Future<void> requestIgnoreBatteryOptimizations() => _ch.invokeMethod('requestIgnoreBatteryOptimizations');
   Future<void> testSms(String to, String text) => _ch.invokeMethod('testSms', {'to': to, 'text': text});
+  Future<bool> requestInboundPermissions() async => (await _ch.invokeMethod<bool>('requestInboundPermissions')) ?? false;
+  Future<bool> hasInboundPermissions() async => (await _ch.invokeMethod<bool>('hasInboundPermissions')) ?? false;
 }

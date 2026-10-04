@@ -951,6 +951,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No members yet'**
   String get noMembers;
+
+  /// No description provided for @inboundSms.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbound SMS'**
+  String get inboundSms;
+
+  /// No description provided for @inboundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS received by gateway phones appear here when forwarding is on (provider setting + switch in the phone app).'**
+  String get inboundHint;
 }
 
 class _AppLocalizationsDelegate

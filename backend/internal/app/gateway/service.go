@@ -17,6 +17,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres/sqlcgen"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/sms/androidgw"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/webhooks"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
 	"github.com/Esca6585dev/habarchy/backend/internal/ports"
@@ -30,9 +31,10 @@ const OnlineWindow = 90 * time.Second
 
 // Service implements androidgw.Store and the phone-facing use cases.
 type Service struct {
-	db       *postgres.DB
-	delivery *delivery.Service // nil in the worker is fine: receipts arrive via the API
-	webhooks *webhooks.Service
+	db        *postgres.DB
+	providers *providers.Service // decrypts android_sms settings (inbound flag); nil disables the check
+	delivery  *delivery.Service  // nil in the worker is fine: receipts arrive via the API
+	webhooks  *webhooks.Service
 	// LeasePoll is the interval for long-polling the outbox.
 	LeasePoll time.Duration
 }
@@ -40,6 +42,29 @@ type Service struct {
 // New creates the service.
 func New(db *postgres.DB, d *delivery.Service, w *webhooks.Service) *Service {
 	return &Service{db: db, delivery: d, webhooks: w, LeasePoll: time.Second}
+}
+
+// WithProviders enables reading the provider's android_sms settings.
+func (s *Service) WithProviders(p *providers.Service) *Service {
+	s.providers = p
+	return s
+}
+
+// Config returns the provider's android_sms settings (defaults when they
+// cannot be read).
+func (s *Service) Config(caller *Caller) androidgw.Config {
+	cfg := androidgw.Config{TimeoutSec: 45}
+	if s.providers == nil {
+		return cfg
+	}
+	raw, err := s.providers.Decrypt(&caller.Provider)
+	if err != nil {
+		return cfg
+	}
+	if parsed, err := androidgw.ParseConfig(raw); err == nil {
+		return parsed
+	}
+	return cfg
 }
 
 // Caller is an authenticated phone.
@@ -188,6 +213,9 @@ func (s *Service) Inbound(ctx context.Context, caller *Caller, from, text string
 	if receivedAt.IsZero() {
 		receivedAt = time.Now()
 	}
+	if !s.Config(caller).Inbound() {
+		return nil, domain.ErrForbiddenScope.WithMessage("inbound SMS is disabled for this provider (inbound_enabled)")
+	}
 	row, err := s.db.Queries.InsertGatewayInbound(ctx, sqlcgen.InsertGatewayInboundParams{
 		ID: ids.New(), ProviderID: caller.Provider.ID, ProjectID: caller.Provider.ProjectID, FromAddress: from, Text: text, ReceivedAt: receivedAt,
 	})
@@ -200,6 +228,16 @@ func (s *Service) Inbound(ctx context.Context, caller *Caller, from, text string
 		})
 	}
 	return &row, nil
+}
+
+// ListInbound pages the project's received SMS (newest first).
+func (s *Service) ListInbound(ctx context.Context, projectID uuid.UUID, limit, offset int32) ([]sqlcgen.GatewayInbound, int64, error) {
+	rows, err := s.db.Queries.ListGatewayInbound(ctx, sqlcgen.ListGatewayInboundParams{ProjectID: projectID, RowLimit: limit, RowOffset: offset})
+	if err != nil {
+		return nil, 0, err
+	}
+	total, err := s.db.Queries.CountGatewayInbound(ctx, projectID)
+	return rows, total, err
 }
 
 // Online reports whether a heartbeat arrived recently.

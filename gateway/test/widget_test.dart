@@ -8,6 +8,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('shows status from the native channel and starts the service', (tester) async {
+    tester.platformDispatcher.localesTestValue = const [Locale('tk')]; // Turkmen phone
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
     const channel = MethodChannel('habarchy/gateway');
     final calls = <String>[];
     var running = false;

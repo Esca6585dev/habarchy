@@ -319,6 +319,23 @@ paths:
       security: [{ ApiKey: [] }]
       responses:
         "204": { description: Removed }
+  /api/v1/inbound:
+    get:
+      tags: [public-messages]
+      summary: SMS received by the project's Android gateway phones (newest first)
+      description: Requires `messages:read`. Only phones whose provider has `inbound_enabled` (default true) and whose app switch is on forward SMS; the `sms.inbound` webhook fires for each one.
+      security: [{ ApiKey: [] }]
+      parameters: [{ $ref: "#/components/parameters/Limit" }, { $ref: "#/components/parameters/Offset" }]
+      responses:
+        "200":
+          description: Inbound SMS
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/InboundSMS" } } }
   /api/v1/contacts:
     get:
       tags: [public-contacts]
@@ -857,7 +874,7 @@ paths:
       summary: Who am I (phone pairing check)
       security: [{ GatewayKey: [] }]
       responses:
-        "200": { description: Provider, project and pending count }
+        "200": { description: "Provider, project, pending count, `inbound_enabled`, `sim_slot`" }
         "401": { description: Invalid gateway key, disabled provider or suspended project }
   /api/gateway/v1/outbox:
     get:
@@ -910,7 +927,7 @@ paths:
   /api/gateway/v1/inbound:
     post:
       tags: [gateway]
-      summary: Forward an SMS the phone received (fires the sms.inbound webhook)
+      summary: Forward an SMS the phone received (fires the sms.inbound webhook; 403 when the provider has inbound_enabled=false)
       security: [{ GatewayKey: [] }]
       requestBody:
         required: true
@@ -2073,13 +2090,12 @@ components:
     InboundSMS:
       type: object
       properties:
-        ID: { type: string, format: uuid }
-        ProviderID: { type: string, format: uuid }
-        ProjectID: { type: string, format: uuid }
-        FromAddress: { type: string }
-        Text: { type: string }
-        ReceivedAt: { type: string, format: date-time }
-        CreatedAt: { type: string, format: date-time }
+        id: { type: string, format: uuid }
+        provider_id: { type: string, format: uuid }
+        from: { type: string }
+        text: { type: string }
+        received_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
     OutboxItem:
       type: object
       properties:

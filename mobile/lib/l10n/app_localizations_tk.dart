@@ -449,4 +449,11 @@ class AppLocalizationsTk extends AppLocalizations {
 
   @override
   String get noMembers => 'Heniz agza ýok';
+
+  @override
+  String get inboundSms => 'Gelen SMS';
+
+  @override
+  String get inboundHint =>
+      'Ugratmak açyk bolanda şlýuz-telefonlaryň alan SMS-leri şu ýerde görünýär (provider sazlamasy + telefon programmasyndaky düwme).';
 }

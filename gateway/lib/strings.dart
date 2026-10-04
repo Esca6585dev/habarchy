@@ -59,6 +59,10 @@ class S {
     'never': {'tk': 'heniz ýok', 'ru': 'ещё нет', 'en': 'never'},
     'secondsAgo': {'tk': '{n} s öň', 'ru': '{n} с назад', 'en': '{n}s ago'},
     'language': {'tk': 'Dil', 'ru': 'Язык', 'en': 'Language'},
+    'inboundOn': {'tk': 'Gelen SMS-ler serwere ugradylýar', 'ru': 'Входящие SMS пересылаются на сервер', 'en': 'Received SMS are forwarded to the server'},
+    'inboundServerOff': {'tk': 'Serwerde (provider sazlamasynda) ýapyk — fonda hiç zat işlemeýär', 'ru': 'Отключено на сервере (в настройках провайдера) — в фоне ничего не работает', 'en': 'Disabled on the server (provider settings) — nothing runs in the background'},
+    'inboundNoPermission': {'tk': 'SMS okamak rugsady berilmedi', 'ru': 'Нет разрешения на чтение SMS', 'en': 'SMS read permission not granted'},
+    'inboundOff': {'tk': 'Ýapyk — gelen SMS-ler okalmaýar, fonda işlemeýär', 'ru': 'Выключено — входящие SMS не читаются, в фоне ничего не работает', 'en': 'Off — received SMS are not read, nothing runs in the background'},
   };
 
   String call(String key, [Map<String, Object>? args]) {

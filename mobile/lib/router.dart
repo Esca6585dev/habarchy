@@ -7,6 +7,7 @@ import 'features/api_keys/api_keys_screen.dart';
 import 'features/compose/compose_screen.dart';
 import 'features/contacts/contacts_screen.dart';
 import 'features/groups/groups_screen.dart';
+import 'features/inbound/inbound_screen.dart';
 import 'features/more/more_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/login/login_screen.dart';
@@ -59,6 +60,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(path: '/templates', builder: (_, _) => const TemplatesScreen()),
             GoRoute(path: '/providers', builder: (_, _) => const ProvidersScreen()),
             GoRoute(path: '/contacts', builder: (_, _) => const ContactsScreen()),
+            GoRoute(path: '/inbound', builder: (_, _) => const InboundScreen()),
             GoRoute(path: '/api-keys', builder: (_, _) => const ApiKeysScreen()),
             GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
           ]),

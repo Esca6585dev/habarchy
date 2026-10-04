@@ -115,6 +115,9 @@ class AdminRepository {
   Future<void> removeGroupMember(String projectId, String id, String contactId) =>
       _api.request<void>('DELETE', '/api/admin/projects/$projectId/groups/$id/members/$contactId');
 
+  Future<List<InboundSms>> inbound(String projectId, {int limit = 100}) async =>
+      (await _api.request<List<dynamic>>('GET', '/api/admin/projects/$projectId/inbound', query: {'limit': limit})).map((e) => InboundSms.fromJson(e as Map<String, dynamic>)).toList();
+
   // ---- compose ----
   Future<SendOutcome> send(String projectId, Map<String, dynamic> body) async {
     final (data, meta) = await _api.requestWithMeta<Map<String, dynamic>>('/api/admin/projects/$projectId/messages/send', method: 'POST', data: body);

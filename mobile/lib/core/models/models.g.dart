@@ -523,3 +523,22 @@ Map<String, dynamic> _$PairingToJson(_Pairing instance) => <String, dynamic>{
   'online': instance.online,
   'last_seen_at': instance.lastSeenAt?.toIso8601String(),
 };
+
+_InboundSms _$InboundSmsFromJson(Map<String, dynamic> json) => _InboundSms(
+  id: json['id'] as String,
+  providerId: json['provider_id'] as String? ?? '',
+  from: json['from'] as String? ?? '',
+  text: json['text'] as String? ?? '',
+  receivedAt: json['received_at'] == null
+      ? null
+      : DateTime.parse(json['received_at'] as String),
+);
+
+Map<String, dynamic> _$InboundSmsToJson(_InboundSms instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'provider_id': instance.providerId,
+      'from': instance.from,
+      'text': instance.text,
+      'received_at': instance.receivedAt?.toIso8601String(),
+    };

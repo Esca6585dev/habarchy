@@ -23,6 +23,28 @@ class GatewayStore(context: Context) {
     var forwardInbound: Boolean
         get() = p.getBoolean("forward_inbound", false)
         set(v) = p.edit().putBoolean("forward_inbound", v).apply()
+    /** inbound_enabled of the provider as the server last reported it. */
+    var serverInboundEnabled: Boolean
+        get() = p.getBoolean("server_inbound_enabled", true)
+        set(v) = p.edit().putBoolean("server_inbound_enabled", v).apply()
+    /** Inbox messages older than this are never forwarded (set when forwarding is switched on). */
+    var lastInboundSyncAt: Long
+        get() = p.getLong("last_inbound_sync_at", 0)
+        set(v) = p.edit().putLong("last_inbound_sync_at", v).apply()
+    var inboundActive: Boolean
+        get() = p.getBoolean("inbound_active", false)
+        set(v) = p.edit().putBoolean("inbound_active", v).apply()
+
+    /** Remembers forwarded SMS keys so the receiver and the inbox sync never send one twice. */
+    @Synchronized
+    fun markForwarded(key: String): Boolean {
+        val arr = JSONArray(p.getString("forwarded", "[]") ?: "[]")
+        for (i in 0 until arr.length()) if (arr.getString(i) == key) return false
+        arr.put(key)
+        while (arr.length() > 200) arr.remove(0)
+        p.edit().putString("forwarded", arr.toString()).apply()
+        return true
+    }
 
     var lastPollAt: Long
         get() = p.getLong("last_poll_at", 0)
@@ -57,6 +79,9 @@ class GatewayStore(context: Context) {
         "failed" to p.getLong("failed", 0),
         "delivered" to p.getLong("delivered", 0),
         "inbound" to p.getLong("inbound", 0),
+        "forwardInbound" to forwardInbound,
+        "serverInboundEnabled" to serverInboundEnabled,
+        "inboundActive" to inboundActive,
         "lastPollAt" to lastPollAt,
         "lastHeartbeatAt" to lastHeartbeatAt,
         "lastError" to lastError,

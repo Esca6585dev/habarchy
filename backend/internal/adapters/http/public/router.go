@@ -12,6 +12,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/middleware"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/gateway"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/groups"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
@@ -31,6 +32,7 @@ type Handlers struct {
 	OTP                *otp.Service
 	Contacts           *contacts.Service
 	Groups             *groups.Service
+	Gateway            *gateway.Service // inbound SMS listing
 	Providers          *providers.Service
 	Delivery           *delivery.Service
 	Stats              *stats.Service
@@ -106,6 +108,10 @@ func (h *Handlers) Register(app fiber.Router) {
 	}
 	if h.Stats != nil {
 		r.Get("/usage", middleware.RequireScope(domain.ScopeUsage), h.usage)
+	}
+	if h.Gateway != nil {
+		// SMS received by the project's Android gateway phones.
+		r.Get("/inbound", middleware.RequireScope(domain.ScopeMessagesRead), h.listInbound)
 	}
 	if h.Delivery != nil && h.Providers != nil {
 		app.Post("/callbacks/sms/:provider_id", h.smsCallback)

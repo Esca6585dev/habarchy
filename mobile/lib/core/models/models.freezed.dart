@@ -7013,4 +7013,286 @@ as DateTime?,
 
 }
 
+
+/// @nodoc
+mixin _$InboundSms {
+
+ String get id;@JsonKey(name: 'provider_id') String get providerId; String get from; String get text;@JsonKey(name: 'received_at') DateTime? get receivedAt;
+/// Create a copy of InboundSms
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InboundSmsCopyWith<InboundSms> get copyWith => _$InboundSmsCopyWithImpl<InboundSms>(this as InboundSms, _$identity);
+
+  /// Serializes this InboundSms to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as InboundSms;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InboundSms&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.providerId, _this.providerId) || other.providerId == _this.providerId)&&(identical(other.from, _this.from) || other.from == _this.from)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.receivedAt, _this.receivedAt) || other.receivedAt == _this.receivedAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as InboundSms;
+  return Object.hash(runtimeType,_this.id,_this.providerId,_this.from,_this.text,_this.receivedAt);
+}
+
+@override
+String toString() {
+  final _this = this as InboundSms;
+  return 'InboundSms(id: ${_this.id}, providerId: ${_this.providerId}, from: ${_this.from}, text: ${_this.text}, receivedAt: ${_this.receivedAt})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $InboundSmsCopyWith<$Res>  {
+  factory $InboundSmsCopyWith(InboundSms value, $Res Function(InboundSms) _then) = _$InboundSmsCopyWithImpl;
+@useResult
+$Res call({
+ String id,@JsonKey(name: 'provider_id') String providerId, String from, String text,@JsonKey(name: 'received_at') DateTime? receivedAt
+});
+
+
+
+
+}
+/// @nodoc
+class _$InboundSmsCopyWithImpl<$Res>
+    implements $InboundSmsCopyWith<$Res> {
+  _$InboundSmsCopyWithImpl(this._self, this._then);
+
+  final InboundSms _self;
+  final $Res Function(InboundSms) _then;
+
+/// Create a copy of InboundSms
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? providerId = null,Object? from = null,Object? text = null,Object? receivedAt = freezed,}) {
+  return _then(InboundSms(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,providerId: null == providerId ? _self.providerId : providerId // ignore: cast_nullable_to_non_nullable
+as String,from: null == from ? _self.from : from // ignore: cast_nullable_to_non_nullable
+as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String,receivedAt: freezed == receivedAt ? _self.receivedAt : receivedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [InboundSms].
+extension InboundSmsPatterns on InboundSms {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _InboundSms value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _InboundSms() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _InboundSms value)  $default,){
+final _that = this;
+switch (_that) {
+case _InboundSms():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _InboundSms value)?  $default,){
+final _that = this;
+switch (_that) {
+case _InboundSms() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'provider_id')  String providerId,  String from,  String text, @JsonKey(name: 'received_at')  DateTime? receivedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _InboundSms() when $default != null:
+return $default(_that.id,_that.providerId,_that.from,_that.text,_that.receivedAt);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'provider_id')  String providerId,  String from,  String text, @JsonKey(name: 'received_at')  DateTime? receivedAt)  $default,) {final _that = this;
+switch (_that) {
+case _InboundSms():
+return $default(_that.id,_that.providerId,_that.from,_that.text,_that.receivedAt);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'provider_id')  String providerId,  String from,  String text, @JsonKey(name: 'received_at')  DateTime? receivedAt)?  $default,) {final _that = this;
+switch (_that) {
+case _InboundSms() when $default != null:
+return $default(_that.id,_that.providerId,_that.from,_that.text,_that.receivedAt);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _InboundSms implements InboundSms {
+  const _InboundSms({required this.id, @JsonKey(name: 'provider_id') this.providerId = '', this.from = '', this.text = '', @JsonKey(name: 'received_at') this.receivedAt});
+  factory _InboundSms.fromJson(Map<String, dynamic> json) => _$InboundSmsFromJson(json);
+
+@override final  String id;
+@override@JsonKey(name: 'provider_id') final  String providerId;
+@override@JsonKey() final  String from;
+@override@JsonKey() final  String text;
+@override@JsonKey(name: 'received_at') final  DateTime? receivedAt;
+
+/// Create a copy of InboundSms
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$InboundSmsCopyWith<_InboundSms> get copyWith => __$InboundSmsCopyWithImpl<_InboundSms>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$InboundSmsToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _InboundSms&&(identical(other.id, id) || other.id == id)&&(identical(other.providerId, providerId) || other.providerId == providerId)&&(identical(other.from, from) || other.from == from)&&(identical(other.text, text) || other.text == text)&&(identical(other.receivedAt, receivedAt) || other.receivedAt == receivedAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,providerId,from,text,receivedAt);
+}
+
+@override
+String toString() {
+    return 'InboundSms(id: $id, providerId: $providerId, from: $from, text: $text, receivedAt: $receivedAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$InboundSmsCopyWith<$Res> implements $InboundSmsCopyWith<$Res> {
+  factory _$InboundSmsCopyWith(_InboundSms value, $Res Function(_InboundSms) _then) = __$InboundSmsCopyWithImpl;
+@override @useResult
+$Res call({
+ String id,@JsonKey(name: 'provider_id') String providerId, String from, String text,@JsonKey(name: 'received_at') DateTime? receivedAt
+});
+
+
+
+
+}
+/// @nodoc
+class __$InboundSmsCopyWithImpl<$Res>
+    implements _$InboundSmsCopyWith<$Res> {
+  __$InboundSmsCopyWithImpl(this._self, this._then);
+
+  final _InboundSms _self;
+  final $Res Function(_InboundSms) _then;
+
+/// Create a copy of InboundSms
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? providerId = null,Object? from = null,Object? text = null,Object? receivedAt = freezed,}) {
+  return _then(_InboundSms(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,providerId: null == providerId ? _self.providerId : providerId // ignore: cast_nullable_to_non_nullable
+as String,from: null == from ? _self.from : from // ignore: cast_nullable_to_non_nullable
+as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String,receivedAt: freezed == receivedAt ? _self.receivedAt : receivedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
+  ));
+}
+
+
+}
+
 // dart format on

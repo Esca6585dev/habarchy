@@ -234,7 +234,35 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(t('gatewayKey'), style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 6),
           TextField(controller: _key, key: const Key('key'), decoration: InputDecoration(hintText: 'gw_…', helperText: t('keyHint'), helperMaxLines: 2)),
-          SwitchListTile(contentPadding: EdgeInsets.zero, value: _forwardInbound, onChanged: (v) => setState(() => _forwardInbound = v), title: Text(t('forwardInbound'))),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _forwardInbound,
+            onChanged: (v) async {
+              setState(() => _forwardInbound = v);
+              if (v) {
+                try {
+                  final ok = await widget.channel.requestInboundPermissions();
+                  if (!ok) _snack(t('inboundNoPermission'));
+                } on MissingPluginException {
+                  // not on Android
+                } on PlatformException {
+                  // ignore
+                }
+              }
+              await _save();
+            },
+            title: Text(t('forwardInbound')),
+            subtitle: Text(
+              !_forwardInbound
+                  ? t('inboundOff')
+                  : !_status.serverInboundEnabled
+                      ? t('inboundServerOff')
+                      : _status.inboundActive
+                          ? t('inboundOn')
+                          : t('inboundNoPermission'),
+              style: TextStyle(fontSize: 12, color: _forwardInbound && !_status.inboundActive ? cs.error : null),
+            ),
+          ),
           Align(alignment: Alignment.centerRight, child: OutlinedButton.icon(onPressed: _save, icon: const Icon(Icons.save_outlined), label: Text(t('save')))),
           const SizedBox(height: 16),
           // Test SMS

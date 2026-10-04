@@ -451,4 +451,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noMembers => 'Участников пока нет';
+
+  @override
+  String get inboundSms => 'Входящие SMS';
+
+  @override
+  String get inboundHint =>
+      'Здесь появляются SMS, полученные телефонами-шлюзами при включённой пересылке (настройка провайдера + переключатель в приложении).';
 }

@@ -21,7 +21,8 @@
     "docs": "API docs",
     "queues": "Queues",
     "groups": "Groups",
-    "compose": "Send message"
+    "compose": "Send message",
+    "inbound": "Inbound SMS"
   },
   "common": {
     "save": "Save",
@@ -360,5 +361,14 @@
     "viewBatch": "Open message log",
     "pickTarget": "Choose at least one group or address",
     "whatsappHint": "Free text works inside the 24 h window; outside it use an approved template via metadata.wa_template."
+  },
+  "inbound": {
+    "title": "Inbound SMS",
+    "from": "From",
+    "text": "Text",
+    "receivedAt": "Received",
+    "provider": "Phone",
+    "hint": "SMS received by the project’s gateway phones with inbound forwarding switched on (provider setting inbound_enabled + the switch in the phone app). Also available at GET /api/v1/inbound and as the sms.inbound webhook.",
+    "empty": "No inbound SMS yet"
   }
 }

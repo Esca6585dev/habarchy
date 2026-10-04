@@ -26,7 +26,14 @@ type Config struct {
 	// TimeoutSec is how long the worker waits for the phone to send
 	// (10–120, default 45). Afterwards the next provider is tried.
 	TimeoutSec int `json:"timeout_sec"`
+	// InboundEnabled lets the phone forward SMS it receives
+	// (POST /api/gateway/v1/inbound). Default true; the phone also has its
+	// own switch and keeps its receiver disabled unless both are on.
+	InboundEnabled *bool `json:"inbound_enabled,omitempty"`
 }
+
+// Inbound reports the effective inbound setting.
+func (c Config) Inbound() bool { return c.InboundEnabled == nil || *c.InboundEnabled }
 
 // MinKeyLen is the minimum gateway key length accepted.
 const MinKeyLen = 16

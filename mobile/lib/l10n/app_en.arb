@@ -175,5 +175,7 @@
   "whatsappHint": "Free text works inside the 24 h window; otherwise an approved template is needed.",
   "contactHint": "At least one of phone, e-mail, WhatsApp, Telegram or Slack is required.",
   "openMessages": "Open message log",
-  "noMembers": "No members yet"
+  "noMembers": "No members yet",
+  "inboundSms": "Inbound SMS",
+  "inboundHint": "SMS received by gateway phones appear here when forwarding is on (provider setting + switch in the phone app)."
 }

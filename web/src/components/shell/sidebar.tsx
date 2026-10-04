@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
-  Activity, BookOpen, Contact, FileText, Gauge, KeyRound, LayoutDashboard, ListOrdered, MessageSquare, Plug, Settings, ShieldCheck, Webhook, Send, Users } from "lucide-react";
+  Activity, BookOpen, Contact, FileText, Gauge, KeyRound, LayoutDashboard, ListOrdered, MessageSquare, Plug, Settings, ShieldCheck, Webhook, Send, Users, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProjectSwitcher } from "./project-switcher";
 import { useProject } from "@/components/project-context";
@@ -15,6 +15,7 @@ export function Sidebar({ className, onNavigate }: { className?: string; onNavig
   const items = [
     { href: "/", label: t("dashboard"), icon: LayoutDashboard },
     { href: "/messages", label: t("messages"), icon: MessageSquare },
+    { href: "/inbound", label: t("inbound"), icon: Inbox },
     { href: "/templates", label: t("templates"), icon: FileText },
     { href: "/providers", label: t("providers"), icon: Plug, min: "admin" as const },
     { href: "/api-keys", label: t("apiKeys"), icon: KeyRound, min: "developer" as const },

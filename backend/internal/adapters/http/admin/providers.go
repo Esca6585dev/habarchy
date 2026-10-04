@@ -226,6 +226,21 @@ func (h *Handlers) gatewayPairing(c *fiber.Ctx) error {
 	return httpx.OK(c, out)
 }
 
+// InboundResponse is one SMS received by a gateway phone.
+type InboundResponse struct {
+	ID         uuid.UUID `json:"id"`
+	ProviderID uuid.UUID `json:"provider_id"`
+	From       string    `json:"from"`
+	Text       string    `json:"text"`
+	ReceivedAt time.Time `json:"received_at"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// ToInbound converts a row.
+func ToInbound(r *sqlcgen.GatewayInbound) InboundResponse {
+	return InboundResponse{ID: r.ID, ProviderID: r.ProviderID, From: r.FromAddress, Text: r.Text, ReceivedAt: r.ReceivedAt, CreatedAt: r.CreatedAt}
+}
+
 // listInbound lists SMS received by the project's gateway phones.
 func (h *Handlers) listInbound(c *fiber.Ctx) error {
 	pid := membership(c).Project.ID
@@ -235,5 +250,9 @@ func (h *Handlers) listInbound(c *fiber.Ctx) error {
 		return err
 	}
 	total, _ := h.DB.Queries.CountGatewayInbound(c.UserContext(), pid)
-	return httpx.JSON(c, fiber.StatusOK, rows, fiber.Map{"total": total, "limit": page.Limit, "offset": page.Offset})
+	out := make([]InboundResponse, 0, len(rows))
+	for i := range rows {
+		out = append(out, ToInbound(&rows[i]))
+	}
+	return httpx.JSON(c, fiber.StatusOK, out, fiber.Map{"total": total, "limit": page.Limit, "offset": page.Offset})
 }

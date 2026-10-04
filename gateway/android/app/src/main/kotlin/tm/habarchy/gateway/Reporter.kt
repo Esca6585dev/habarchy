@@ -27,11 +27,12 @@ object Reporter {
         }
     }
 
-    fun inbound(context: Context, from: String, text: String, receivedAtIso: String) {
+    fun inbound(context: Context, from: String, text: String, receivedAtIso: String, timestampMillis: Long = 0L) {
         val app = context.applicationContext
         executor.execute {
             val store = GatewayStore(app)
-            if (!store.forwardInbound || store.url.isBlank()) return@execute
+            if (!InboundControl.effective(app, store) || store.url.isBlank()) return@execute
+            if (!store.markForwarded("$from|${timestampMillis.takeIf { it > 0 } ?: receivedAtIso}|${text.hashCode()}")) return@execute
             try {
                 Api(store.url, store.key, GatewayService.appVersion(app)).inbound(from, text, receivedAtIso)
                 store.inc("inbound")

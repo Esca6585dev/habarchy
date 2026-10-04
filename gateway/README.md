@@ -61,6 +61,13 @@ Tips:
 - Operators cap SMS per hour per SIM; set `rate_limit_per_sec` accordingly and keep an
   `http_sms`/`smpp` provider as fallback (higher `priority` number).
 - **Test SMS** in the app sends directly from the phone without the server (checks the SIM).
+- **Received SMS** (*Forward received SMS to the server*): off by default. Turning it on asks for
+  the SMS read permission and enables the SMS receiver at the OS level; the app also reads the inbox
+  for SMS that arrived while it was killed, so none are lost (nothing older than the moment you
+  switched it on is ever sent). Turning it off, or setting `inbound_enabled: false` on the provider
+  in the admin panel, disables the receiver component completely, so no background work happens for
+  incoming SMS. Each SMS is forwarded once (deduplicated) and is visible in the admin panel under
+  *Inbound SMS*, via `GET /api/v1/inbound`, and as the `sms.inbound` webhook.
 
 Release signing is the same as the admin app (`android/key.properties`, git-ignored). The app
 has no Firebase or third-party dependencies.
@@ -71,11 +78,11 @@ All requests carry `X-Gateway-Key: <key>`.
 
 | Call | Purpose |
 |------|---------|
-| `GET /api/gateway/v1/me` | provider name, project id, pending count |
+| `GET /api/gateway/v1/me` | provider name, project id, pending count, `inbound_enabled`, `sim_slot` |
 | `GET /api/gateway/v1/outbox?wait=20&limit=5` | long poll; returns `[{id, message_id, to, text, sim_slot, expires_at}]` and marks them leased |
 | `POST /api/gateway/v1/outbox/{id}/result` | `{status: sent\|failed\|delivered, error_code?, error_message?, parts?}` |
 | `POST /api/gateway/v1/heartbeat` | any JSON (`battery`, `network`, `operator`, `model`, `app_version`) |
-| `POST /api/gateway/v1/inbound` | `{from, text, received_at}` → `sms.inbound` webhook |
+| `POST /api/gateway/v1/inbound` | `{from, text, received_at}` → stored, `GET /api/v1/inbound`, `sms.inbound` webhook; 403 when the provider has `inbound_enabled: false` |
 
 `error_code` values map to Android `SmsManager` results: `generic_failure`, `radio_off`,
 `null_pdu`, `no_service`, `limit_exceeded`, `short_code_not_allowed`, `network_reject`,

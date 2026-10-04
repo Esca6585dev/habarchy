@@ -16,6 +16,7 @@ import io.flutter.plugin.common.MethodChannel
 /** Bridges the Flutter UI to the native gateway service and settings. */
 class MainActivity : FlutterActivity() {
     private var pendingPermissionResult: MethodChannel.Result? = null
+    private var pendingInboundResult: MethodChannel.Result? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -28,9 +29,14 @@ class MainActivity : FlutterActivity() {
                 "saveConfig" -> {
                     store.url = (call.argument<String>("url") ?: "").trim().trimEnd('/')
                     store.key = (call.argument<String>("key") ?: "").trim()
-                    store.forwardInbound = call.argument<Boolean>("forwardInbound") ?: false
+                    val wantInbound = call.argument<Boolean>("forwardInbound") ?: false
+                    if (wantInbound && !store.forwardInbound) store.lastInboundSyncAt = System.currentTimeMillis() // never dump old inbox
+                    store.forwardInbound = wantInbound
+                    InboundControl.apply(this)
                     result.success(true)
                 }
+                "requestInboundPermissions" -> requestInboundPermissions(result)
+                "hasInboundPermissions" -> result.success(InboundControl.hasReceivePermission(this))
                 "start" -> {
                     if (!hasPermissions()) {
                         result.error("permission", "SEND_SMS permission missing", null)
@@ -68,9 +74,20 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun requiredPermissions(): List<String> {
-        val list = mutableListOf(Manifest.permission.SEND_SMS, Manifest.permission.READ_PHONE_STATE, Manifest.permission.RECEIVE_SMS)
+        // RECEIVE_SMS / READ_SMS are asked separately, only when inbound forwarding is switched on.
+        val list = mutableListOf(Manifest.permission.SEND_SMS, Manifest.permission.READ_PHONE_STATE)
         if (Build.VERSION.SDK_INT >= 33) list.add(Manifest.permission.POST_NOTIFICATIONS)
         return list
+    }
+
+    private fun requestInboundPermissions(result: MethodChannel.Result) {
+        if (InboundControl.hasReceivePermission(this) && InboundControl.hasReadPermission(this)) {
+            InboundControl.apply(this)
+            result.success(true)
+            return
+        }
+        pendingInboundResult = result
+        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS), REQ_INBOUND)
     }
 
     private fun hasPermissions(): Boolean =
@@ -93,6 +110,11 @@ class MainActivity : FlutterActivity() {
             pendingPermissionResult?.success(hasPermissions())
             pendingPermissionResult = null
         }
+        if (requestCode == REQ_INBOUND) {
+            InboundControl.apply(this)
+            pendingInboundResult?.success(InboundControl.hasReceivePermission(this))
+            pendingInboundResult = null
+        }
     }
 
     private fun isIgnoringBattery(): Boolean {
@@ -113,5 +135,6 @@ class MainActivity : FlutterActivity() {
     companion object {
         const val CHANNEL = "habarchy/gateway"
         private const val REQ_PERMISSIONS = 4101
+        private const val REQ_INBOUND = 4102
     }
 }

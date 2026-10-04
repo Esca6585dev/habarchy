@@ -68,9 +68,11 @@ func toItem(r *sqlcgen.GatewayOutbox) OutboxItem {
 func (h *Handlers) me(c *fiber.Ctx) error {
 	cl := caller(c)
 	pending, _ := h.Gateway.PendingCount(c.UserContext(), cl.Provider.ID)
+	cfg := h.Gateway.Config(cl)
 	return httpx.OK(c, fiber.Map{
 		"provider_id": cl.Provider.ID, "provider": cl.Provider.Name, "project_id": cl.Provider.ProjectID,
 		"pending": pending, "last_seen_at": cl.Device.LastSeenAt, "server_time": time.Now().UTC(),
+		"inbound_enabled": cfg.Inbound(), "sim_slot": cfg.SimSlot,
 	})
 }
 
@@ -129,7 +131,7 @@ func (h *Handlers) heartbeat(c *fiber.Ctx) error {
 		return err
 	}
 	pending, _ := h.Gateway.PendingCount(c.UserContext(), caller(c).Provider.ID)
-	return httpx.OK(c, fiber.Map{"ok": true, "pending": pending, "server_time": time.Now().UTC()})
+	return httpx.OK(c, fiber.Map{"ok": true, "pending": pending, "server_time": time.Now().UTC(), "inbound_enabled": h.Gateway.Config(caller(c)).Inbound()})
 }
 
 type inboundRequest struct {

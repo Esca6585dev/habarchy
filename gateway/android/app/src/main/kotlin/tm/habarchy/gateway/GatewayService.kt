@@ -73,9 +73,14 @@ class GatewayService : Service() {
                     val data = api.heartbeat(deviceInfo())
                     store.lastHeartbeatAt = System.currentTimeMillis()
                     store.pending = data.optLong("pending", 0)
+                    if (data.has("inbound_enabled")) store.serverInboundEnabled = data.optBoolean("inbound_enabled", true)
                     if (store.providerName.isBlank()) {
-                        store.providerName = api.me().optString("provider", "")
+                        val me = api.me()
+                        store.providerName = me.optString("provider", "")
+                        if (me.has("inbound_enabled")) store.serverInboundEnabled = me.optBoolean("inbound_enabled", true)
                     }
+                    InboundControl.apply(this)
+                    InboundControl.syncInbox(this)
                 }
                 val items = api.lease(POLL_WAIT_SEC, 5)
                 store.lastPollAt = System.currentTimeMillis()
@@ -142,6 +147,7 @@ class GatewayService : Service() {
             .put("model", "${Build.MANUFACTURER} ${Build.MODEL}")
             .put("android", Build.VERSION.RELEASE)
             .put("app_version", appVersion(this))
+            .put("inbound_forwarding", InboundControl.effective(this))
     }
 
     private fun sleepQuiet(ms: Long) {

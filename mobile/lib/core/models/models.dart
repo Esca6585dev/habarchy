@@ -326,3 +326,15 @@ class SendOutcome {
   final int accepted;
   final List<Map<String, dynamic>> rejected;
 }
+
+@freezed
+abstract class InboundSms with _$InboundSms {
+  const factory InboundSms({
+    required String id,
+    @JsonKey(name: 'provider_id') @Default('') String providerId,
+    @Default('') String from,
+    @Default('') String text,
+    @JsonKey(name: 'received_at') DateTime? receivedAt,
+  }) = _InboundSms;
+  factory InboundSms.fromJson(Map<String, dynamic> json) => _$InboundSmsFromJson(json);
+}

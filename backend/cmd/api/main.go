@@ -156,7 +156,7 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 	publisher := events.NewPublisher(rdb.Raw())
 	messageSvc.Events, deliverySvc.Events = publisher, publisher
 	statsSvc := stats.New(db, q)
-	gatewaySvc := gateway.New(db, deliverySvc, webhookSvc)
+	gatewaySvc := gateway.New(db, deliverySvc, webhookSvc).WithProviders(providerSvc)
 	groupSvc := groups.New(db, contactSvc)
 
 	app := httpadapter.NewServer(cfg, log, httpadapter.Deps{DB: db, Redis: rdb})
@@ -173,7 +173,7 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 	}).Register(app)
 	(&gatewayhttp.Handlers{Gateway: gatewaySvc}).Register(app)
 	(&public.Handlers{
-		Projects: projectSvc, Templates: templateSvc, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc, Groups: groupSvc,
+		Projects: projectSvc, Templates: templateSvc, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc, Groups: groupSvc, Gateway: gatewaySvc,
 		Providers: providerSvc, Delivery: deliverySvc, Stats: statsSvc, SignatureTolerance: cfg.Security.SignatureTolerance,
 		APIRatePerSec: cfg.Limits.APIRatePerSec, Limiter: rdb,
 	}).Register(app)

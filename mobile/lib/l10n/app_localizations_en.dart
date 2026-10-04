@@ -450,4 +450,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noMembers => 'No members yet';
+
+  @override
+  String get inboundSms => 'Inbound SMS';
+
+  @override
+  String get inboundHint =>
+      'SMS received by gateway phones appear here when forwarding is on (provider setting + switch in the phone app).';
 }

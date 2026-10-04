@@ -29,6 +29,7 @@ const providerTypes = <String, List<CredField>>{
   'android_sms': [
     CredField('sim_slot', 'SIM slot', options: ['-1', '0', '1'], defaultValue: '-1'),
     CredField('timeout_sec', 'Timeout (sec)', number: true, defaultValue: 45),
+    CredField('inbound_enabled', 'Forward received SMS to the server', boolean: true, defaultValue: true),
   ],
   'smtp': [
     CredField('host', 'SMTP host', hint: 'smtp.example.tm'),

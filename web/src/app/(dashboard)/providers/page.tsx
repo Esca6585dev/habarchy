@@ -30,7 +30,7 @@ const types = ["http_sms", "smpp", "android_sms", "smtp", "fcm", "telegram_bot",
 const samples: Record<string, string> = {
   http_sms: JSON.stringify({ url: "https://sms.example.tm/api/send", method: "POST", headers: { Authorization: "Bearer TOKEN" }, body_template: '{"to":"{{.To}}","text":{{.TextJSON}},"from":"{{.Sender}}"}', sender: "HABARCHY", success: { json_path: "status", json_equals: "OK" }, message_id: { json_path: "id" }, dlr: { message_id_param: "msgid", status_param: "status", delivered_values: ["DELIVRD"], failed_values: ["UNDELIV", "EXPIRED"] } }, null, 2),
   smpp: JSON.stringify({ host: "smsc.operator.tm", port: 2775, system_id: "habarchy", password: "secret", source_addr: "HABARCHY", source_ton: 5, source_npi: 0, dest_ton: 1, dest_npi: 1, enquire_link_sec: 60, request_dlr: true }, null, 2),
-  android_sms: JSON.stringify({ gateway_key: "", sim_slot: -1, timeout_sec: 45 }, null, 2),
+  android_sms: JSON.stringify({ gateway_key: "", sim_slot: -1, timeout_sec: 45, inbound_enabled: true }, null, 2),
   smtp: JSON.stringify({ host: "smtp.example.tm", port: 587, tls_mode: "starttls", username: "no-reply@example.tm", password: "secret", from_name: "Habarchy", from_email: "no-reply@example.tm" }, null, 2),
   fcm: JSON.stringify({ service_account: { type: "service_account", project_id: "my-firebase", private_key: "-----BEGIN PRIVATE KEY-----\n...", client_email: "firebase-adminsdk@my-firebase.iam.gserviceaccount.com" } }, null, 2),
   telegram_bot: JSON.stringify({ bot_token: "123456:ABC-DEF", parse_mode: "HTML" }, null, 2),

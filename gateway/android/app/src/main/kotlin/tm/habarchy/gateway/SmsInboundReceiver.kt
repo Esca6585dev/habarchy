@@ -17,7 +17,11 @@ class SmsInboundReceiver : BroadcastReceiver() {
         if (messages.isEmpty()) return
         val from = messages[0].displayOriginatingAddress ?: return
         val text = messages.joinToString("") { it.messageBody ?: "" }
+        if (!InboundControl.effective(context)) return // switched off: never forward
         val fmt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
-        Reporter.inbound(context, from, text, fmt.format(Date(messages[0].timestampMillis)))
+        val ts = messages[0].timestampMillis
+        Reporter.inbound(context, from, text, fmt.format(Date(ts)), ts)
+        val store = GatewayStore(context)
+        if (ts > store.lastInboundSyncAt) store.lastInboundSyncAt = ts
     }
 }

@@ -806,6 +806,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inbound": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * SMS received by the project's Android gateway phones (newest first)
+         * @description Requires `messages:read`. Only phones whose provider has `inbound_enabled` (default true) and whose app switch is on forward SMS; the `sms.inbound` webhook fires for each one.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: components["parameters"]["Limit"];
+                    offset?: components["parameters"]["Offset"];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Inbound SMS */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Envelope"] & {
+                            data?: components["schemas"]["InboundSMS"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/contacts": {
         parameters: {
             query?: never;
@@ -2224,7 +2268,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Provider */
+                /** @description Provider, project, pending count, `inbound_enabled`, `sim_slot` */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2397,7 +2441,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Forward an SMS the phone received (fires the sms.inbound webhook) */
+        /** Forward an SMS the phone received (fires the sms.inbound webhook; 403 when the provider has inbound_enabled=false) */
         post: {
             parameters: {
                 query?: never;
@@ -4296,17 +4340,15 @@ export interface components {
         };
         InboundSMS: {
             /** Format: uuid */
-            ID?: string;
+            id?: string;
             /** Format: uuid */
-            ProviderID?: string;
-            /** Format: uuid */
-            ProjectID?: string;
-            FromAddress?: string;
-            Text?: string;
+            provider_id?: string;
+            from?: string;
+            text?: string;
             /** Format: date-time */
-            ReceivedAt?: string;
+            received_at?: string;
             /** Format: date-time */
-            CreatedAt?: string;
+            created_at?: string;
         };
         OutboxItem: {
             /** Format: uuid */

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	httpx "github.com/Esca6585dev/habarchy/backend/internal/adapters/http"
+	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/admin"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres/sqlcgen"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/groups"
 )
@@ -164,4 +165,18 @@ func (h *Handlers) removeGroupMember(c *fiber.Ctx) error {
 		return err
 	}
 	return httpx.NoContent(c)
+}
+
+// listInbound lists SMS received by the project's gateway phones.
+func (h *Handlers) listInbound(c *fiber.Ctx) error {
+	page := httpx.ParsePage(c, 50, 200)
+	rows, total, err := h.Gateway.ListInbound(c.UserContext(), caller(c).Project.ID, page.Limit, page.Offset)
+	if err != nil {
+		return err
+	}
+	out := make([]admin.InboundResponse, 0, len(rows))
+	for i := range rows {
+		out = append(out, admin.ToInbound(&rows[i]))
+	}
+	return httpx.JSON(c, fiber.StatusOK, out, fiber.Map{"total": total, "limit": page.Limit, "offset": page.Offset})
 }

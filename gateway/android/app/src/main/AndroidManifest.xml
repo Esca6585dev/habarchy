@@ -1,7 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.SEND_SMS"/>
+    <!-- Inbound SMS forwarding: both permissions are requested only when the user turns the feature on. -->
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+    <uses-permission android:name="android.permission.READ_SMS"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
@@ -62,7 +64,9 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".SmsInboundReceiver" android:exported="true" android:permission="android.permission.BROADCAST_SMS">
+        <!-- Disabled by default; InboundControl enables it only while forwarding is on
+             (user switch + server inbound_enabled), so nothing wakes up otherwise. -->
+        <receiver android:name=".SmsInboundReceiver" android:exported="true" android:enabled="false" android:permission="android.permission.BROADCAST_SMS">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
             </intent-filter>

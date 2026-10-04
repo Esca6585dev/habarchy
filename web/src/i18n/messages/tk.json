@@ -21,7 +21,8 @@
     "docs": "API resminamalary",
     "queues": "Nobatlar",
     "groups": "Toparlar",
-    "compose": "Habar iber"
+    "compose": "Habar iber",
+    "inbound": "Gelen SMS"
   },
   "common": {
     "save": "Ýatda sakla",
@@ -360,5 +361,14 @@
     "viewBatch": "Habar logyny aç",
     "pickTarget": "Iň azyndan bir topar ýa-da salgy saýlaň",
     "whatsappHint": "Erkin tekst 24 sagatlyk penjirede işleýär; daşynda tassyklanan şablon gerek (metadata.wa_template)."
+  },
+  "inbound": {
+    "title": "Gelen SMS",
+    "from": "Kimden",
+    "text": "Tekst",
+    "receivedAt": "Gelen wagty",
+    "provider": "Telefon",
+    "hint": "Gelen SMS-leri ugratmak açyk bolan şlýuz-telefonlaryň alan SMS-leri (providerde inbound_enabled + telefon programmasyndaky düwme). GET /api/v1/inbound we sms.inbound webhook arkaly hem alyp bolýar.",
+    "empty": "Heniz gelen SMS ýok"
   }
 }

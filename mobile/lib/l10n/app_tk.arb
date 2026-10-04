@@ -141,5 +141,7 @@
   "whatsappHint": "Erkin tekst 24 sagatlyk penjirede işleýär; başga ýagdaýda tassyklanan şablon gerek.",
   "contactHint": "Telefon, e-mail, WhatsApp, Telegram ýa-da Slack-dan iň azyndan biri gerek.",
   "openMessages": "Habar logyny aç",
-  "noMembers": "Heniz agza ýok"
+  "noMembers": "Heniz agza ýok",
+  "inboundSms": "Gelen SMS",
+  "inboundHint": "Ugratmak açyk bolanda şlýuz-telefonlaryň alan SMS-leri şu ýerde görünýär (provider sazlamasy + telefon programmasyndaky düwme)."
 }

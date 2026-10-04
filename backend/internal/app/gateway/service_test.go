@@ -76,7 +76,7 @@ func newEnv(t *testing.T) *env {
 	if !strings.HasPrefix(key, "gw_") || len(key) < 20 {
 		t.Fatalf("generated key %q", key)
 	}
-	gw := gateway.New(db, nil, nil)
+	gw := gateway.New(db, nil, nil).WithProviders(providerSvc)
 	gw.LeasePoll = 20 * time.Millisecond
 	providerSvc.GatewayFactory = gw.Factory
 
@@ -200,10 +200,27 @@ func TestGatewayFlowPhoneSendsAndReportsDelivered(t *testing.T) {
 		t.Fatal("provider missing from health")
 	}
 
-	// Inbound SMS is stored.
+	// Inbound SMS is stored while enabled (default), and /me says so.
+	if _, me := e.call("GET", "/api/gateway/v1/me", "", e.key); me["data"].(map[string]any)["inbound_enabled"] != true {
+		t.Fatalf("me inbound flag: %v", me)
+	}
 	st, body = e.call("POST", "/api/gateway/v1/inbound", `{"from":"+99365000111","text":"Salam, bu test"}`, e.key)
 	if st != 201 || body["data"].(map[string]any)["id"] == nil {
 		t.Fatalf("inbound: %d %v", st, body)
+	}
+	// Admin turns inbound off: the phone learns it from /me and the endpoint refuses.
+	if _, err := e.providers.Update(ctx, e.projectID, e.prov, providers.Input{Credentials: json.RawMessage(`{"gateway_key":"` + e.key + `","sim_slot":1,"timeout_sec":10,"inbound_enabled":false}`)}); err != nil {
+		t.Fatal(err)
+	}
+	if _, me := e.call("GET", "/api/gateway/v1/me", "", e.key); me["data"].(map[string]any)["inbound_enabled"] != false {
+		t.Fatalf("me inbound flag after disable: %v", me)
+	}
+	if st, _ := e.call("POST", "/api/gateway/v1/inbound", `{"from":"+99365000111","text":"ignored"}`, e.key); st != 403 {
+		t.Fatalf("inbound while disabled: %d", st)
+	}
+	rows, total, err := e.gateway.ListInbound(ctx, e.projectID, 10, 0)
+	if err != nil || total != 1 || len(rows) != 1 || rows[0].FromAddress != "+99365000111" {
+		t.Fatalf("list inbound: %v %d %v", err, total, rows)
 	}
 }
 
