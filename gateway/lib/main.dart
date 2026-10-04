@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'gateway_channel.dart';
+import 'l10n_fallback.dart';
 import 'strings.dart';
 
 void main() {
@@ -29,6 +30,7 @@ class _GatewayAppState extends State<GatewayApp> {
       debugShowCheckedModeBanner: false,
       locale: _locale,
       supportedLocales: const [Locale('tk'), Locale('ru'), Locale('en')],
+      localizationsDelegates: gatewayLocalizationsDelegates,
       localeResolutionCallback: (device, supported) {
         if (_locale != null) return _locale;
         if (device != null && supported.any((l) => l.languageCode == device.languageCode)) return Locale(device.languageCode);
