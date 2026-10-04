@@ -1,0 +1,1576 @@
+{
+  "info": {
+    "name": "Habarchy",
+    "description": "Habarchy notification gateway — public API (X-Api-Key, optional HMAC signing via pre-request script), admin API (JWT) and the Android gateway API. Set base_url, api_key, admin_email/admin_password, project_id.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "api_key",
+      "value": "hb_test_..."
+    },
+    {
+      "key": "sign",
+      "value": "false"
+    },
+    {
+      "key": "admin_email",
+      "value": "admin@example.tm"
+    },
+    {
+      "key": "admin_password",
+      "value": ""
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "project_id",
+      "value": ""
+    },
+    {
+      "key": "message_id",
+      "value": ""
+    },
+    {
+      "key": "gateway_key",
+      "value": ""
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Habarchy HMAC signing (optional): set collection vars api_key, sign=true",
+          "if (pm.collectionVariables.get(\"sign\") !== \"true\") return;",
+          "const key = pm.collectionVariables.get(\"api_key\");",
+          "const ts = Math.floor(Date.now() / 1000).toString();",
+          "const body = pm.request.body && pm.request.body.mode === \"raw\" ? pm.request.body.raw.replace(/\\{\\{(\\w+)\\}\\}/g, (m, v) => pm.variables.get(v) ?? m) : \"\";",
+          "const path = \"/\" + pm.request.url.getPath().replace(/^\\//, \"\").replace(/\\{\\{(\\w+)\\}\\}/g, (m, v) => pm.variables.get(v) ?? m);",
+          "const bodyHash = CryptoJS.SHA256(body).toString(CryptoJS.enc.Hex);",
+          "const msg = ts + \"\\n\" + pm.request.method.toUpperCase() + \"\\n\" + path + \"\\n\" + bodyHash;",
+          "const sig = CryptoJS.HmacSHA256(msg, key).toString(CryptoJS.enc.Hex);",
+          "pm.request.headers.upsert({ key: \"X-Timestamp\", value: ts });",
+          "pm.request.headers.upsert({ key: \"X-Signature\", value: sig });"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Public API (API key)",
+      "item": [
+        {
+          "name": "Send SMS (template)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "messages"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"sms\",\n  \"to\": \"+99365123456\",\n  \"template\": \"otp\",\n  \"data\": {\n    \"code\": \"4821\",\n    \"minutes\": 5\n  },\n  \"idempotency_key\": \"order-77\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Send email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "messages"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"email\",\n  \"to\": \"user@example.tm\",\n  \"subject\": \"Salam {{name}}\",\n  \"body\": \"<p>Hoş geldiňiz!</p>\",\n  \"data\": {\n    \"name\": \"Aman\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Send push to contact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "messages"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"push\",\n  \"to\": {\n    \"external_id\": \"user-42\"\n  },\n  \"title\": \"Täze habar\",\n  \"body\": \"Resminamaňyz taýýar\",\n  \"metadata\": {\n    \"data\": {\n      \"screen\": \"docs\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Send Telegram",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "messages"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"telegram\",\n  \"to\": \"123456789\",\n  \"body\": \"<b>Habarchy</b> işleýär\",\n  \"metadata\": {\n    \"parse_mode\": \"HTML\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Send auto (best channel)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "messages"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"auto\",\n  \"to\": {\n    \"external_id\": \"user-42\"\n  },\n  \"template\": \"welcome\",\n  \"data\": {\n    \"name\": \"Aman\",\n    \"support\": \"+99312345678\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Send batch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/messages/batch",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "messages",
+                "batch"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"sms\",\n  \"template\": \"welcome\",\n  \"recipients\": [\n    {\n      \"to\": \"+99365123456\",\n      \"data\": {\n        \"name\": \"Aman\",\n        \"support\": \"+99312345678\"\n      }\n    },\n    {\n      \"to\": \"+99365123457\",\n      \"data\": {\n        \"name\": \"Maral\",\n        \"support\": \"+99312345678\"\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/messages?status=&channel=&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "messages"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "key": "channel",
+                  "value": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Get message",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/messages/{{message_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "messages",
+                "{{message_id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Cancel message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/messages/{{message_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "messages",
+                "{{message_id}}",
+                "cancel"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "OTP send",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/otp/send",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "otp",
+                "send"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"sms\",\n  \"to\": \"+99365123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "OTP verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/otp/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to\": \"+99365123456\",\n  \"code\": \"482193\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Create contact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/contacts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contacts"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"external_id\": \"user-42\",\n  \"phone\": \"+99365123456\",\n  \"email\": \"user@example.tm\",\n  \"locale\": \"tk\",\n  \"tags\": [\n    \"vip\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Register device (FCM)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/devices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "devices"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm-token-at-least-20-chars\",\n  \"platform\": \"android\",\n  \"external_id\": \"user-42\",\n  \"app_version\": \"1.0.0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Templates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/templates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "templates"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Preview template",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/templates/preview",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "templates",
+                "preview"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"sms\",\n  \"body\": \"Kod: {{code}}\",\n  \"data\": {\n    \"code\": \"1234\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Usage",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/usage?group_by=channel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "usage"
+              ],
+              "query": [
+                {
+                  "key": "group_by",
+                  "value": "channel"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Me (key info)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin API (JWT)",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Stores access_token in the collection variables.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.data && j.data.access_token) pm.collectionVariables.set('access_token', j.data.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "auth",
+                "me"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo\",\n  \"slug\": \"demo\",\n  \"daily_quota\": 1000,\n  \"monthly_quota\": 20000,\n  \"default_locale\": \"tk\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Create API key",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/api-keys",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "api-keys"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"server\",\n  \"live\": false,\n  \"scopes\": [\n    \"messages:send\",\n    \"messages:read\",\n    \"otp\",\n    \"templates\",\n    \"contacts\",\n    \"devices\",\n    \"usage\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Create android_sms provider",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/providers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "providers"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Office phone\",\n  \"type\": \"android_sms\",\n  \"priority\": 10,\n  \"rate_limit_per_sec\": 1,\n  \"credentials\": {\n    \"sim_slot\": -1,\n    \"timeout_sec\": 45\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Create http_sms provider",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/providers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "providers"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Operator HTTP\",\n  \"type\": \"http_sms\",\n  \"priority\": 100,\n  \"credentials\": {\n    \"url\": \"https://sms.example.tm/api/send\",\n    \"method\": \"POST\",\n    \"headers\": {\n      \"Authorization\": \"Bearer TOKEN\"\n    },\n    \"body_template\": \"{\\\"to\\\":\\\"{{.To}}\\\",\\\"text\\\":{{.TextJSON}}}\",\n    \"success\": {\n      \"json_path\": \"status\",\n      \"json_equals\": \"OK\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Providers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/providers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "providers"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Provider pairing (android_sms)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/providers/{{provider_id}}/pairing",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "providers",
+                "{{provider_id}}",
+                "pairing"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create template",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/templates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "templates"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"otp\",\n  \"channel\": \"sms\",\n  \"locale\": \"tk\",\n  \"body\": \"{{.code}} — tassyklama kody. {{.minutes}} minut.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Message log",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/messages?status=&channel=&search=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "messages"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "key": "channel",
+                  "value": ""
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Resend message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/messages/{{message_id}}/resend",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "messages",
+                "{{message_id}}",
+                "resend"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/dashboard?days=7",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "health"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Usage CSV",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/usage?group_by=day&format=csv",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "usage"
+              ],
+              "query": [
+                {
+                  "key": "group_by",
+                  "value": "day"
+                },
+                {
+                  "key": "format",
+                  "value": "csv"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Webhook deliveries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/webhooks?failed=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "webhooks"
+              ],
+              "query": [
+                {
+                  "key": "failed",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Audit log",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/audit-logs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "audit-logs"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Inbound SMS (gateway phones)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/inbound",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "inbound"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Android gateway (X-Gateway-Key)",
+      "item": [
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Gateway-Key",
+                "value": "{{gateway_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/gateway/v1/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "gateway",
+                "v1",
+                "me"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Lease outbox (long poll)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Gateway-Key",
+                "value": "{{gateway_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/gateway/v1/outbox?wait=20&limit=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "gateway",
+                "v1",
+                "outbox"
+              ],
+              "query": [
+                {
+                  "key": "wait",
+                  "value": "20"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Report result",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Gateway-Key",
+                "value": "{{gateway_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/gateway/v1/outbox/{{outbox_id}}/result",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "gateway",
+                "v1",
+                "outbox",
+                "{{outbox_id}}",
+                "result"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"sent\",\n  \"parts\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Heartbeat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Gateway-Key",
+                "value": "{{gateway_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/gateway/v1/heartbeat",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "gateway",
+                "v1",
+                "heartbeat"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"battery\": 80,\n  \"network\": \"wifi\",\n  \"operator\": \"TM CELL\",\n  \"app_version\": \"1.0.0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Inbound SMS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Gateway-Key",
+                "value": "{{gateway_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/gateway/v1/inbound",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "gateway",
+                "v1",
+                "inbound"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"from\": \"+99365000111\",\n  \"text\": \"Salam\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "healthz",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/healthz",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "healthz"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "readyz",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/readyz",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "readyz"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/metrics",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "metrics"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ]
+}

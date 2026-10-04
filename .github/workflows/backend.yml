@@ -1,0 +1,40 @@
+name: backend
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**", ".github/workflows/backend.yml"]
+  pull_request:
+    paths: ["backend/**", ".github/workflows/backend.yml"]
+permissions: { contents: read }
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: habarchy, POSTGRES_PASSWORD: habarchy, POSTGRES_DB: habarchy_test }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U habarchy" --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: backend/go.mod, cache-dependency-path: backend/go.sum }
+      - name: Lint
+        uses: golangci/golangci-lint-action@v8
+        with: { version: v2.5, working-directory: backend }
+      - name: Build
+        run: go build ./...
+      - name: Test (unit + integration)
+        env:
+          HABARCHY_TEST_DATABASE_URL: postgres://habarchy:habarchy@localhost:5432/habarchy_test?sslmode=disable
+          HABARCHY_TEST_REDIS_URL: redis://localhost:6379/2
+        run: go test -race -count=1 ./...
+      - name: OpenAPI spec is in sync with docs/
+        run: cmp api/openapi.yaml ../docs/openapi.yaml

@@ -1,0 +1,35 @@
+name: flutter
+on:
+  push:
+    branches: [main]
+    paths: ["mobile/**", "gateway/**", "sdk/dart/**", ".github/workflows/flutter.yml"]
+  pull_request:
+    paths: ["mobile/**", "gateway/**", "sdk/dart/**", ".github/workflows/flutter.yml"]
+permissions: { contents: read }
+jobs:
+  analyze-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [mobile, gateway]
+    defaults: { run: { working-directory: "${{ matrix.app }}" } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, flutter-version: 3.47.6, cache: true }
+      - run: flutter pub get
+      - name: Code generation (freezed / json_serializable / l10n)
+        if: matrix.app == 'mobile'
+        run: dart run build_runner build --delete-conflicting-outputs && flutter gen-l10n
+      - run: flutter analyze
+      - run: flutter test
+  dart-sdk:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: sdk/dart } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+      - run: dart pub get
+      - run: dart analyze --fatal-infos
+      - run: dart test

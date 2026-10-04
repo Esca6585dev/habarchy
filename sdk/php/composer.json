@@ -1,0 +1,23 @@
+{
+  "name": "habarchy/sdk",
+  "description": "Client for the Habarchy notification gateway public API (SMS, email, push, Telegram, OTP) with HMAC request signing. Laravel service provider included.",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.1",
+    "ext-curl": "*",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": { "Habarchy\\": "src/" }
+  },
+  "scripts": {
+    "test": "php tests/run.php"
+  },
+  "extra": {
+    "laravel": {
+      "providers": ["Habarchy\\Laravel\\HabarchyServiceProvider"],
+      "aliases": { "Habarchy": "Habarchy\\Laravel\\Facades\\Habarchy" }
+    }
+  }
+}

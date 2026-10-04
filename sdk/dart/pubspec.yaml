@@ -1,0 +1,11 @@
+name: habarchy
+description: Client for the Habarchy notification gateway public API (SMS, email, push, Telegram, OTP) with HMAC request signing.
+version: 1.0.0
+repository: https://github.com/Esca6585dev/habarchy
+environment:
+  sdk: ^3.5.0
+dependencies:
+  crypto: ^3.0.3
+dev_dependencies:
+  lints: ^5.0.0
+  test: ^1.25.0

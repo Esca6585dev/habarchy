@@ -1,0 +1,35 @@
+name: sdks
+on:
+  push:
+    branches: [main]
+    paths: ["sdk/go/**", "sdk/ts/**", "sdk/php/**", ".github/workflows/sdks.yml"]
+  pull_request:
+    paths: ["sdk/go/**", "sdk/ts/**", "sdk/php/**", ".github/workflows/sdks.yml"]
+permissions: { contents: read }
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: sdk/go } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: sdk/go/go.mod }
+      - run: go vet ./... && go test -race ./...
+  ts:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: sdk/ts } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+  php:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: sdk/php } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: "8.3", extensions: curl, json, tools: composer }
+      - run: composer validate --no-check-publish
+      - run: php -l src/Client.php && php tests/run.php

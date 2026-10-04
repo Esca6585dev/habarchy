@@ -35,3 +35,23 @@ backend/coverage.out
 backend/worker
 backend/scheduler
 backend/api/api
+
+# deploy
+deploy/.env
+deploy/nginx/certs/*.pem
+
+# SDKs
+sdk/ts/node_modules/
+sdk/ts/dist/
+sdk/dart/.dart_tool/
+sdk/dart/pubspec.lock
+sdk/php/vendor/
+
+# gateway app
+gateway/build/
+gateway/.dart_tool/
+
+# web
+web/test-results/
+web/playwright-report/
+web/tsconfig.tsbuildinfo

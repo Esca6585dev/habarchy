@@ -1,0 +1,10 @@
+bin/
+tmp/
+api/api
+worker
+scheduler
+*.test
+coverage.out
+.env
+.env.*
+!.env.example

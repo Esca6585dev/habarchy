@@ -4,6 +4,28 @@
 
 **EN:** Habarchy is a self-hosted, multi-tenant notification gateway: one API to send SMS, email, push (FCM) and Telegram messages with queues, retries, provider fallback, templates, delivery status, webhooks and an admin panel.
 
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph Clients
+    L[Laravel / tds.gov.tm<br/>sdk/php] ; F[Flutter apps<br/>sdk/dart] ; S[Any service<br/>sdk/go · sdk/ts · curl]
+  end
+  subgraph Habarchy
+    N[nginx] --> W[Next.js admin] ; N --> A[API · Go/Fiber]
+    A --> P[(PostgreSQL 16)] ; A --> R[(Redis 7 · asynq)]
+    R --> K[Worker] ; K --> P
+    SC[Scheduler] --> P
+  end
+  subgraph Providers
+    K --> SMS[http_sms / SMPP]
+    K --> GW[android_sms<br/>phone + SIM]
+    K --> M[SMTP] ; K --> FCM[FCM] ; K --> TG[Telegram]
+  end
+  L & F & S -->|X-Api-Key + HMAC| N
+  K -->|webhooks| L
+```
+
 ## Stack
 
 | Part | Tech |
@@ -27,7 +49,50 @@ In progress — built step by step from [PROMPT.md](PROMPT.md).
 | 5 | Next.js admin panel (tk/ru/en, dark mode, live feed, template editor, Playwright e2e) + OpenAPI spec at `/api/docs` | ✅ done |
 | 6 | Flutter admin app (dashboard, message log, templates, providers, API keys, tk/ru/en, dark mode) + FCM push demo client | ✅ done |
 | 6b | Android SMS gateway: `android_sms` provider + Habarçy Gateway APK (phone sends SMS from its SIM, reports sent/delivered, forwards inbound) | ✅ done |
-| 7 | SDKs, docs, docker, CI | ⏳ |
+| 7 | SDKs (Go, TypeScript, Dart, PHP/Laravel), Postman collection, Dockerfiles + `deploy/docker-compose.yml` (nginx, web, api, worker, scheduler, postgres, redis, asynqmon), `api -seed`, GitHub Actions (backend, web, flutter, sdks, docker images on tags) | ✅ done |
+
+## Quick start (production-like, one command)
+
+```sh
+cp deploy/.env.example deploy/.env      # POSTGRES_PASSWORD, HABARCHY_JWT_SECRET, HABARCHY_MASTER_KEY (openssl rand -hex 32), HABARCHY_PUBLIC_URL, admin e-mail/password
+make up                                 # docker compose: nginx :80 → web + api, worker, scheduler, postgres, redis, asynqmon
+make seed                               # admin user, demo project, templates otp/welcome/password_reset (tk/ru/en), prints a test API key
+open http://localhost/                  # admin panel · http://localhost/api/docs Swagger · http://localhost/asynqmon/ queues
+```
+
+Details, TLS with certbot and scaling: [deploy/README.md](deploy/README.md).
+
+## SDKs
+
+| Language | Path | Install | 5-line example |
+|----------|------|---------|----------------|
+| Go | [`sdk/go`](sdk/go) | `go get github.com/Esca6585dev/habarchy/sdk/go` | [README](sdk/go/README.md) |
+| TypeScript / Node | [`sdk/ts`](sdk/ts) | `npm install @habarchy/sdk` (or path) | [README](sdk/ts/README.md) |
+| Dart / Flutter | [`sdk/dart`](sdk/dart) | git dependency, `path: sdk/dart` | [README](sdk/dart/README.md) |
+| PHP / Laravel 12 | [`sdk/php`](sdk/php) | Composer path repository, auto-discovered provider + facade | [README](sdk/php/README.md) |
+
+All clients: `SendMessage`, `SendBatch`, `GetMessage`, `SendOTP`, `VerifyOTP`, `RegisterDevice`,
+optional HMAC request signing (`X-Timestamp` / `X-Signature`). Postman collection with the
+same signing as a pre-request script: [docs/habarchy.postman_collection.json](docs/habarchy.postman_collection.json).
+
+## Integrating
+
+**tds.gov.tm (Laravel 12).** `composer config repositories.habarchy path ../habarchy/sdk/php && composer require habarchy/sdk:@dev`,
+set `HABARCHY_URL`, `HABARCHY_API_KEY` (a live key with scopes `messages:send messages:read otp`) and
+`HABARCHY_SIGN=true` in `.env`, then `Habarchy::sendOTP($phone)` / `Habarchy::verifyOTP($phone, $code)` for
+login codes and `Habarchy::sendMessage([...])` for notifications; use `idempotency_key` for anything retried
+by a queue, and point the project webhook at a Laravel route to receive `message.delivered` / `message.failed`
+(verify `X-Habarchy-Signature`, see [docs/auth.md](docs/auth.md)). Templates are edited by non-developers in
+the admin panel (`otp`, `welcome`, `password_reset` in tk/ru/en come pre-installed by `make seed`).
+
+**Flutter apps (push).** Add `sdk/dart`, after login call `registerDevice(token: fcmToken, platform: 'android', externalId: userId)`
+with an API key limited to the `devices` scope, and again on `onTokenRefresh`; your backend then sends
+`{"channel":"push","to":{"external_id":userId}}` or `"channel":"auto"`. The `mobile/` app's
+*Settings → Push demo* and `lib/core/push/push_service.dart` are a working reference for `firebase_messaging`.
+
+**SMS without an operator contract.** Create an `android_sms` provider, install the
+[Habarçy Gateway APK](gateway/README.md) on a phone with a SIM card, paste the pairing key. Messages flow
+through the phone; keep an `http_sms`/`smpp` provider as fallback once you have a contract.
 
 ## Development
 
