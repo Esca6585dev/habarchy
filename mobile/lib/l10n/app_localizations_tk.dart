@@ -530,4 +530,47 @@ class AppLocalizationsTk extends AppLocalizations {
   String purgedAll(int n) {
     return '$n hemişelik pozuldy';
   }
+
+  @override
+  String get chat => 'Topar çaty';
+
+  @override
+  String get chatNew => 'Täze';
+
+  @override
+  String get chatDirect => 'Şahsy';
+
+  @override
+  String get chatChannel => 'Kanal';
+
+  @override
+  String get chatPublic => 'Açyk';
+
+  @override
+  String get chatPrivate => 'Ýapyk';
+
+  @override
+  String get chatName => 'Ady';
+
+  @override
+  String get chatMessage => 'Habar ýaz…';
+
+  @override
+  String get chatNoMessages => 'Heniz habar ýok';
+
+  @override
+  String get chatEmpty =>
+      'Heniz çat ýok. Şahsy ýazyşyk başla ýa-da kanal döret.';
+
+  @override
+  String get profileTitle => 'Profil';
+
+  @override
+  String get uploadPhoto => 'Surat ýükle';
+
+  @override
+  String get profileSaved => 'Profil ýatda saklandy';
+
+  @override
+  String get bio => 'Hakynda';
 }

@@ -30,6 +30,8 @@ abstract class User with _$User {
     required String id,
     required String email,
     @JsonKey(name: 'full_name') @Default('') String fullName,
+    @Default('') String bio,
+    @JsonKey(name: 'avatar_id') String? avatarId,
     @JsonKey(name: 'totp_enabled') @Default(false) bool totpEnabled,
   }) = _User;
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
@@ -338,4 +340,49 @@ abstract class InboundSms with _$InboundSms {
     @JsonKey(name: 'received_at') DateTime? receivedAt,
   }) = _InboundSms;
   factory InboundSms.fromJson(Map<String, dynamic> json) => _$InboundSmsFromJson(json);
+}
+
+@freezed
+abstract class ChatChannel with _$ChatChannel {
+  const factory ChatChannel({
+    required String id,
+    required String kind,
+    @Default('') String name,
+    @Default('') String topic,
+    @Default(0) int unread,
+    @JsonKey(name: 'last_body') @Default('') String lastBody,
+    @JsonKey(name: 'last_at') DateTime? lastAt,
+    @JsonKey(name: 'last_has_file') @Default(false) bool lastHasFile,
+    @JsonKey(name: 'peer_id') String? peerId,
+    @JsonKey(name: 'peer_name') @Default('') String peerName,
+    @JsonKey(name: 'peer_avatar') String? peerAvatar,
+  }) = _ChatChannel;
+  factory ChatChannel.fromJson(Map<String, dynamic> json) => _$ChatChannelFromJson(json);
+}
+
+@freezed
+abstract class ChatMessage with _$ChatMessage {
+  const factory ChatMessage({
+    required String id,
+    @JsonKey(name: 'channel_id') required String channelId,
+    @JsonKey(name: 'user_id') String? userId,
+    @JsonKey(name: 'author_name') @Default('') String authorName,
+    @JsonKey(name: 'author_avatar') String? authorAvatar,
+    @Default('') String body,
+    @JsonKey(name: 'attachment_id') String? attachmentId,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+  }) = _ChatMessage;
+  factory ChatMessage.fromJson(Map<String, dynamic> json) => _$ChatMessageFromJson(json);
+}
+
+@freezed
+abstract class ChatMember with _$ChatMember {
+  const factory ChatMember({
+    required String id,
+    @JsonKey(name: 'full_name') @Default('') String fullName,
+    @Default('') String email,
+    @JsonKey(name: 'avatar_id') String? avatarId,
+    @Default('member') String role,
+  }) = _ChatMember;
+  factory ChatMember.fromJson(Map<String, dynamic> json) => _$ChatMemberFromJson(json);
 }

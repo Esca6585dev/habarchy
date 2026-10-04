@@ -222,5 +222,19 @@
         "type": "int"
       }
     }
-  }
+  },
+  "chat": "Team chat",
+  "chatNew": "New",
+  "chatDirect": "Direct",
+  "chatChannel": "Channel",
+  "chatPublic": "Public",
+  "chatPrivate": "Private",
+  "chatName": "Name",
+  "chatMessage": "Write a message…",
+  "chatNoMessages": "No messages yet",
+  "chatEmpty": "No chats yet. Start a direct message or create a channel.",
+  "profileTitle": "Profile",
+  "uploadPhoto": "Upload photo",
+  "profileSaved": "Profile saved",
+  "bio": "About"
 }

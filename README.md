@@ -50,6 +50,7 @@ In progress — built step by step from [PROMPT.md](PROMPT.md).
 | 6 | Flutter admin app (dashboard, message log, templates, providers, API keys, tk/ru/en, dark mode) + FCM push demo client | ✅ done |
 | 6b | Android SMS gateway: `android_sms` provider + Habarçy Gateway APK (phone sends SMS from its SIM, reports sent/delivered, forwards inbound) | ✅ done |
 | 6c | Contact groups (colleagues, customers…), broadcast to a group on any channel, WhatsApp Cloud API + Slack channels, compose screen in web + mobile, in-app provider setup (SMTP, SMPP, HTTP SMS, Telegram, WhatsApp, Slack, FCM, phone gateway) | ✅ done |
+| 6e | Internal team chat (profiles with avatars, public channels, private groups, direct messages, image messages, unread counts, live via SSE); web + mobile | ✅ done |
 | 6d | Contact import: Excel, CSV, Word, vCard files; Google Contacts (OAuth); Apple/iCloud Contacts (CardDAV, app-specific password); web + mobile | ✅ done |
 | 7 | SDKs (Go, TypeScript, Dart, PHP/Laravel), Postman collection, Dockerfiles + `deploy/docker-compose.yml` (nginx, web, api, worker, scheduler, postgres, redis, asynqmon), `api -seed`, GitHub Actions (backend, web, flutter, sdks, docker images on tags) | ✅ done |
 
@@ -124,6 +125,8 @@ cd mobile && flutter pub get && dart run build_runner build -d && flutter run --
 
 API reference: Swagger UI at `http://localhost:8080/api/docs`, spec in [docs/openapi.yaml](docs/openapi.yaml)
 (source: `backend/api/openapi.yaml`, `make -C backend openapi` regenerates the web client types).
+
+Team chat for panel users: [docs/chat.md](docs/chat.md).
 
 See [docs/architecture.md](docs/architecture.md) for the component and data-model diagrams and
 [docs/auth.md](docs/auth.md) for login, API keys and request signing.

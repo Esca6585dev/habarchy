@@ -11,6 +11,8 @@ class MoreScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final items = [
+      (Icons.forum_outlined, t.chat, '/chat'),
+      (Icons.account_circle_outlined, t.profileTitle, '/profile'),
       (Icons.description_outlined, t.templates, '/templates'),
       (Icons.power_outlined, t.providers, '/providers'),
       (Icons.move_to_inbox_outlined, t.inboundSms, '/inbound'),

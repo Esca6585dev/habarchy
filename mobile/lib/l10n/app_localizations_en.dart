@@ -532,4 +532,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String purgedAll(int n) {
     return '$n permanently deleted';
   }
+
+  @override
+  String get chat => 'Team chat';
+
+  @override
+  String get chatNew => 'New';
+
+  @override
+  String get chatDirect => 'Direct';
+
+  @override
+  String get chatChannel => 'Channel';
+
+  @override
+  String get chatPublic => 'Public';
+
+  @override
+  String get chatPrivate => 'Private';
+
+  @override
+  String get chatName => 'Name';
+
+  @override
+  String get chatMessage => 'Write a message…';
+
+  @override
+  String get chatNoMessages => 'No messages yet';
+
+  @override
+  String get chatEmpty =>
+      'No chats yet. Start a direct message or create a channel.';
+
+  @override
+  String get profileTitle => 'Profile';
+
+  @override
+  String get uploadPhoto => 'Upload photo';
+
+  @override
+  String get profileSaved => 'Profile saved';
+
+  @override
+  String get bio => 'About';
 }

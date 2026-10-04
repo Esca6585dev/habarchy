@@ -533,4 +533,47 @@ class AppLocalizationsRu extends AppLocalizations {
   String purgedAll(int n) {
     return '$n удалено навсегда';
   }
+
+  @override
+  String get chat => 'Чат команды';
+
+  @override
+  String get chatNew => 'Создать';
+
+  @override
+  String get chatDirect => 'Личный';
+
+  @override
+  String get chatChannel => 'Канал';
+
+  @override
+  String get chatPublic => 'Публичный';
+
+  @override
+  String get chatPrivate => 'Приватный';
+
+  @override
+  String get chatName => 'Название';
+
+  @override
+  String get chatMessage => 'Напишите сообщение…';
+
+  @override
+  String get chatNoMessages => 'Сообщений пока нет';
+
+  @override
+  String get chatEmpty =>
+      'Чатов пока нет. Начните личную переписку или создайте канал.';
+
+  @override
+  String get profileTitle => 'Профиль';
+
+  @override
+  String get uploadPhoto => 'Загрузить фото';
+
+  @override
+  String get profileSaved => 'Профиль сохранён';
+
+  @override
+  String get bio => 'О себе';
 }

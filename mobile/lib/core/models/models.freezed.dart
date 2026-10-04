@@ -576,7 +576,7 @@ as int,
 /// @nodoc
 mixin _$User {
 
- String get id; String get email;@JsonKey(name: 'full_name') String get fullName;@JsonKey(name: 'totp_enabled') bool get totpEnabled;
+ String get id; String get email;@JsonKey(name: 'full_name') String get fullName; String get bio;@JsonKey(name: 'avatar_id') String? get avatarId;@JsonKey(name: 'totp_enabled') bool get totpEnabled;
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -590,20 +590,20 @@ $UserCopyWith<User> get copyWith => _$UserCopyWithImpl<User>(this as User, _$ide
 @override
 bool operator ==(Object other) {
   final _this = this as User;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.fullName, _this.fullName) || other.fullName == _this.fullName)&&(identical(other.totpEnabled, _this.totpEnabled) || other.totpEnabled == _this.totpEnabled));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.fullName, _this.fullName) || other.fullName == _this.fullName)&&(identical(other.bio, _this.bio) || other.bio == _this.bio)&&(identical(other.avatarId, _this.avatarId) || other.avatarId == _this.avatarId)&&(identical(other.totpEnabled, _this.totpEnabled) || other.totpEnabled == _this.totpEnabled));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as User;
-  return Object.hash(runtimeType,_this.id,_this.email,_this.fullName,_this.totpEnabled);
+  return Object.hash(runtimeType,_this.id,_this.email,_this.fullName,_this.bio,_this.avatarId,_this.totpEnabled);
 }
 
 @override
 String toString() {
   final _this = this as User;
-  return 'User(id: ${_this.id}, email: ${_this.email}, fullName: ${_this.fullName}, totpEnabled: ${_this.totpEnabled})';
+  return 'User(id: ${_this.id}, email: ${_this.email}, fullName: ${_this.fullName}, bio: ${_this.bio}, avatarId: ${_this.avatarId}, totpEnabled: ${_this.totpEnabled})';
 }
 
 
@@ -614,7 +614,7 @@ abstract mixin class $UserCopyWith<$Res>  {
   factory $UserCopyWith(User value, $Res Function(User) _then) = _$UserCopyWithImpl;
 @useResult
 $Res call({
- String id, String email,@JsonKey(name: 'full_name') String fullName,@JsonKey(name: 'totp_enabled') bool totpEnabled
+ String id, String email,@JsonKey(name: 'full_name') String fullName, String bio,@JsonKey(name: 'avatar_id') String? avatarId,@JsonKey(name: 'totp_enabled') bool totpEnabled
 });
 
 
@@ -631,12 +631,14 @@ class _$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? fullName = null,Object? totpEnabled = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? fullName = null,Object? bio = null,Object? avatarId = freezed,Object? totpEnabled = null,}) {
   return _then(User(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
-as String,totpEnabled: null == totpEnabled ? _self.totpEnabled : totpEnabled // ignore: cast_nullable_to_non_nullable
+as String,bio: null == bio ? _self.bio : bio // ignore: cast_nullable_to_non_nullable
+as String,avatarId: freezed == avatarId ? _self.avatarId : avatarId // ignore: cast_nullable_to_non_nullable
+as String?,totpEnabled: null == totpEnabled ? _self.totpEnabled : totpEnabled // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -722,10 +724,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String email, @JsonKey(name: 'full_name')  String fullName, @JsonKey(name: 'totp_enabled')  bool totpEnabled)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String email, @JsonKey(name: 'full_name')  String fullName,  String bio, @JsonKey(name: 'avatar_id')  String? avatarId, @JsonKey(name: 'totp_enabled')  bool totpEnabled)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.email,_that.fullName,_that.totpEnabled);case _:
+return $default(_that.id,_that.email,_that.fullName,_that.bio,_that.avatarId,_that.totpEnabled);case _:
   return orElse();
 
 }
@@ -743,10 +745,10 @@ return $default(_that.id,_that.email,_that.fullName,_that.totpEnabled);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String email, @JsonKey(name: 'full_name')  String fullName, @JsonKey(name: 'totp_enabled')  bool totpEnabled)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String email, @JsonKey(name: 'full_name')  String fullName,  String bio, @JsonKey(name: 'avatar_id')  String? avatarId, @JsonKey(name: 'totp_enabled')  bool totpEnabled)  $default,) {final _that = this;
 switch (_that) {
 case _User():
-return $default(_that.id,_that.email,_that.fullName,_that.totpEnabled);case _:
+return $default(_that.id,_that.email,_that.fullName,_that.bio,_that.avatarId,_that.totpEnabled);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -763,10 +765,10 @@ return $default(_that.id,_that.email,_that.fullName,_that.totpEnabled);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String email, @JsonKey(name: 'full_name')  String fullName, @JsonKey(name: 'totp_enabled')  bool totpEnabled)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String email, @JsonKey(name: 'full_name')  String fullName,  String bio, @JsonKey(name: 'avatar_id')  String? avatarId, @JsonKey(name: 'totp_enabled')  bool totpEnabled)?  $default,) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.email,_that.fullName,_that.totpEnabled);case _:
+return $default(_that.id,_that.email,_that.fullName,_that.bio,_that.avatarId,_that.totpEnabled);case _:
   return null;
 
 }
@@ -778,12 +780,14 @@ return $default(_that.id,_that.email,_that.fullName,_that.totpEnabled);case _:
 @JsonSerializable()
 
 class _User implements User {
-  const _User({required this.id, required this.email, @JsonKey(name: 'full_name') this.fullName = '', @JsonKey(name: 'totp_enabled') this.totpEnabled = false});
+  const _User({required this.id, required this.email, @JsonKey(name: 'full_name') this.fullName = '', this.bio = '', @JsonKey(name: 'avatar_id') this.avatarId, @JsonKey(name: 'totp_enabled') this.totpEnabled = false});
   factory _User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
 @override final  String id;
 @override final  String email;
 @override@JsonKey(name: 'full_name') final  String fullName;
+@override@JsonKey() final  String bio;
+@override@JsonKey(name: 'avatar_id') final  String? avatarId;
 @override@JsonKey(name: 'totp_enabled') final  bool totpEnabled;
 
 /// Create a copy of User
@@ -799,18 +803,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.totpEnabled, totpEnabled) || other.totpEnabled == totpEnabled));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.avatarId, avatarId) || other.avatarId == avatarId)&&(identical(other.totpEnabled, totpEnabled) || other.totpEnabled == totpEnabled));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,email,fullName,totpEnabled);
+    return Object.hash(runtimeType,id,email,fullName,bio,avatarId,totpEnabled);
 }
 
 @override
 String toString() {
-    return 'User(id: $id, email: $email, fullName: $fullName, totpEnabled: $totpEnabled)';
+    return 'User(id: $id, email: $email, fullName: $fullName, bio: $bio, avatarId: $avatarId, totpEnabled: $totpEnabled)';
 }
 
 
@@ -821,7 +825,7 @@ abstract mixin class _$UserCopyWith<$Res> implements $UserCopyWith<$Res> {
   factory _$UserCopyWith(_User value, $Res Function(_User) _then) = __$UserCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String email,@JsonKey(name: 'full_name') String fullName,@JsonKey(name: 'totp_enabled') bool totpEnabled
+ String id, String email,@JsonKey(name: 'full_name') String fullName, String bio,@JsonKey(name: 'avatar_id') String? avatarId,@JsonKey(name: 'totp_enabled') bool totpEnabled
 });
 
 
@@ -838,12 +842,14 @@ class __$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? fullName = null,Object? totpEnabled = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? fullName = null,Object? bio = null,Object? avatarId = freezed,Object? totpEnabled = null,}) {
   return _then(_User(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
-as String,totpEnabled: null == totpEnabled ? _self.totpEnabled : totpEnabled // ignore: cast_nullable_to_non_nullable
+as String,bio: null == bio ? _self.bio : bio // ignore: cast_nullable_to_non_nullable
+as String,avatarId: freezed == avatarId ? _self.avatarId : avatarId // ignore: cast_nullable_to_non_nullable
+as String?,totpEnabled: null == totpEnabled ? _self.totpEnabled : totpEnabled // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -7292,6 +7298,879 @@ as String,from: null == from ? _self.from : from // ignore: cast_nullable_to_non
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,receivedAt: freezed == receivedAt ? _self.receivedAt : receivedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$ChatChannel {
+
+ String get id; String get kind; String get name; String get topic; int get unread;@JsonKey(name: 'last_body') String get lastBody;@JsonKey(name: 'last_at') DateTime? get lastAt;@JsonKey(name: 'last_has_file') bool get lastHasFile;@JsonKey(name: 'peer_id') String? get peerId;@JsonKey(name: 'peer_name') String get peerName;@JsonKey(name: 'peer_avatar') String? get peerAvatar;
+/// Create a copy of ChatChannel
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ChatChannelCopyWith<ChatChannel> get copyWith => _$ChatChannelCopyWithImpl<ChatChannel>(this as ChatChannel, _$identity);
+
+  /// Serializes this ChatChannel to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ChatChannel;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatChannel&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.topic, _this.topic) || other.topic == _this.topic)&&(identical(other.unread, _this.unread) || other.unread == _this.unread)&&(identical(other.lastBody, _this.lastBody) || other.lastBody == _this.lastBody)&&(identical(other.lastAt, _this.lastAt) || other.lastAt == _this.lastAt)&&(identical(other.lastHasFile, _this.lastHasFile) || other.lastHasFile == _this.lastHasFile)&&(identical(other.peerId, _this.peerId) || other.peerId == _this.peerId)&&(identical(other.peerName, _this.peerName) || other.peerName == _this.peerName)&&(identical(other.peerAvatar, _this.peerAvatar) || other.peerAvatar == _this.peerAvatar));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as ChatChannel;
+  return Object.hash(runtimeType,_this.id,_this.kind,_this.name,_this.topic,_this.unread,_this.lastBody,_this.lastAt,_this.lastHasFile,_this.peerId,_this.peerName,_this.peerAvatar);
+}
+
+@override
+String toString() {
+  final _this = this as ChatChannel;
+  return 'ChatChannel(id: ${_this.id}, kind: ${_this.kind}, name: ${_this.name}, topic: ${_this.topic}, unread: ${_this.unread}, lastBody: ${_this.lastBody}, lastAt: ${_this.lastAt}, lastHasFile: ${_this.lastHasFile}, peerId: ${_this.peerId}, peerName: ${_this.peerName}, peerAvatar: ${_this.peerAvatar})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ChatChannelCopyWith<$Res>  {
+  factory $ChatChannelCopyWith(ChatChannel value, $Res Function(ChatChannel) _then) = _$ChatChannelCopyWithImpl;
+@useResult
+$Res call({
+ String id, String kind, String name, String topic, int unread,@JsonKey(name: 'last_body') String lastBody,@JsonKey(name: 'last_at') DateTime? lastAt,@JsonKey(name: 'last_has_file') bool lastHasFile,@JsonKey(name: 'peer_id') String? peerId,@JsonKey(name: 'peer_name') String peerName,@JsonKey(name: 'peer_avatar') String? peerAvatar
+});
+
+
+
+
+}
+/// @nodoc
+class _$ChatChannelCopyWithImpl<$Res>
+    implements $ChatChannelCopyWith<$Res> {
+  _$ChatChannelCopyWithImpl(this._self, this._then);
+
+  final ChatChannel _self;
+  final $Res Function(ChatChannel) _then;
+
+/// Create a copy of ChatChannel
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? kind = null,Object? name = null,Object? topic = null,Object? unread = null,Object? lastBody = null,Object? lastAt = freezed,Object? lastHasFile = null,Object? peerId = freezed,Object? peerName = null,Object? peerAvatar = freezed,}) {
+  return _then(ChatChannel(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,topic: null == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
+as String,unread: null == unread ? _self.unread : unread // ignore: cast_nullable_to_non_nullable
+as int,lastBody: null == lastBody ? _self.lastBody : lastBody // ignore: cast_nullable_to_non_nullable
+as String,lastAt: freezed == lastAt ? _self.lastAt : lastAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,lastHasFile: null == lastHasFile ? _self.lastHasFile : lastHasFile // ignore: cast_nullable_to_non_nullable
+as bool,peerId: freezed == peerId ? _self.peerId : peerId // ignore: cast_nullable_to_non_nullable
+as String?,peerName: null == peerName ? _self.peerName : peerName // ignore: cast_nullable_to_non_nullable
+as String,peerAvatar: freezed == peerAvatar ? _self.peerAvatar : peerAvatar // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ChatChannel].
+extension ChatChannelPatterns on ChatChannel {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ChatChannel value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ChatChannel() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ChatChannel value)  $default,){
+final _that = this;
+switch (_that) {
+case _ChatChannel():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ChatChannel value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ChatChannel() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String kind,  String name,  String topic,  int unread, @JsonKey(name: 'last_body')  String lastBody, @JsonKey(name: 'last_at')  DateTime? lastAt, @JsonKey(name: 'last_has_file')  bool lastHasFile, @JsonKey(name: 'peer_id')  String? peerId, @JsonKey(name: 'peer_name')  String peerName, @JsonKey(name: 'peer_avatar')  String? peerAvatar)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ChatChannel() when $default != null:
+return $default(_that.id,_that.kind,_that.name,_that.topic,_that.unread,_that.lastBody,_that.lastAt,_that.lastHasFile,_that.peerId,_that.peerName,_that.peerAvatar);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String kind,  String name,  String topic,  int unread, @JsonKey(name: 'last_body')  String lastBody, @JsonKey(name: 'last_at')  DateTime? lastAt, @JsonKey(name: 'last_has_file')  bool lastHasFile, @JsonKey(name: 'peer_id')  String? peerId, @JsonKey(name: 'peer_name')  String peerName, @JsonKey(name: 'peer_avatar')  String? peerAvatar)  $default,) {final _that = this;
+switch (_that) {
+case _ChatChannel():
+return $default(_that.id,_that.kind,_that.name,_that.topic,_that.unread,_that.lastBody,_that.lastAt,_that.lastHasFile,_that.peerId,_that.peerName,_that.peerAvatar);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String kind,  String name,  String topic,  int unread, @JsonKey(name: 'last_body')  String lastBody, @JsonKey(name: 'last_at')  DateTime? lastAt, @JsonKey(name: 'last_has_file')  bool lastHasFile, @JsonKey(name: 'peer_id')  String? peerId, @JsonKey(name: 'peer_name')  String peerName, @JsonKey(name: 'peer_avatar')  String? peerAvatar)?  $default,) {final _that = this;
+switch (_that) {
+case _ChatChannel() when $default != null:
+return $default(_that.id,_that.kind,_that.name,_that.topic,_that.unread,_that.lastBody,_that.lastAt,_that.lastHasFile,_that.peerId,_that.peerName,_that.peerAvatar);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ChatChannel implements ChatChannel {
+  const _ChatChannel({required this.id, required this.kind, this.name = '', this.topic = '', this.unread = 0, @JsonKey(name: 'last_body') this.lastBody = '', @JsonKey(name: 'last_at') this.lastAt, @JsonKey(name: 'last_has_file') this.lastHasFile = false, @JsonKey(name: 'peer_id') this.peerId, @JsonKey(name: 'peer_name') this.peerName = '', @JsonKey(name: 'peer_avatar') this.peerAvatar});
+  factory _ChatChannel.fromJson(Map<String, dynamic> json) => _$ChatChannelFromJson(json);
+
+@override final  String id;
+@override final  String kind;
+@override@JsonKey() final  String name;
+@override@JsonKey() final  String topic;
+@override@JsonKey() final  int unread;
+@override@JsonKey(name: 'last_body') final  String lastBody;
+@override@JsonKey(name: 'last_at') final  DateTime? lastAt;
+@override@JsonKey(name: 'last_has_file') final  bool lastHasFile;
+@override@JsonKey(name: 'peer_id') final  String? peerId;
+@override@JsonKey(name: 'peer_name') final  String peerName;
+@override@JsonKey(name: 'peer_avatar') final  String? peerAvatar;
+
+/// Create a copy of ChatChannel
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ChatChannelCopyWith<_ChatChannel> get copyWith => __$ChatChannelCopyWithImpl<_ChatChannel>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ChatChannelToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatChannel&&(identical(other.id, id) || other.id == id)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.name, name) || other.name == name)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.unread, unread) || other.unread == unread)&&(identical(other.lastBody, lastBody) || other.lastBody == lastBody)&&(identical(other.lastAt, lastAt) || other.lastAt == lastAt)&&(identical(other.lastHasFile, lastHasFile) || other.lastHasFile == lastHasFile)&&(identical(other.peerId, peerId) || other.peerId == peerId)&&(identical(other.peerName, peerName) || other.peerName == peerName)&&(identical(other.peerAvatar, peerAvatar) || other.peerAvatar == peerAvatar));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,kind,name,topic,unread,lastBody,lastAt,lastHasFile,peerId,peerName,peerAvatar);
+}
+
+@override
+String toString() {
+    return 'ChatChannel(id: $id, kind: $kind, name: $name, topic: $topic, unread: $unread, lastBody: $lastBody, lastAt: $lastAt, lastHasFile: $lastHasFile, peerId: $peerId, peerName: $peerName, peerAvatar: $peerAvatar)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ChatChannelCopyWith<$Res> implements $ChatChannelCopyWith<$Res> {
+  factory _$ChatChannelCopyWith(_ChatChannel value, $Res Function(_ChatChannel) _then) = __$ChatChannelCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String kind, String name, String topic, int unread,@JsonKey(name: 'last_body') String lastBody,@JsonKey(name: 'last_at') DateTime? lastAt,@JsonKey(name: 'last_has_file') bool lastHasFile,@JsonKey(name: 'peer_id') String? peerId,@JsonKey(name: 'peer_name') String peerName,@JsonKey(name: 'peer_avatar') String? peerAvatar
+});
+
+
+
+
+}
+/// @nodoc
+class __$ChatChannelCopyWithImpl<$Res>
+    implements _$ChatChannelCopyWith<$Res> {
+  __$ChatChannelCopyWithImpl(this._self, this._then);
+
+  final _ChatChannel _self;
+  final $Res Function(_ChatChannel) _then;
+
+/// Create a copy of ChatChannel
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? kind = null,Object? name = null,Object? topic = null,Object? unread = null,Object? lastBody = null,Object? lastAt = freezed,Object? lastHasFile = null,Object? peerId = freezed,Object? peerName = null,Object? peerAvatar = freezed,}) {
+  return _then(_ChatChannel(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,topic: null == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
+as String,unread: null == unread ? _self.unread : unread // ignore: cast_nullable_to_non_nullable
+as int,lastBody: null == lastBody ? _self.lastBody : lastBody // ignore: cast_nullable_to_non_nullable
+as String,lastAt: freezed == lastAt ? _self.lastAt : lastAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,lastHasFile: null == lastHasFile ? _self.lastHasFile : lastHasFile // ignore: cast_nullable_to_non_nullable
+as bool,peerId: freezed == peerId ? _self.peerId : peerId // ignore: cast_nullable_to_non_nullable
+as String?,peerName: null == peerName ? _self.peerName : peerName // ignore: cast_nullable_to_non_nullable
+as String,peerAvatar: freezed == peerAvatar ? _self.peerAvatar : peerAvatar // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$ChatMessage {
+
+ String get id;@JsonKey(name: 'channel_id') String get channelId;@JsonKey(name: 'user_id') String? get userId;@JsonKey(name: 'author_name') String get authorName;@JsonKey(name: 'author_avatar') String? get authorAvatar; String get body;@JsonKey(name: 'attachment_id') String? get attachmentId;@JsonKey(name: 'created_at') DateTime? get createdAt;
+/// Create a copy of ChatMessage
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ChatMessageCopyWith<ChatMessage> get copyWith => _$ChatMessageCopyWithImpl<ChatMessage>(this as ChatMessage, _$identity);
+
+  /// Serializes this ChatMessage to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ChatMessage;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMessage&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.channelId, _this.channelId) || other.channelId == _this.channelId)&&(identical(other.userId, _this.userId) || other.userId == _this.userId)&&(identical(other.authorName, _this.authorName) || other.authorName == _this.authorName)&&(identical(other.authorAvatar, _this.authorAvatar) || other.authorAvatar == _this.authorAvatar)&&(identical(other.body, _this.body) || other.body == _this.body)&&(identical(other.attachmentId, _this.attachmentId) || other.attachmentId == _this.attachmentId)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as ChatMessage;
+  return Object.hash(runtimeType,_this.id,_this.channelId,_this.userId,_this.authorName,_this.authorAvatar,_this.body,_this.attachmentId,_this.createdAt);
+}
+
+@override
+String toString() {
+  final _this = this as ChatMessage;
+  return 'ChatMessage(id: ${_this.id}, channelId: ${_this.channelId}, userId: ${_this.userId}, authorName: ${_this.authorName}, authorAvatar: ${_this.authorAvatar}, body: ${_this.body}, attachmentId: ${_this.attachmentId}, createdAt: ${_this.createdAt})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ChatMessageCopyWith<$Res>  {
+  factory $ChatMessageCopyWith(ChatMessage value, $Res Function(ChatMessage) _then) = _$ChatMessageCopyWithImpl;
+@useResult
+$Res call({
+ String id,@JsonKey(name: 'channel_id') String channelId,@JsonKey(name: 'user_id') String? userId,@JsonKey(name: 'author_name') String authorName,@JsonKey(name: 'author_avatar') String? authorAvatar, String body,@JsonKey(name: 'attachment_id') String? attachmentId,@JsonKey(name: 'created_at') DateTime? createdAt
+});
+
+
+
+
+}
+/// @nodoc
+class _$ChatMessageCopyWithImpl<$Res>
+    implements $ChatMessageCopyWith<$Res> {
+  _$ChatMessageCopyWithImpl(this._self, this._then);
+
+  final ChatMessage _self;
+  final $Res Function(ChatMessage) _then;
+
+/// Create a copy of ChatMessage
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? channelId = null,Object? userId = freezed,Object? authorName = null,Object? authorAvatar = freezed,Object? body = null,Object? attachmentId = freezed,Object? createdAt = freezed,}) {
+  return _then(ChatMessage(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,channelId: null == channelId ? _self.channelId : channelId // ignore: cast_nullable_to_non_nullable
+as String,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String?,authorName: null == authorName ? _self.authorName : authorName // ignore: cast_nullable_to_non_nullable
+as String,authorAvatar: freezed == authorAvatar ? _self.authorAvatar : authorAvatar // ignore: cast_nullable_to_non_nullable
+as String?,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
+as String,attachmentId: freezed == attachmentId ? _self.attachmentId : attachmentId // ignore: cast_nullable_to_non_nullable
+as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ChatMessage].
+extension ChatMessagePatterns on ChatMessage {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ChatMessage value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ChatMessage() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ChatMessage value)  $default,){
+final _that = this;
+switch (_that) {
+case _ChatMessage():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ChatMessage value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ChatMessage() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'channel_id')  String channelId, @JsonKey(name: 'user_id')  String? userId, @JsonKey(name: 'author_name')  String authorName, @JsonKey(name: 'author_avatar')  String? authorAvatar,  String body, @JsonKey(name: 'attachment_id')  String? attachmentId, @JsonKey(name: 'created_at')  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ChatMessage() when $default != null:
+return $default(_that.id,_that.channelId,_that.userId,_that.authorName,_that.authorAvatar,_that.body,_that.attachmentId,_that.createdAt);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'channel_id')  String channelId, @JsonKey(name: 'user_id')  String? userId, @JsonKey(name: 'author_name')  String authorName, @JsonKey(name: 'author_avatar')  String? authorAvatar,  String body, @JsonKey(name: 'attachment_id')  String? attachmentId, @JsonKey(name: 'created_at')  DateTime? createdAt)  $default,) {final _that = this;
+switch (_that) {
+case _ChatMessage():
+return $default(_that.id,_that.channelId,_that.userId,_that.authorName,_that.authorAvatar,_that.body,_that.attachmentId,_that.createdAt);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'channel_id')  String channelId, @JsonKey(name: 'user_id')  String? userId, @JsonKey(name: 'author_name')  String authorName, @JsonKey(name: 'author_avatar')  String? authorAvatar,  String body, @JsonKey(name: 'attachment_id')  String? attachmentId, @JsonKey(name: 'created_at')  DateTime? createdAt)?  $default,) {final _that = this;
+switch (_that) {
+case _ChatMessage() when $default != null:
+return $default(_that.id,_that.channelId,_that.userId,_that.authorName,_that.authorAvatar,_that.body,_that.attachmentId,_that.createdAt);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ChatMessage implements ChatMessage {
+  const _ChatMessage({required this.id, @JsonKey(name: 'channel_id') required this.channelId, @JsonKey(name: 'user_id') this.userId, @JsonKey(name: 'author_name') this.authorName = '', @JsonKey(name: 'author_avatar') this.authorAvatar, this.body = '', @JsonKey(name: 'attachment_id') this.attachmentId, @JsonKey(name: 'created_at') this.createdAt});
+  factory _ChatMessage.fromJson(Map<String, dynamic> json) => _$ChatMessageFromJson(json);
+
+@override final  String id;
+@override@JsonKey(name: 'channel_id') final  String channelId;
+@override@JsonKey(name: 'user_id') final  String? userId;
+@override@JsonKey(name: 'author_name') final  String authorName;
+@override@JsonKey(name: 'author_avatar') final  String? authorAvatar;
+@override@JsonKey() final  String body;
+@override@JsonKey(name: 'attachment_id') final  String? attachmentId;
+@override@JsonKey(name: 'created_at') final  DateTime? createdAt;
+
+/// Create a copy of ChatMessage
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ChatMessageCopyWith<_ChatMessage> get copyWith => __$ChatMessageCopyWithImpl<_ChatMessage>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ChatMessageToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.channelId, channelId) || other.channelId == channelId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.authorName, authorName) || other.authorName == authorName)&&(identical(other.authorAvatar, authorAvatar) || other.authorAvatar == authorAvatar)&&(identical(other.body, body) || other.body == body)&&(identical(other.attachmentId, attachmentId) || other.attachmentId == attachmentId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,channelId,userId,authorName,authorAvatar,body,attachmentId,createdAt);
+}
+
+@override
+String toString() {
+    return 'ChatMessage(id: $id, channelId: $channelId, userId: $userId, authorName: $authorName, authorAvatar: $authorAvatar, body: $body, attachmentId: $attachmentId, createdAt: $createdAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ChatMessageCopyWith<$Res> implements $ChatMessageCopyWith<$Res> {
+  factory _$ChatMessageCopyWith(_ChatMessage value, $Res Function(_ChatMessage) _then) = __$ChatMessageCopyWithImpl;
+@override @useResult
+$Res call({
+ String id,@JsonKey(name: 'channel_id') String channelId,@JsonKey(name: 'user_id') String? userId,@JsonKey(name: 'author_name') String authorName,@JsonKey(name: 'author_avatar') String? authorAvatar, String body,@JsonKey(name: 'attachment_id') String? attachmentId,@JsonKey(name: 'created_at') DateTime? createdAt
+});
+
+
+
+
+}
+/// @nodoc
+class __$ChatMessageCopyWithImpl<$Res>
+    implements _$ChatMessageCopyWith<$Res> {
+  __$ChatMessageCopyWithImpl(this._self, this._then);
+
+  final _ChatMessage _self;
+  final $Res Function(_ChatMessage) _then;
+
+/// Create a copy of ChatMessage
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? channelId = null,Object? userId = freezed,Object? authorName = null,Object? authorAvatar = freezed,Object? body = null,Object? attachmentId = freezed,Object? createdAt = freezed,}) {
+  return _then(_ChatMessage(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,channelId: null == channelId ? _self.channelId : channelId // ignore: cast_nullable_to_non_nullable
+as String,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String?,authorName: null == authorName ? _self.authorName : authorName // ignore: cast_nullable_to_non_nullable
+as String,authorAvatar: freezed == authorAvatar ? _self.authorAvatar : authorAvatar // ignore: cast_nullable_to_non_nullable
+as String?,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
+as String,attachmentId: freezed == attachmentId ? _self.attachmentId : attachmentId // ignore: cast_nullable_to_non_nullable
+as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$ChatMember {
+
+ String get id;@JsonKey(name: 'full_name') String get fullName; String get email;@JsonKey(name: 'avatar_id') String? get avatarId; String get role;
+/// Create a copy of ChatMember
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ChatMemberCopyWith<ChatMember> get copyWith => _$ChatMemberCopyWithImpl<ChatMember>(this as ChatMember, _$identity);
+
+  /// Serializes this ChatMember to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ChatMember;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMember&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.fullName, _this.fullName) || other.fullName == _this.fullName)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.avatarId, _this.avatarId) || other.avatarId == _this.avatarId)&&(identical(other.role, _this.role) || other.role == _this.role));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as ChatMember;
+  return Object.hash(runtimeType,_this.id,_this.fullName,_this.email,_this.avatarId,_this.role);
+}
+
+@override
+String toString() {
+  final _this = this as ChatMember;
+  return 'ChatMember(id: ${_this.id}, fullName: ${_this.fullName}, email: ${_this.email}, avatarId: ${_this.avatarId}, role: ${_this.role})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ChatMemberCopyWith<$Res>  {
+  factory $ChatMemberCopyWith(ChatMember value, $Res Function(ChatMember) _then) = _$ChatMemberCopyWithImpl;
+@useResult
+$Res call({
+ String id,@JsonKey(name: 'full_name') String fullName, String email,@JsonKey(name: 'avatar_id') String? avatarId, String role
+});
+
+
+
+
+}
+/// @nodoc
+class _$ChatMemberCopyWithImpl<$Res>
+    implements $ChatMemberCopyWith<$Res> {
+  _$ChatMemberCopyWithImpl(this._self, this._then);
+
+  final ChatMember _self;
+  final $Res Function(ChatMember) _then;
+
+/// Create a copy of ChatMember
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? fullName = null,Object? email = null,Object? avatarId = freezed,Object? role = null,}) {
+  return _then(ChatMember(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
+as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
+as String,avatarId: freezed == avatarId ? _self.avatarId : avatarId // ignore: cast_nullable_to_non_nullable
+as String?,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ChatMember].
+extension ChatMemberPatterns on ChatMember {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ChatMember value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ChatMember() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ChatMember value)  $default,){
+final _that = this;
+switch (_that) {
+case _ChatMember():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ChatMember value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ChatMember() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'full_name')  String fullName,  String email, @JsonKey(name: 'avatar_id')  String? avatarId,  String role)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ChatMember() when $default != null:
+return $default(_that.id,_that.fullName,_that.email,_that.avatarId,_that.role);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'full_name')  String fullName,  String email, @JsonKey(name: 'avatar_id')  String? avatarId,  String role)  $default,) {final _that = this;
+switch (_that) {
+case _ChatMember():
+return $default(_that.id,_that.fullName,_that.email,_that.avatarId,_that.role);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'full_name')  String fullName,  String email, @JsonKey(name: 'avatar_id')  String? avatarId,  String role)?  $default,) {final _that = this;
+switch (_that) {
+case _ChatMember() when $default != null:
+return $default(_that.id,_that.fullName,_that.email,_that.avatarId,_that.role);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ChatMember implements ChatMember {
+  const _ChatMember({required this.id, @JsonKey(name: 'full_name') this.fullName = '', this.email = '', @JsonKey(name: 'avatar_id') this.avatarId, this.role = 'member'});
+  factory _ChatMember.fromJson(Map<String, dynamic> json) => _$ChatMemberFromJson(json);
+
+@override final  String id;
+@override@JsonKey(name: 'full_name') final  String fullName;
+@override@JsonKey() final  String email;
+@override@JsonKey(name: 'avatar_id') final  String? avatarId;
+@override@JsonKey() final  String role;
+
+/// Create a copy of ChatMember
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ChatMemberCopyWith<_ChatMember> get copyWith => __$ChatMemberCopyWithImpl<_ChatMember>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ChatMemberToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMember&&(identical(other.id, id) || other.id == id)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.avatarId, avatarId) || other.avatarId == avatarId)&&(identical(other.role, role) || other.role == role));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,fullName,email,avatarId,role);
+}
+
+@override
+String toString() {
+    return 'ChatMember(id: $id, fullName: $fullName, email: $email, avatarId: $avatarId, role: $role)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ChatMemberCopyWith<$Res> implements $ChatMemberCopyWith<$Res> {
+  factory _$ChatMemberCopyWith(_ChatMember value, $Res Function(_ChatMember) _then) = __$ChatMemberCopyWithImpl;
+@override @useResult
+$Res call({
+ String id,@JsonKey(name: 'full_name') String fullName, String email,@JsonKey(name: 'avatar_id') String? avatarId, String role
+});
+
+
+
+
+}
+/// @nodoc
+class __$ChatMemberCopyWithImpl<$Res>
+    implements _$ChatMemberCopyWith<$Res> {
+  __$ChatMemberCopyWithImpl(this._self, this._then);
+
+  final _ChatMember _self;
+  final $Res Function(_ChatMember) _then;
+
+/// Create a copy of ChatMember
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? fullName = null,Object? email = null,Object? avatarId = freezed,Object? role = null,}) {
+  return _then(_ChatMember(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
+as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
+as String,avatarId: freezed == avatarId ? _self.avatarId : avatarId // ignore: cast_nullable_to_non_nullable
+as String?,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

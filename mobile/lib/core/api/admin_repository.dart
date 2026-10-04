@@ -179,6 +179,49 @@ class AdminRepository {
           data: {'token': token, 'platform': platform, if (externalId != null && externalId.isNotEmpty) 'external_id': externalId, 'app_version': ?appVersion},
           headers: {'X-Api-Key': apiKey},
           noAuth: true));
+
+  // ---- profile + chat ----
+  Future<User> updateProfile({required String fullName, String bio = '', String? avatarId}) async =>
+      User.fromJson(await _api.request<Map<String, dynamic>>('PUT', '/api/admin/me/profile', data: {'full_name': fullName, 'bio': bio, 'avatar_id': ?avatarId}));
+
+  Future<String> uploadAttachment({required String filename, required List<int> bytes}) async {
+    final form = FormData.fromMap({'file': MultipartFile.fromBytes(bytes, filename: filename)});
+    final data = await _api.request<Map<String, dynamic>>('POST', '/api/admin/attachments', data: form);
+    return data['id'] as String;
+  }
+
+  Future<List<int>> attachmentBytes(String id) => _api.bytes('/api/admin/attachments/$id');
+
+  Future<List<ChatChannel>> chatChannels() async =>
+      (await _api.request<List<dynamic>>('GET', '/api/admin/chat/channels')).map((e) => ChatChannel.fromJson(e as Map<String, dynamic>)).toList();
+
+  Future<List<ChatMessage>> chatMessages(String channelId, {String? before}) async =>
+      (await _api.request<List<dynamic>>('GET', '/api/admin/chat/channels/$channelId/messages', query: {'before': ?before}))
+          .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+  Future<List<ChatMember>> chatMembers(String channelId) async =>
+      (await _api.request<List<dynamic>>('GET', '/api/admin/chat/channels/$channelId/members')).map((e) => ChatMember.fromJson(e as Map<String, dynamic>)).toList();
+
+  Future<ChatMessage> postChatMessage(String channelId, {String body = '', String? attachmentId}) async =>
+      ChatMessage.fromJson(await _api.request<Map<String, dynamic>>('POST', '/api/admin/chat/channels/$channelId/messages', data: {'body': body, 'attachment_id': ?attachmentId}));
+
+  Future<void> deleteChatMessage(String channelId, String messageId) => _api.request<void>('DELETE', '/api/admin/chat/channels/$channelId/messages/$messageId');
+
+  Future<void> markChatRead(String channelId) => _api.request<void>('POST', '/api/admin/chat/channels/$channelId/read');
+
+  Future<String> createChatChannel({required String kind, required String name, List<String> members = const []}) async {
+    final data = await _api.request<Map<String, dynamic>>('POST', '/api/admin/chat/channels', data: {'kind': kind, 'name': name, 'members': members});
+    return data['id'] as String;
+  }
+
+  Future<String> openDirect(String userId) async {
+    final data = await _api.request<Map<String, dynamic>>('POST', '/api/admin/chat/direct', data: {'user_id': userId});
+    return data['id'] as String;
+  }
+
+  Future<List<User>> users() async =>
+      (await _api.request<List<dynamic>>('GET', '/api/admin/users')).map((e) => User.fromJson(e as Map<String, dynamic>)).toList();
 }
 
 final adminRepositoryProvider = Provider<AdminRepository>((ref) => AdminRepository(ref.watch(apiClientProvider)));

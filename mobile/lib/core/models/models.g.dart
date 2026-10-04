@@ -34,6 +34,8 @@ _User _$UserFromJson(Map<String, dynamic> json) => _User(
   id: json['id'] as String,
   email: json['email'] as String,
   fullName: json['full_name'] as String? ?? '',
+  bio: json['bio'] as String? ?? '',
+  avatarId: json['avatar_id'] as String?,
   totpEnabled: json['totp_enabled'] as bool? ?? false,
 );
 
@@ -41,6 +43,8 @@ Map<String, dynamic> _$UserToJson(_User instance) => <String, dynamic>{
   'id': instance.id,
   'email': instance.email,
   'full_name': instance.fullName,
+  'bio': instance.bio,
+  'avatar_id': instance.avatarId,
   'totp_enabled': instance.totpEnabled,
 };
 
@@ -545,4 +549,77 @@ Map<String, dynamic> _$InboundSmsToJson(_InboundSms instance) =>
       'from': instance.from,
       'text': instance.text,
       'received_at': instance.receivedAt?.toIso8601String(),
+    };
+
+_ChatChannel _$ChatChannelFromJson(Map<String, dynamic> json) => _ChatChannel(
+  id: json['id'] as String,
+  kind: json['kind'] as String,
+  name: json['name'] as String? ?? '',
+  topic: json['topic'] as String? ?? '',
+  unread: (json['unread'] as num?)?.toInt() ?? 0,
+  lastBody: json['last_body'] as String? ?? '',
+  lastAt: json['last_at'] == null
+      ? null
+      : DateTime.parse(json['last_at'] as String),
+  lastHasFile: json['last_has_file'] as bool? ?? false,
+  peerId: json['peer_id'] as String?,
+  peerName: json['peer_name'] as String? ?? '',
+  peerAvatar: json['peer_avatar'] as String?,
+);
+
+Map<String, dynamic> _$ChatChannelToJson(_ChatChannel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'kind': instance.kind,
+      'name': instance.name,
+      'topic': instance.topic,
+      'unread': instance.unread,
+      'last_body': instance.lastBody,
+      'last_at': instance.lastAt?.toIso8601String(),
+      'last_has_file': instance.lastHasFile,
+      'peer_id': instance.peerId,
+      'peer_name': instance.peerName,
+      'peer_avatar': instance.peerAvatar,
+    };
+
+_ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => _ChatMessage(
+  id: json['id'] as String,
+  channelId: json['channel_id'] as String,
+  userId: json['user_id'] as String?,
+  authorName: json['author_name'] as String? ?? '',
+  authorAvatar: json['author_avatar'] as String?,
+  body: json['body'] as String? ?? '',
+  attachmentId: json['attachment_id'] as String?,
+  createdAt: json['created_at'] == null
+      ? null
+      : DateTime.parse(json['created_at'] as String),
+);
+
+Map<String, dynamic> _$ChatMessageToJson(_ChatMessage instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'channel_id': instance.channelId,
+      'user_id': instance.userId,
+      'author_name': instance.authorName,
+      'author_avatar': instance.authorAvatar,
+      'body': instance.body,
+      'attachment_id': instance.attachmentId,
+      'created_at': instance.createdAt?.toIso8601String(),
+    };
+
+_ChatMember _$ChatMemberFromJson(Map<String, dynamic> json) => _ChatMember(
+  id: json['id'] as String,
+  fullName: json['full_name'] as String? ?? '',
+  email: json['email'] as String? ?? '',
+  avatarId: json['avatar_id'] as String?,
+  role: json['role'] as String? ?? 'member',
+);
+
+Map<String, dynamic> _$ChatMemberToJson(_ChatMember instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'full_name': instance.fullName,
+      'email': instance.email,
+      'avatar_id': instance.avatarId,
+      'role': instance.role,
     };

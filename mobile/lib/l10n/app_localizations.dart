@@ -1095,6 +1095,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{n} permanently deleted'**
   String purgedAll(int n);
+
+  /// No description provided for @chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Team chat'**
+  String get chat;
+
+  /// No description provided for @chatNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get chatNew;
+
+  /// No description provided for @chatDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get chatDirect;
+
+  /// No description provided for @chatChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get chatChannel;
+
+  /// No description provided for @chatPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get chatPublic;
+
+  /// No description provided for @chatPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get chatPrivate;
+
+  /// No description provided for @chatName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get chatName;
+
+  /// No description provided for @chatMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a message…'**
+  String get chatMessage;
+
+  /// No description provided for @chatNoMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get chatNoMessages;
+
+  /// No description provided for @chatEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats yet. Start a direct message or create a channel.'**
+  String get chatEmpty;
+
+  /// No description provided for @profileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileTitle;
+
+  /// No description provided for @uploadPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload photo'**
+  String get uploadPhoto;
+
+  /// No description provided for @profileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile saved'**
+  String get profileSaved;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get bio;
 }
 
 class _AppLocalizationsDelegate

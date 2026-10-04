@@ -6,6 +6,9 @@ import 'core/auth/auth_controller.dart';
 import 'features/api_keys/api_keys_screen.dart';
 import 'features/compose/compose_screen.dart';
 import 'features/contacts/contacts_screen.dart';
+import 'features/chat/chat_screen.dart';
+import 'features/chat/conversation_screen.dart';
+import 'features/chat/profile_screen.dart';
 import 'features/contacts/trash_screen.dart';
 import 'features/groups/groups_screen.dart';
 import 'features/inbound/inbound_screen.dart';
@@ -61,6 +64,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(path: '/templates', builder: (_, _) => const TemplatesScreen()),
             GoRoute(path: '/providers', builder: (_, _) => const ProvidersScreen()),
             GoRoute(path: '/contacts', builder: (_, _) => const ContactsScreen(), routes: [GoRoute(path: 'trash', builder: (_, _) => const ContactsTrashScreen())]),
+            GoRoute(path: '/chat', builder: (_, _) => const ChatScreen(), routes: [GoRoute(path: ':id', builder: (_, s) => ChatConversationScreen(channelId: s.pathParameters['id']!))]),
+            GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
             GoRoute(path: '/inbound', builder: (_, _) => const InboundScreen()),
             GoRoute(path: '/api-keys', builder: (_, _) => const ApiKeysScreen()),
             GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),

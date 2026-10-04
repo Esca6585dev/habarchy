@@ -113,6 +113,12 @@ class ApiClient {
   }
 
   /// Returns data and meta (for paginated lists).
+  /// Fetches raw bytes (images) through the authenticated dio client.
+  Future<List<int>> bytes(String path) async {
+    final res = await dio.get<List<int>>(path, options: Options(responseType: ResponseType.bytes));
+    return res.data ?? const [];
+  }
+
   Future<(T, Map<String, dynamic>)> requestWithMeta<T>(String path, {Map<String, dynamic>? query, String method = 'GET', Object? data}) async {
     final res = await dio.request<dynamic>(path, queryParameters: query, data: data, options: Options(method: method));
     final code = res.statusCode ?? 0;

@@ -165,5 +165,19 @@
   "emptyTrash": "Sebet boş",
   "softDeleteHint": "Pozulan kontaktlar şu ýerde saklanýar we dikeldip bolýar. Diňe hemişelik pozanyňyzda doly aýrylýar.",
   "restored": "Dikeldildi",
-  "purgedAll": "{n} hemişelik pozuldy"
+  "purgedAll": "{n} hemişelik pozuldy",
+  "chat": "Topar çaty",
+  "chatNew": "Täze",
+  "chatDirect": "Şahsy",
+  "chatChannel": "Kanal",
+  "chatPublic": "Açyk",
+  "chatPrivate": "Ýapyk",
+  "chatName": "Ady",
+  "chatMessage": "Habar ýaz…",
+  "chatNoMessages": "Heniz habar ýok",
+  "chatEmpty": "Heniz çat ýok. Şahsy ýazyşyk başla ýa-da kanal döret.",
+  "profileTitle": "Profil",
+  "uploadPhoto": "Surat ýükle",
+  "profileSaved": "Profil ýatda saklandy",
+  "bio": "Hakynda"
 }
