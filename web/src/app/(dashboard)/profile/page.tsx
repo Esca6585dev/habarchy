@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar } from "@/components/chat/avatar";
+import type { User } from "@/lib/api/types";
 
 export default function ProfilePage() {
   const t = useTranslations("profile");
@@ -20,6 +23,10 @@ export default function ProfilePage() {
   const { data: me } = useMe();
   const qc = useQueryClient();
   const router = useRouter();
+  const u = me as User | undefined;
+  const [profile, setProfile] = useState({ full_name: "", bio: "" });
+  const [avatarId, setAvatarId] = useState<string | null | undefined>(undefined);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [pw, setPw] = useState({ current: "", next: "" });
   const [setup, setSetup] = useState<{ secret: string; otpauth_url: string } | null>(null);
   const [code, setCode] = useState("");
@@ -30,6 +37,18 @@ export default function ProfilePage() {
     onSuccess: () => { toast.success(t("passwordChanged")); setPw({ current: "", next: "" }); },
     onError: (e: ApiError) => toast.error(e.message),
   });
+  const saveProfile = useMutation({
+    mutationFn: async () => unwrap<User>(await api.PUT("/api/admin/me/profile", { body: { full_name: profile.full_name || u?.full_name || "", bio: profile.bio, avatar_id: (avatarId === undefined ? u?.avatar_id : avatarId) ?? undefined } })),
+    onSuccess: () => { toast.success(t("profileSaved")); void qc.invalidateQueries({ queryKey: qk.me }); },
+    onError: (e: ApiError) => toast.error(e.message),
+  });
+  const uploadAvatar = async (file: File) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/backend/api/admin/attachments", { method: "POST", body: fd });
+    if (!res.ok) return void toast.error(tc("error"));
+    setAvatarId(((await res.json()) as { data: { id: string } }).data.id);
+  };
   const start = useMutation({
     mutationFn: async () => unwrap<{ secret: string; otpauth_url: string }>(await api.POST("/api/admin/me/totp/setup")),
     onSuccess: setSetup,
@@ -54,6 +73,23 @@ export default function ProfilePage() {
     <>
       <PageHeader title={t("title")} description={me?.email} />
       <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="lg:col-span-2">
+          <CardHeader><CardTitle>{t("profileTitle")}</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              <div className="flex flex-col items-center gap-2">
+                <Avatar name={profile.full_name || u?.full_name} avatarId={avatarId === undefined ? u?.avatar_id : avatarId} size={72} />
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadAvatar(f); e.target.value = ""; }} />
+                <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>{t("uploadPhoto")}</Button>
+              </div>
+              <div className="flex-1 space-y-3">
+                <Field label={t("name")} htmlFor="pf-name"><Input id="pf-name" value={profile.full_name || u?.full_name || ""} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} /></Field>
+                <Field label={t("bio")} htmlFor="pf-bio"><Textarea id="pf-bio" rows={2} value={profile.bio || u?.bio || ""} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} /></Field>
+                <Button onClick={() => saveProfile.mutate()} disabled={saveProfile.isPending}>{tc("save")}</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader><CardTitle>{t("changePassword")}</CardTitle></CardHeader>
           <CardContent>

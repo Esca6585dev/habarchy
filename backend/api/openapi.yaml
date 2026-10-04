@@ -2223,6 +2223,8 @@ components:
         totp_enabled: { type: boolean }
         last_login_at: { type: [string, "null"], format: date-time }
         created_at: { type: string, format: date-time }
+        bio: { type: string }
+        avatar_id: { type: [string, "null"], format: uuid }
     Overview:
       type: object
       properties:

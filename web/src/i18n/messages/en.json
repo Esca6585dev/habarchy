@@ -22,7 +22,8 @@
     "queues": "Queues",
     "groups": "Groups",
     "compose": "Send message",
-    "inbound": "Inbound SMS"
+    "inbound": "Inbound SMS",
+    "chat": "Team chat"
   },
   "common": {
     "save": "Save",
@@ -337,7 +338,12 @@
     "confirm": "Confirm",
     "twoFactorOn": "Two-factor authentication enabled",
     "twoFactorOff": "Two-factor authentication disabled",
-    "sessions": "Sign out everywhere"
+    "sessions": "Sign out everywhere",
+    "name": "Name",
+    "bio": "About",
+    "uploadPhoto": "Upload photo",
+    "profileTitle": "Profile",
+    "profileSaved": "Profile saved"
   },
   "status": {
     "queued": "Queued",
@@ -400,5 +406,26 @@
     "provider": "Phone",
     "hint": "SMS received by the project’s gateway phones with inbound forwarding switched on (provider setting inbound_enabled + the switch in the phone app). Also available at GET /api/v1/inbound and as the sms.inbound webhook.",
     "empty": "No inbound SMS yet"
+  },
+  "chat": {
+    "title": "Team chat",
+    "new": "New",
+    "channel": "Channel",
+    "direct": "Direct message",
+    "kind": "Type",
+    "public": "Public (everyone)",
+    "private": "Private group",
+    "name": "Name",
+    "members": "Members",
+    "message": "Write a message…",
+    "attachImage": "Attach image",
+    "noMessages": "No messages yet",
+    "empty": "No channels yet. Create one or start a direct message.",
+    "pick": "Pick a channel to start chatting",
+    "profileTitle": "Profile",
+    "avatar": "Photo",
+    "bio": "About",
+    "uploadPhoto": "Upload photo",
+    "profileSaved": "Profile saved"
   }
 }

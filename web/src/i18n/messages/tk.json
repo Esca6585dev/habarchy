@@ -22,7 +22,8 @@
     "queues": "Nobatlar",
     "groups": "Toparlar",
     "compose": "Habar iber",
-    "inbound": "Gelen SMS"
+    "inbound": "Gelen SMS",
+    "chat": "Topar çaty"
   },
   "common": {
     "save": "Ýatda sakla",
@@ -337,7 +338,12 @@
     "confirm": "Tassykla",
     "twoFactorOn": "Iki basgançakly tassyklama açyldy",
     "twoFactorOff": "Iki basgançakly tassyklama ýapyldy",
-    "sessions": "Hemme ýerden çyk"
+    "sessions": "Hemme ýerden çyk",
+    "name": "Ady",
+    "bio": "Hakynda",
+    "uploadPhoto": "Surat ýükle",
+    "profileTitle": "Profil",
+    "profileSaved": "Profil ýatda saklandy"
   },
   "status": {
     "queued": "Nobatda",
@@ -400,5 +406,26 @@
     "provider": "Telefon",
     "hint": "Gelen SMS-leri ugratmak açyk bolan şlýuz-telefonlaryň alan SMS-leri (providerde inbound_enabled + telefon programmasyndaky düwme). GET /api/v1/inbound we sms.inbound webhook arkaly hem alyp bolýar.",
     "empty": "Heniz gelen SMS ýok"
+  },
+  "chat": {
+    "title": "Topar çaty",
+    "new": "Täze",
+    "channel": "Kanal",
+    "direct": "Şahsy habar",
+    "kind": "Görnüşi",
+    "public": "Açyk (hemmä)",
+    "private": "Ýapyk topar",
+    "name": "Ady",
+    "members": "Agzalar",
+    "message": "Habar ýaz…",
+    "attachImage": "Surat goş",
+    "noMessages": "Heniz habar ýok",
+    "empty": "Heniz kanal ýok. Kanal dörediň ýa-da şahsy ýazyşyk başladyň.",
+    "pick": "Ýazyşmak üçin kanal saýlaň",
+    "profileTitle": "Profil",
+    "avatar": "Surat",
+    "bio": "Hakynda",
+    "uploadPhoto": "Surat ýükle",
+    "profileSaved": "Profil ýatda saklandy"
   }
 }

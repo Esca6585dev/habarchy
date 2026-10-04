@@ -5112,6 +5112,9 @@ export interface components {
             last_login_at?: string | null;
             /** Format: date-time */
             created_at?: string;
+            bio?: string;
+            /** Format: uuid */
+            avatar_id?: string | null;
         };
         Overview: {
             projects?: number;
