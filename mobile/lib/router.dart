@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import 'core/auth/auth_controller.dart';
 import 'features/api_keys/api_keys_screen.dart';
+import 'features/compose/compose_screen.dart';
+import 'features/contacts/contacts_screen.dart';
+import 'features/groups/groups_screen.dart';
+import 'features/more/more_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/login/login_screen.dart';
 import 'features/messages/message_detail_screen.dart';
@@ -48,10 +52,16 @@ final routerProvider = Provider<GoRouter>((ref) {
               routes: [GoRoute(path: ':id', builder: (_, s) => MessageDetailScreen(id: s.pathParameters['id']!))],
             ),
           ]),
-          StatefulShellBranch(routes: [GoRoute(path: '/templates', builder: (_, _) => const TemplatesScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/providers', builder: (_, _) => const ProvidersScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/api-keys', builder: (_, _) => const ApiKeysScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen())]),
+          StatefulShellBranch(routes: [GoRoute(path: '/compose', builder: (_, s) => ComposeScreen(initialGroupId: s.uri.queryParameters['group']))]),
+          StatefulShellBranch(routes: [GoRoute(path: '/groups', builder: (_, _) => const GroupsScreen())]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/more', builder: (_, _) => const MoreScreen()),
+            GoRoute(path: '/templates', builder: (_, _) => const TemplatesScreen()),
+            GoRoute(path: '/providers', builder: (_, _) => const ProvidersScreen()),
+            GoRoute(path: '/contacts', builder: (_, _) => const ContactsScreen()),
+            GoRoute(path: '/api-keys', builder: (_, _) => const ApiKeysScreen()),
+            GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+          ]),
         ],
       ),
     ],

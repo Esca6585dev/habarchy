@@ -62,6 +62,69 @@ class AdminRepository {
   Future<Map<String, dynamic>> testSend(String projectId, String providerId, String to, {String? text}) =>
       _api.request<Map<String, dynamic>>('POST', '/api/admin/projects/$projectId/providers/$providerId/test', data: {'to': to, 'text': ?text});
 
+  Future<ProviderDetail> provider(String projectId, String id) async =>
+      ProviderDetail.fromJson(await _api.request<Map<String, dynamic>>('GET', '/api/admin/projects/$projectId/providers/$id'));
+
+  Future<ProviderDetail> createProvider(String projectId, Map<String, dynamic> body) async =>
+      ProviderDetail.fromJson(await _api.request<Map<String, dynamic>>('POST', '/api/admin/projects/$projectId/providers', data: body));
+
+  Future<ProviderDetail> updateProvider(String projectId, String id, Map<String, dynamic> body) async =>
+      ProviderDetail.fromJson(await _api.request<Map<String, dynamic>>('PUT', '/api/admin/projects/$projectId/providers/$id', data: body));
+
+  Future<void> deleteProvider(String projectId, String id) => _api.request<void>('DELETE', '/api/admin/projects/$projectId/providers/$id');
+
+  Future<Pairing> pairing(String projectId, String id) async =>
+      Pairing.fromJson(await _api.request<Map<String, dynamic>>('GET', '/api/admin/projects/$projectId/providers/$id/pairing'));
+
+  // ---- contacts ----
+  Future<List<Contact>> contacts(String projectId, {String? search, int limit = 100, int offset = 0}) async =>
+      (await _api.request<List<dynamic>>('GET', '/api/admin/projects/$projectId/contacts',
+              query: {if (search != null && search.isNotEmpty) 'search': search, 'limit': limit, 'offset': offset}))
+          .map((e) => Contact.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+  Future<Contact> createContact(String projectId, Map<String, dynamic> body) async =>
+      Contact.fromJson(await _api.request<Map<String, dynamic>>('POST', '/api/admin/projects/$projectId/contacts', data: body));
+
+  Future<Contact> updateContact(String projectId, String id, Map<String, dynamic> body) async =>
+      Contact.fromJson(await _api.request<Map<String, dynamic>>('PUT', '/api/admin/projects/$projectId/contacts/$id', data: body));
+
+  Future<void> deleteContact(String projectId, String id) => _api.request<void>('DELETE', '/api/admin/projects/$projectId/contacts/$id');
+
+  // ---- groups ----
+  Future<List<Group>> groups(String projectId) async =>
+      (await _api.request<List<dynamic>>('GET', '/api/admin/projects/$projectId/groups')).map((e) => Group.fromJson(e as Map<String, dynamic>)).toList();
+
+  Future<Group> createGroup(String projectId, String name, {String description = ''}) async =>
+      Group.fromJson(await _api.request<Map<String, dynamic>>('POST', '/api/admin/projects/$projectId/groups', data: {'name': name, 'description': description}));
+
+  Future<Group> updateGroup(String projectId, String id, String name, {String description = ''}) async =>
+      Group.fromJson(await _api.request<Map<String, dynamic>>('PUT', '/api/admin/projects/$projectId/groups/$id', data: {'name': name, 'description': description}));
+
+  Future<void> deleteGroup(String projectId, String id) => _api.request<void>('DELETE', '/api/admin/projects/$projectId/groups/$id');
+
+  Future<List<Contact>> groupMembers(String projectId, String id) async =>
+      (await _api.request<List<dynamic>>('GET', '/api/admin/projects/$projectId/groups/$id/members', query: {'limit': 500}))
+          .map((e) => Contact.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+  Future<MembersResult> addGroupMembers(String projectId, String id, {List<String> contactIds = const [], List<Map<String, dynamic>> contacts = const []}) async =>
+      MembersResult.fromJson(await _api.request<Map<String, dynamic>>('POST', '/api/admin/projects/$projectId/groups/$id/members',
+          data: {'contact_ids': contactIds, 'contacts': contacts}));
+
+  Future<void> removeGroupMember(String projectId, String id, String contactId) =>
+      _api.request<void>('DELETE', '/api/admin/projects/$projectId/groups/$id/members/$contactId');
+
+  // ---- compose ----
+  Future<SendOutcome> send(String projectId, Map<String, dynamic> body) async {
+    final (data, meta) = await _api.requestWithMeta<Map<String, dynamic>>('/api/admin/projects/$projectId/messages/send', method: 'POST', data: body);
+    return SendOutcome(
+      batchId: data['id'] as String? ?? '',
+      accepted: (meta['accepted'] as num?)?.toInt() ?? 0,
+      rejected: ((meta['rejected'] as List<dynamic>?) ?? const []).map((e) => e as Map<String, dynamic>).toList(),
+    );
+  }
+
   Future<List<ApiKey>> apiKeys(String projectId) async =>
       (await _api.request<List<dynamic>>('GET', '/api/admin/projects/$projectId/api-keys')).map((e) => ApiKey.fromJson(e as Map<String, dynamic>)).toList();
 

@@ -84,6 +84,10 @@ Color channelColor(String channel) {
       return const Color(0xFFD97706);
     case 'telegram':
       return const Color(0xFF0EA5E9);
+    case 'whatsapp':
+      return const Color(0xFF16A34A);
+    case 'slack':
+      return const Color(0xFF9333EA);
     default:
       return Colors.grey;
   }
@@ -99,6 +103,10 @@ IconData channelIcon(String channel) {
       return Icons.notifications_outlined;
     case 'telegram':
       return Icons.send_outlined;
+    case 'whatsapp':
+      return Icons.chat_outlined;
+    case 'slack':
+      return Icons.tag;
     default:
       return Icons.hub_outlined;
   }

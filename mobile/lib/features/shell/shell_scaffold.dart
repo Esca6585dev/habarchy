@@ -17,10 +17,9 @@ class ShellScaffold extends ConsumerWidget {
     final items = [
       (Icons.dashboard_outlined, Icons.dashboard, t.dashboard),
       (Icons.forum_outlined, Icons.forum, t.messages),
-      (Icons.description_outlined, Icons.description, t.templates),
-      (Icons.power_outlined, Icons.power, t.providers),
-      (Icons.key_outlined, Icons.key, t.apiKeys),
-      (Icons.settings_outlined, Icons.settings, t.settings),
+      (Icons.send_outlined, Icons.send, t.compose),
+      (Icons.groups_outlined, Icons.groups, t.groups),
+      (Icons.more_horiz, Icons.more_horiz, t.more),
     ];
     void go(int i) => shell.goBranch(i, initialLocation: i == shell.currentIndex);
 
@@ -50,7 +49,7 @@ class ShellScaffold extends ConsumerWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: shell.currentIndex,
         onDestinationSelected: go,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         destinations: [for (final i in items) NavigationDestination(icon: Icon(i.$1), selectedIcon: Icon(i.$2), label: i.$3)],
       ),
     );

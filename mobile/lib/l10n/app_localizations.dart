@@ -621,6 +621,336 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Variables'**
   String get requiredVars;
+
+  /// No description provided for @groups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groups;
+
+  /// No description provided for @contacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get contacts;
+
+  /// No description provided for @compose.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get compose;
+
+  /// No description provided for @more.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get more;
+
+  /// No description provided for @newGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get newGroup;
+
+  /// No description provided for @groupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupName;
+
+  /// No description provided for @description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get description;
+
+  /// No description provided for @members.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get members;
+
+  /// No description provided for @addMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Add members'**
+  String get addMembers;
+
+  /// No description provided for @pickContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing contacts'**
+  String get pickContacts;
+
+  /// No description provided for @newContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'New contacts'**
+  String get newContacts;
+
+  /// No description provided for @newContactsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One per line: Name, +99365…, mail@…'**
+  String get newContactsHint;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @sendToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to group'**
+  String get sendToGroup;
+
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phone;
+
+  /// No description provided for @whatsapp.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get whatsapp;
+
+  /// No description provided for @telegram.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram chat id'**
+  String get telegram;
+
+  /// No description provided for @slack.
+  ///
+  /// In en, this message translates to:
+  /// **'Slack id'**
+  String get slack;
+
+  /// No description provided for @newContact.
+  ///
+  /// In en, this message translates to:
+  /// **'New contact'**
+  String get newContact;
+
+  /// No description provided for @editContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit contact'**
+  String get editContact;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @confirmDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String confirmDelete(String name);
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @template.
+  ///
+  /// In en, this message translates to:
+  /// **'Template'**
+  String get template;
+
+  /// No description provided for @freeText.
+  ///
+  /// In en, this message translates to:
+  /// **'Free text'**
+  String get freeText;
+
+  /// No description provided for @subject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject / title'**
+  String get subject;
+
+  /// No description provided for @body.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get body;
+
+  /// No description provided for @templateData.
+  ///
+  /// In en, this message translates to:
+  /// **'Template data (JSON)'**
+  String get templateData;
+
+  /// No description provided for @sandboxMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Test mode (sandbox, nothing is really sent)'**
+  String get sandboxMode;
+
+  /// No description provided for @recipients.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipients'**
+  String get recipients;
+
+  /// No description provided for @addresses.
+  ///
+  /// In en, this message translates to:
+  /// **'Addresses, one per line'**
+  String get addresses;
+
+  /// No description provided for @addressesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Phones, e-mails or chat ids depending on the channel'**
+  String get addressesHint;
+
+  /// No description provided for @queuedRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} queued · {m} rejected'**
+  String queuedRejected(int n, int m);
+
+  /// No description provided for @selectRecipients.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a group or type an address'**
+  String get selectRecipients;
+
+  /// No description provided for @noGroupsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups yet. Create “Colleagues”, “Customers”… and add members.'**
+  String get noGroupsYet;
+
+  /// No description provided for @added.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} added · {created} new contacts'**
+  String added(int n, int created);
+
+  /// No description provided for @newProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'New provider'**
+  String get newProvider;
+
+  /// No description provided for @editProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit provider'**
+  String get editProvider;
+
+  /// No description provided for @providerType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get providerType;
+
+  /// No description provided for @priority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority (lower first)'**
+  String get priority;
+
+  /// No description provided for @rateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limit (msg/s, 0 = off)'**
+  String get rateLimit;
+
+  /// No description provided for @active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get active;
+
+  /// No description provided for @credentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials'**
+  String get credentials;
+
+  /// No description provided for @keepCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to keep the current credentials'**
+  String get keepCredentials;
+
+  /// No description provided for @pairing.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair phone'**
+  String get pairing;
+
+  /// No description provided for @pairingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Install the Habarçy Gateway APK on a phone with a SIM card, enter this URL and key, press Start.'**
+  String get pairingHint;
+
+  /// No description provided for @gatewayKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Gateway key'**
+  String get gatewayKey;
+
+  /// No description provided for @apiUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'API URL'**
+  String get apiUrl;
+
+  /// No description provided for @online.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get online;
+
+  /// No description provided for @offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get offline;
+
+  /// No description provided for @whatsappHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Free text works inside the 24 h window; otherwise an approved template is needed.'**
+  String get whatsappHint;
+
+  /// No description provided for @contactHint.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one of phone, e-mail, WhatsApp, Telegram or Slack is required.'**
+  String get contactHint;
+
+  /// No description provided for @openMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Open message log'**
+  String get openMessages;
+
+  /// No description provided for @noMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'No members yet'**
+  String get noMembers;
 }
 
 class _AppLocalizationsDelegate

@@ -4,6 +4,13 @@
 
 **EN:** Flutter 3 client for the Habarchy admin API (Riverpod 3, go_router, dio, freezed, fl_chart) plus a push demo built on `firebase_messaging`.
 
+Tabs: **Dashboard · Messages · Send · Groups · More** (templates, providers, contacts, API keys,
+settings). *Send* composes to groups and/or typed addresses over SMS, WhatsApp, Telegram, e-mail,
+push or Slack, with templates or free text and a sandbox switch. *Groups* manages contact groups
+(colleagues, classmates, customers…) with a contact picker and "Name, +99365…" quick entry.
+*Providers* has typed forms for every provider type (SMTP, SMPP, HTTP SMS, Telegram, WhatsApp Cloud,
+Slack, FCM, Android phone gateway with pairing key).
+
 ```
 lib/
   main.dart, app.dart, router.dart          # bootstrap, Material 3 theme, auth-aware routes

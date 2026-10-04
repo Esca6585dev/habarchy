@@ -13,6 +13,8 @@ blocked user, bad credentials) fail the message immediately with a clear `error_
 | `smtp` | email | SMTP with none / STARTTLS / TLS, auth auto-detect |
 | `fcm` | push | Firebase Cloud Messaging HTTP v1 with a service account |
 | `telegram_bot` | telegram | Telegram Bot API `sendMessage` |
+| `whatsapp_cloud` | whatsapp | Meta WhatsApp Business Cloud API (text inside the 24 h window, approved templates otherwise) |
+| `slack` | slack | Slack `chat.postMessage` with a bot token, or an incoming webhook |
 
 Credentials are stored **AES-256-GCM encrypted** (`HABARCHY_MASTER_KEY`), bound to the
 provider id, and are never returned by the API. `GET /providers/{id}` returns
@@ -142,6 +144,40 @@ invalid and the device is disabled automatically. `metadata.data` becomes the da
 
 `to` is the chat id. `metadata.parse_mode` overrides per message. Blocked bots and unknown
 chats fail as `invalid_recipient`; 429 is retried after `retry_after`.
+
+## `whatsapp_cloud` credentials
+
+```json
+{ "access_token": "EAAG…", "phone_number_id": "123456789012345", "api_version": "v20.0", "preview_url": false }
+```
+
+Create a Meta developer app with the WhatsApp product, add a phone number, generate a permanent
+system-user token. Recipients are E.164 phone numbers (`contact.whatsapp`, falling back to
+`contact.phone`). Free-form text is only delivered inside the 24-hour customer-service window;
+for notifications outside it send an approved template through metadata:
+
+```json
+{"channel":"whatsapp","to":"+99365123456","body":"ignored","metadata":{"wa_template":{"name":"otp_code","language":"tk","components":[{"type":"body","parameters":[{"type":"text","text":"4821"}]}]}}}
+```
+
+Graph error codes are mapped: not-a-WhatsApp-user / unsupported → permanent `invalid_recipient`,
+rate limits (4, 80007, 130429) → retry, bad token → `auth`. Messages stay `sent` until you wire the
+Cloud API status webhook (planned).
+
+## `slack` credentials
+
+```json
+{ "bot_token": "xoxb-…", "default_channel": "C0123456789" }
+```
+or
+```json
+{ "webhook_url": "https://hooks.slack.com/services/T…/B…/…" }
+```
+
+With a bot token (`chat:write` scope, bot invited to the channel) the recipient is a channel or
+user id (`C…`, `U…`; `contact.slack_id`); `subject` becomes a bold first line. With an incoming
+webhook the recipient is ignored and everything goes to the webhook's channel. Slack has no
+delivery receipts, so messages are counted delivered when accepted.
 
 ## Adding a new SMS provider in one Go file
 

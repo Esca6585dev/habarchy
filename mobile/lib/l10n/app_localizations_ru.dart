@@ -274,4 +274,181 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get requiredVars => 'Переменные';
+
+  @override
+  String get groups => 'Группы';
+
+  @override
+  String get contacts => 'Контакты';
+
+  @override
+  String get compose => 'Отправить';
+
+  @override
+  String get more => 'Ещё';
+
+  @override
+  String get newGroup => 'Новая группа';
+
+  @override
+  String get groupName => 'Название группы';
+
+  @override
+  String get description => 'Описание';
+
+  @override
+  String get members => 'Участники';
+
+  @override
+  String get addMembers => 'Добавить участников';
+
+  @override
+  String get pickContacts => 'Существующие контакты';
+
+  @override
+  String get newContacts => 'Новые контакты';
+
+  @override
+  String get newContactsHint => 'По одному в строке: Имя, +99365…, mail@…';
+
+  @override
+  String get remove => 'Убрать';
+
+  @override
+  String get sendToGroup => 'Отправить группе';
+
+  @override
+  String get name => 'Имя';
+
+  @override
+  String get phone => 'Телефон';
+
+  @override
+  String get whatsapp => 'WhatsApp';
+
+  @override
+  String get telegram => 'Telegram chat id';
+
+  @override
+  String get slack => 'Slack id';
+
+  @override
+  String get newContact => 'Новый контакт';
+
+  @override
+  String get editContact => 'Изменить контакт';
+
+  @override
+  String get delete => 'Удалить';
+
+  @override
+  String confirmDelete(String name) {
+    return 'Удалить «$name»?';
+  }
+
+  @override
+  String get save => 'Сохранить';
+
+  @override
+  String get template => 'Шаблон';
+
+  @override
+  String get freeText => 'Свободный текст';
+
+  @override
+  String get subject => 'Тема / заголовок';
+
+  @override
+  String get body => 'Сообщение';
+
+  @override
+  String get templateData => 'Данные шаблона (JSON)';
+
+  @override
+  String get sandboxMode => 'Тестовый режим (sandbox, реально не отправляется)';
+
+  @override
+  String get recipients => 'Получатели';
+
+  @override
+  String get addresses => 'Адреса, по одному в строке';
+
+  @override
+  String get addressesHint =>
+      'Телефоны, e-mail или chat id в зависимости от канала';
+
+  @override
+  String queuedRejected(int n, int m) {
+    return '$n в очереди · $m отклонено';
+  }
+
+  @override
+  String get selectRecipients => 'Выберите группу или введите адрес';
+
+  @override
+  String get noGroupsYet =>
+      'Групп пока нет. Создайте «Коллеги», «Клиенты»… и добавьте участников.';
+
+  @override
+  String added(int n, int created) {
+    return '$n добавлено · $created новых контактов';
+  }
+
+  @override
+  String get newProvider => 'Новый провайдер';
+
+  @override
+  String get editProvider => 'Изменить провайдер';
+
+  @override
+  String get providerType => 'Тип';
+
+  @override
+  String get priority => 'Приоритет (меньше — раньше)';
+
+  @override
+  String get rateLimit => 'Лимит (сообщ./с, 0 = нет)';
+
+  @override
+  String get active => 'Активен';
+
+  @override
+  String get credentials => 'Данные доступа';
+
+  @override
+  String get keepCredentials =>
+      'Оставьте пустым, чтобы сохранить текущие данные';
+
+  @override
+  String get pairing => 'Подключить телефон';
+
+  @override
+  String get pairingHint =>
+      'Установите APK Habarçy Gateway на телефон с SIM-картой, введите этот URL и ключ, нажмите «Запустить».';
+
+  @override
+  String get gatewayKey => 'Ключ шлюза';
+
+  @override
+  String get apiUrl => 'API URL';
+
+  @override
+  String get online => 'Онлайн';
+
+  @override
+  String get offline => 'Офлайн';
+
+  @override
+  String get whatsappHint =>
+      'Свободный текст работает в 24-часовом окне; иначе нужен одобренный шаблон.';
+
+  @override
+  String get contactHint =>
+      'Нужен хотя бы телефон, e-mail, WhatsApp, Telegram или Slack.';
+
+  @override
+  String get openMessages => 'Открыть журнал';
+
+  @override
+  String get noMembers => 'Участников пока нет';
 }

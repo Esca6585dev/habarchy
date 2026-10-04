@@ -113,8 +113,8 @@ class ApiClient {
   }
 
   /// Returns data and meta (for paginated lists).
-  Future<(T, Map<String, dynamic>)> requestWithMeta<T>(String path, {Map<String, dynamic>? query}) async {
-    final res = await dio.get<dynamic>(path, queryParameters: query);
+  Future<(T, Map<String, dynamic>)> requestWithMeta<T>(String path, {Map<String, dynamic>? query, String method = 'GET', Object? data}) async {
+    final res = await dio.request<dynamic>(path, queryParameters: query, data: data, options: Options(method: method));
     final code = res.statusCode ?? 0;
     if (code >= 200 && code < 300 && res.data is Map<String, dynamic>) {
       final m = res.data as Map<String, dynamic>;

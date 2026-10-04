@@ -252,3 +252,77 @@ abstract class Device with _$Device {
   }) = _Device;
   factory Device.fromJson(Map<String, dynamic> json) => _$DeviceFromJson(json);
 }
+
+@freezed
+abstract class Contact with _$Contact {
+  const factory Contact({
+    required String id,
+    @JsonKey(name: 'external_id') @Default('') String externalId,
+    @Default('') String name,
+    @Default('') String phone,
+    @Default('') String email,
+    @Default('') String whatsapp,
+    @JsonKey(name: 'telegram_chat_id') @Default('') String telegramChatId,
+    @JsonKey(name: 'slack_id') @Default('') String slackId,
+    @Default('tk') String locale,
+    @Default(<String>[]) List<String> tags,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+  }) = _Contact;
+  factory Contact.fromJson(Map<String, dynamic> json) => _$ContactFromJson(json);
+}
+
+@freezed
+abstract class Group with _$Group {
+  const factory Group({
+    required String id,
+    required String name,
+    @Default('') String description,
+    @JsonKey(name: 'member_count') @Default(0) int memberCount,
+  }) = _Group;
+  factory Group.fromJson(Map<String, dynamic> json) => _$GroupFromJson(json);
+}
+
+@freezed
+abstract class MembersResult with _$MembersResult {
+  const factory MembersResult({
+    @Default(0) int added,
+    @JsonKey(name: 'created_contacts') @Default(0) int createdContacts,
+    @JsonKey(name: 'not_found') @Default(<String>[]) List<String> notFound,
+  }) = _MembersResult;
+  factory MembersResult.fromJson(Map<String, dynamic> json) => _$MembersResultFromJson(json);
+}
+
+@freezed
+abstract class ProviderDetail with _$ProviderDetail {
+  const factory ProviderDetail({
+    required String id,
+    required String name,
+    required String channel,
+    required String type,
+    @Default(100) int priority,
+    @JsonKey(name: 'is_active') @Default(true) bool isActive,
+    @JsonKey(name: 'rate_limit_per_sec') @Default(0) int rateLimitPerSec,
+    @Default(<String, dynamic>{}) Map<String, dynamic> settings,
+  }) = _ProviderDetail;
+  factory ProviderDetail.fromJson(Map<String, dynamic> json) => _$ProviderDetailFromJson(json);
+}
+
+@freezed
+abstract class Pairing with _$Pairing {
+  const factory Pairing({
+    @JsonKey(name: 'api_url') @Default('') String apiUrl,
+    @JsonKey(name: 'gateway_key') @Default('') String gatewayKey,
+    @Default('') String qr,
+    @Default(false) bool online,
+    @JsonKey(name: 'last_seen_at') DateTime? lastSeenAt,
+  }) = _Pairing;
+  factory Pairing.fromJson(Map<String, dynamic> json) => _$PairingFromJson(json);
+}
+
+/// Result of compose/send: the batch plus accepted / rejected counts.
+class SendOutcome {
+  const SendOutcome({required this.batchId, required this.accepted, required this.rejected});
+  final String batchId;
+  final int accepted;
+  final List<Map<String, dynamic>> rejected;
+}

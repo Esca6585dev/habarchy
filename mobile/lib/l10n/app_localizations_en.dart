@@ -274,4 +274,180 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requiredVars => 'Variables';
+
+  @override
+  String get groups => 'Groups';
+
+  @override
+  String get contacts => 'Contacts';
+
+  @override
+  String get compose => 'Send';
+
+  @override
+  String get more => 'More';
+
+  @override
+  String get newGroup => 'New group';
+
+  @override
+  String get groupName => 'Group name';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get members => 'Members';
+
+  @override
+  String get addMembers => 'Add members';
+
+  @override
+  String get pickContacts => 'Existing contacts';
+
+  @override
+  String get newContacts => 'New contacts';
+
+  @override
+  String get newContactsHint => 'One per line: Name, +99365…, mail@…';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get sendToGroup => 'Send to group';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get phone => 'Phone';
+
+  @override
+  String get whatsapp => 'WhatsApp';
+
+  @override
+  String get telegram => 'Telegram chat id';
+
+  @override
+  String get slack => 'Slack id';
+
+  @override
+  String get newContact => 'New contact';
+
+  @override
+  String get editContact => 'Edit contact';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String confirmDelete(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get template => 'Template';
+
+  @override
+  String get freeText => 'Free text';
+
+  @override
+  String get subject => 'Subject / title';
+
+  @override
+  String get body => 'Message';
+
+  @override
+  String get templateData => 'Template data (JSON)';
+
+  @override
+  String get sandboxMode => 'Test mode (sandbox, nothing is really sent)';
+
+  @override
+  String get recipients => 'Recipients';
+
+  @override
+  String get addresses => 'Addresses, one per line';
+
+  @override
+  String get addressesHint =>
+      'Phones, e-mails or chat ids depending on the channel';
+
+  @override
+  String queuedRejected(int n, int m) {
+    return '$n queued · $m rejected';
+  }
+
+  @override
+  String get selectRecipients => 'Choose a group or type an address';
+
+  @override
+  String get noGroupsYet =>
+      'No groups yet. Create “Colleagues”, “Customers”… and add members.';
+
+  @override
+  String added(int n, int created) {
+    return '$n added · $created new contacts';
+  }
+
+  @override
+  String get newProvider => 'New provider';
+
+  @override
+  String get editProvider => 'Edit provider';
+
+  @override
+  String get providerType => 'Type';
+
+  @override
+  String get priority => 'Priority (lower first)';
+
+  @override
+  String get rateLimit => 'Rate limit (msg/s, 0 = off)';
+
+  @override
+  String get active => 'Active';
+
+  @override
+  String get credentials => 'Credentials';
+
+  @override
+  String get keepCredentials => 'Leave empty to keep the current credentials';
+
+  @override
+  String get pairing => 'Pair phone';
+
+  @override
+  String get pairingHint =>
+      'Install the Habarçy Gateway APK on a phone with a SIM card, enter this URL and key, press Start.';
+
+  @override
+  String get gatewayKey => 'Gateway key';
+
+  @override
+  String get apiUrl => 'API URL';
+
+  @override
+  String get online => 'Online';
+
+  @override
+  String get offline => 'Offline';
+
+  @override
+  String get whatsappHint =>
+      'Free text works inside the 24 h window; otherwise an approved template is needed.';
+
+  @override
+  String get contactHint =>
+      'At least one of phone, e-mail, WhatsApp, Telegram or Slack is required.';
+
+  @override
+  String get openMessages => 'Open message log';
+
+  @override
+  String get noMembers => 'No members yet';
 }

@@ -5567,4 +5567,1450 @@ as bool,
 
 }
 
+
+/// @nodoc
+mixin _$Contact {
+
+ String get id;@JsonKey(name: 'external_id') String get externalId; String get name; String get phone; String get email; String get whatsapp;@JsonKey(name: 'telegram_chat_id') String get telegramChatId;@JsonKey(name: 'slack_id') String get slackId; String get locale; List<String> get tags;@JsonKey(name: 'created_at') DateTime? get createdAt;
+/// Create a copy of Contact
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ContactCopyWith<Contact> get copyWith => _$ContactCopyWithImpl<Contact>(this as Contact, _$identity);
+
+  /// Serializes this Contact to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as Contact;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Contact&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.externalId, _this.externalId) || other.externalId == _this.externalId)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.phone, _this.phone) || other.phone == _this.phone)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.whatsapp, _this.whatsapp) || other.whatsapp == _this.whatsapp)&&(identical(other.telegramChatId, _this.telegramChatId) || other.telegramChatId == _this.telegramChatId)&&(identical(other.slackId, _this.slackId) || other.slackId == _this.slackId)&&(identical(other.locale, _this.locale) || other.locale == _this.locale)&&const DeepCollectionEquality().equals(other.tags, _this.tags)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as Contact;
+  return Object.hash(runtimeType,_this.id,_this.externalId,_this.name,_this.phone,_this.email,_this.whatsapp,_this.telegramChatId,_this.slackId,_this.locale,const DeepCollectionEquality().hash(_this.tags),_this.createdAt);
+}
+
+@override
+String toString() {
+  final _this = this as Contact;
+  return 'Contact(id: ${_this.id}, externalId: ${_this.externalId}, name: ${_this.name}, phone: ${_this.phone}, email: ${_this.email}, whatsapp: ${_this.whatsapp}, telegramChatId: ${_this.telegramChatId}, slackId: ${_this.slackId}, locale: ${_this.locale}, tags: ${_this.tags}, createdAt: ${_this.createdAt})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ContactCopyWith<$Res>  {
+  factory $ContactCopyWith(Contact value, $Res Function(Contact) _then) = _$ContactCopyWithImpl;
+@useResult
+$Res call({
+ String id,@JsonKey(name: 'external_id') String externalId, String name, String phone, String email, String whatsapp,@JsonKey(name: 'telegram_chat_id') String telegramChatId,@JsonKey(name: 'slack_id') String slackId, String locale, List<String> tags,@JsonKey(name: 'created_at') DateTime? createdAt
+});
+
+
+
+
+}
+/// @nodoc
+class _$ContactCopyWithImpl<$Res>
+    implements $ContactCopyWith<$Res> {
+  _$ContactCopyWithImpl(this._self, this._then);
+
+  final Contact _self;
+  final $Res Function(Contact) _then;
+
+/// Create a copy of Contact
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? externalId = null,Object? name = null,Object? phone = null,Object? email = null,Object? whatsapp = null,Object? telegramChatId = null,Object? slackId = null,Object? locale = null,Object? tags = null,Object? createdAt = freezed,}) {
+  return _then(Contact(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,externalId: null == externalId ? _self.externalId : externalId // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,phone: null == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
+as String,whatsapp: null == whatsapp ? _self.whatsapp : whatsapp // ignore: cast_nullable_to_non_nullable
+as String,telegramChatId: null == telegramChatId ? _self.telegramChatId : telegramChatId // ignore: cast_nullable_to_non_nullable
+as String,slackId: null == slackId ? _self.slackId : slackId // ignore: cast_nullable_to_non_nullable
+as String,locale: null == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
+as String,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
+as List<String>,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [Contact].
+extension ContactPatterns on Contact {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Contact value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Contact() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Contact value)  $default,){
+final _that = this;
+switch (_that) {
+case _Contact():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Contact value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Contact() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'external_id')  String externalId,  String name,  String phone,  String email,  String whatsapp, @JsonKey(name: 'telegram_chat_id')  String telegramChatId, @JsonKey(name: 'slack_id')  String slackId,  String locale,  List<String> tags, @JsonKey(name: 'created_at')  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Contact() when $default != null:
+return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_that.whatsapp,_that.telegramChatId,_that.slackId,_that.locale,_that.tags,_that.createdAt);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'external_id')  String externalId,  String name,  String phone,  String email,  String whatsapp, @JsonKey(name: 'telegram_chat_id')  String telegramChatId, @JsonKey(name: 'slack_id')  String slackId,  String locale,  List<String> tags, @JsonKey(name: 'created_at')  DateTime? createdAt)  $default,) {final _that = this;
+switch (_that) {
+case _Contact():
+return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_that.whatsapp,_that.telegramChatId,_that.slackId,_that.locale,_that.tags,_that.createdAt);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'external_id')  String externalId,  String name,  String phone,  String email,  String whatsapp, @JsonKey(name: 'telegram_chat_id')  String telegramChatId, @JsonKey(name: 'slack_id')  String slackId,  String locale,  List<String> tags, @JsonKey(name: 'created_at')  DateTime? createdAt)?  $default,) {final _that = this;
+switch (_that) {
+case _Contact() when $default != null:
+return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_that.whatsapp,_that.telegramChatId,_that.slackId,_that.locale,_that.tags,_that.createdAt);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _Contact implements Contact {
+  const _Contact({required this.id, @JsonKey(name: 'external_id') this.externalId = '', this.name = '', this.phone = '', this.email = '', this.whatsapp = '', @JsonKey(name: 'telegram_chat_id') this.telegramChatId = '', @JsonKey(name: 'slack_id') this.slackId = '', this.locale = 'tk',  List<String> tags = const <String>[], @JsonKey(name: 'created_at') this.createdAt}): _tags = tags;
+  factory _Contact.fromJson(Map<String, dynamic> json) => _$ContactFromJson(json);
+
+@override final  String id;
+@override@JsonKey(name: 'external_id') final  String externalId;
+@override@JsonKey() final  String name;
+@override@JsonKey() final  String phone;
+@override@JsonKey() final  String email;
+@override@JsonKey() final  String whatsapp;
+@override@JsonKey(name: 'telegram_chat_id') final  String telegramChatId;
+@override@JsonKey(name: 'slack_id') final  String slackId;
+@override@JsonKey() final  String locale;
+ final  List<String> _tags;
+@override@JsonKey() List<String> get tags {
+  if (_tags is EqualUnmodifiableListView) return _tags;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_tags);
+}
+
+@override@JsonKey(name: 'created_at') final  DateTime? createdAt;
+
+/// Create a copy of Contact
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ContactCopyWith<_Contact> get copyWith => __$ContactCopyWithImpl<_Contact>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ContactToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Contact&&(identical(other.id, id) || other.id == id)&&(identical(other.externalId, externalId) || other.externalId == externalId)&&(identical(other.name, name) || other.name == name)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.whatsapp, whatsapp) || other.whatsapp == whatsapp)&&(identical(other.telegramChatId, telegramChatId) || other.telegramChatId == telegramChatId)&&(identical(other.slackId, slackId) || other.slackId == slackId)&&(identical(other.locale, locale) || other.locale == locale)&&const DeepCollectionEquality().equals(other.tags, _tags)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,externalId,name,phone,email,whatsapp,telegramChatId,slackId,locale,const DeepCollectionEquality().hash(_tags),createdAt);
+}
+
+@override
+String toString() {
+    return 'Contact(id: $id, externalId: $externalId, name: $name, phone: $phone, email: $email, whatsapp: $whatsapp, telegramChatId: $telegramChatId, slackId: $slackId, locale: $locale, tags: $tags, createdAt: $createdAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ContactCopyWith<$Res> implements $ContactCopyWith<$Res> {
+  factory _$ContactCopyWith(_Contact value, $Res Function(_Contact) _then) = __$ContactCopyWithImpl;
+@override @useResult
+$Res call({
+ String id,@JsonKey(name: 'external_id') String externalId, String name, String phone, String email, String whatsapp,@JsonKey(name: 'telegram_chat_id') String telegramChatId,@JsonKey(name: 'slack_id') String slackId, String locale, List<String> tags,@JsonKey(name: 'created_at') DateTime? createdAt
+});
+
+
+
+
+}
+/// @nodoc
+class __$ContactCopyWithImpl<$Res>
+    implements _$ContactCopyWith<$Res> {
+  __$ContactCopyWithImpl(this._self, this._then);
+
+  final _Contact _self;
+  final $Res Function(_Contact) _then;
+
+/// Create a copy of Contact
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? externalId = null,Object? name = null,Object? phone = null,Object? email = null,Object? whatsapp = null,Object? telegramChatId = null,Object? slackId = null,Object? locale = null,Object? tags = null,Object? createdAt = freezed,}) {
+  return _then(_Contact(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,externalId: null == externalId ? _self.externalId : externalId // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,phone: null == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
+as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
+as String,whatsapp: null == whatsapp ? _self.whatsapp : whatsapp // ignore: cast_nullable_to_non_nullable
+as String,telegramChatId: null == telegramChatId ? _self.telegramChatId : telegramChatId // ignore: cast_nullable_to_non_nullable
+as String,slackId: null == slackId ? _self.slackId : slackId // ignore: cast_nullable_to_non_nullable
+as String,locale: null == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
+as String,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
+as List<String>,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$Group {
+
+ String get id; String get name; String get description;@JsonKey(name: 'member_count') int get memberCount;
+/// Create a copy of Group
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$GroupCopyWith<Group> get copyWith => _$GroupCopyWithImpl<Group>(this as Group, _$identity);
+
+  /// Serializes this Group to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as Group;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Group&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.memberCount, _this.memberCount) || other.memberCount == _this.memberCount));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as Group;
+  return Object.hash(runtimeType,_this.id,_this.name,_this.description,_this.memberCount);
+}
+
+@override
+String toString() {
+  final _this = this as Group;
+  return 'Group(id: ${_this.id}, name: ${_this.name}, description: ${_this.description}, memberCount: ${_this.memberCount})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $GroupCopyWith<$Res>  {
+  factory $GroupCopyWith(Group value, $Res Function(Group) _then) = _$GroupCopyWithImpl;
+@useResult
+$Res call({
+ String id, String name, String description,@JsonKey(name: 'member_count') int memberCount
+});
+
+
+
+
+}
+/// @nodoc
+class _$GroupCopyWithImpl<$Res>
+    implements $GroupCopyWith<$Res> {
+  _$GroupCopyWithImpl(this._self, this._then);
+
+  final Group _self;
+  final $Res Function(Group) _then;
+
+/// Create a copy of Group
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = null,Object? memberCount = null,}) {
+  return _then(Group(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String,memberCount: null == memberCount ? _self.memberCount : memberCount // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [Group].
+extension GroupPatterns on Group {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Group value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Group() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Group value)  $default,){
+final _that = this;
+switch (_that) {
+case _Group():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Group value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Group() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String description, @JsonKey(name: 'member_count')  int memberCount)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Group() when $default != null:
+return $default(_that.id,_that.name,_that.description,_that.memberCount);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String description, @JsonKey(name: 'member_count')  int memberCount)  $default,) {final _that = this;
+switch (_that) {
+case _Group():
+return $default(_that.id,_that.name,_that.description,_that.memberCount);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String description, @JsonKey(name: 'member_count')  int memberCount)?  $default,) {final _that = this;
+switch (_that) {
+case _Group() when $default != null:
+return $default(_that.id,_that.name,_that.description,_that.memberCount);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _Group implements Group {
+  const _Group({required this.id, required this.name, this.description = '', @JsonKey(name: 'member_count') this.memberCount = 0});
+  factory _Group.fromJson(Map<String, dynamic> json) => _$GroupFromJson(json);
+
+@override final  String id;
+@override final  String name;
+@override@JsonKey() final  String description;
+@override@JsonKey(name: 'member_count') final  int memberCount;
+
+/// Create a copy of Group
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$GroupCopyWith<_Group> get copyWith => __$GroupCopyWithImpl<_Group>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$GroupToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Group&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.memberCount, memberCount) || other.memberCount == memberCount));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,name,description,memberCount);
+}
+
+@override
+String toString() {
+    return 'Group(id: $id, name: $name, description: $description, memberCount: $memberCount)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$GroupCopyWith<$Res> implements $GroupCopyWith<$Res> {
+  factory _$GroupCopyWith(_Group value, $Res Function(_Group) _then) = __$GroupCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String name, String description,@JsonKey(name: 'member_count') int memberCount
+});
+
+
+
+
+}
+/// @nodoc
+class __$GroupCopyWithImpl<$Res>
+    implements _$GroupCopyWith<$Res> {
+  __$GroupCopyWithImpl(this._self, this._then);
+
+  final _Group _self;
+  final $Res Function(_Group) _then;
+
+/// Create a copy of Group
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = null,Object? memberCount = null,}) {
+  return _then(_Group(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String,memberCount: null == memberCount ? _self.memberCount : memberCount // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$MembersResult {
+
+ int get added;@JsonKey(name: 'created_contacts') int get createdContacts;@JsonKey(name: 'not_found') List<String> get notFound;
+/// Create a copy of MembersResult
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$MembersResultCopyWith<MembersResult> get copyWith => _$MembersResultCopyWithImpl<MembersResult>(this as MembersResult, _$identity);
+
+  /// Serializes this MembersResult to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as MembersResult;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MembersResult&&(identical(other.added, _this.added) || other.added == _this.added)&&(identical(other.createdContacts, _this.createdContacts) || other.createdContacts == _this.createdContacts)&&const DeepCollectionEquality().equals(other.notFound, _this.notFound));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as MembersResult;
+  return Object.hash(runtimeType,_this.added,_this.createdContacts,const DeepCollectionEquality().hash(_this.notFound));
+}
+
+@override
+String toString() {
+  final _this = this as MembersResult;
+  return 'MembersResult(added: ${_this.added}, createdContacts: ${_this.createdContacts}, notFound: ${_this.notFound})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $MembersResultCopyWith<$Res>  {
+  factory $MembersResultCopyWith(MembersResult value, $Res Function(MembersResult) _then) = _$MembersResultCopyWithImpl;
+@useResult
+$Res call({
+ int added,@JsonKey(name: 'created_contacts') int createdContacts,@JsonKey(name: 'not_found') List<String> notFound
+});
+
+
+
+
+}
+/// @nodoc
+class _$MembersResultCopyWithImpl<$Res>
+    implements $MembersResultCopyWith<$Res> {
+  _$MembersResultCopyWithImpl(this._self, this._then);
+
+  final MembersResult _self;
+  final $Res Function(MembersResult) _then;
+
+/// Create a copy of MembersResult
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? added = null,Object? createdContacts = null,Object? notFound = null,}) {
+  return _then(MembersResult(
+added: null == added ? _self.added : added // ignore: cast_nullable_to_non_nullable
+as int,createdContacts: null == createdContacts ? _self.createdContacts : createdContacts // ignore: cast_nullable_to_non_nullable
+as int,notFound: null == notFound ? _self.notFound : notFound // ignore: cast_nullable_to_non_nullable
+as List<String>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [MembersResult].
+extension MembersResultPatterns on MembersResult {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _MembersResult value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _MembersResult() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _MembersResult value)  $default,){
+final _that = this;
+switch (_that) {
+case _MembersResult():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _MembersResult value)?  $default,){
+final _that = this;
+switch (_that) {
+case _MembersResult() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int added, @JsonKey(name: 'created_contacts')  int createdContacts, @JsonKey(name: 'not_found')  List<String> notFound)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _MembersResult() when $default != null:
+return $default(_that.added,_that.createdContacts,_that.notFound);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int added, @JsonKey(name: 'created_contacts')  int createdContacts, @JsonKey(name: 'not_found')  List<String> notFound)  $default,) {final _that = this;
+switch (_that) {
+case _MembersResult():
+return $default(_that.added,_that.createdContacts,_that.notFound);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int added, @JsonKey(name: 'created_contacts')  int createdContacts, @JsonKey(name: 'not_found')  List<String> notFound)?  $default,) {final _that = this;
+switch (_that) {
+case _MembersResult() when $default != null:
+return $default(_that.added,_that.createdContacts,_that.notFound);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _MembersResult implements MembersResult {
+  const _MembersResult({this.added = 0, @JsonKey(name: 'created_contacts') this.createdContacts = 0, @JsonKey(name: 'not_found')  List<String> notFound = const <String>[]}): _notFound = notFound;
+  factory _MembersResult.fromJson(Map<String, dynamic> json) => _$MembersResultFromJson(json);
+
+@override@JsonKey() final  int added;
+@override@JsonKey(name: 'created_contacts') final  int createdContacts;
+ final  List<String> _notFound;
+@override@JsonKey(name: 'not_found') List<String> get notFound {
+  if (_notFound is EqualUnmodifiableListView) return _notFound;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_notFound);
+}
+
+
+/// Create a copy of MembersResult
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$MembersResultCopyWith<_MembersResult> get copyWith => __$MembersResultCopyWithImpl<_MembersResult>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$MembersResultToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MembersResult&&(identical(other.added, added) || other.added == added)&&(identical(other.createdContacts, createdContacts) || other.createdContacts == createdContacts)&&const DeepCollectionEquality().equals(other.notFound, _notFound));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,added,createdContacts,const DeepCollectionEquality().hash(_notFound));
+}
+
+@override
+String toString() {
+    return 'MembersResult(added: $added, createdContacts: $createdContacts, notFound: $notFound)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$MembersResultCopyWith<$Res> implements $MembersResultCopyWith<$Res> {
+  factory _$MembersResultCopyWith(_MembersResult value, $Res Function(_MembersResult) _then) = __$MembersResultCopyWithImpl;
+@override @useResult
+$Res call({
+ int added,@JsonKey(name: 'created_contacts') int createdContacts,@JsonKey(name: 'not_found') List<String> notFound
+});
+
+
+
+
+}
+/// @nodoc
+class __$MembersResultCopyWithImpl<$Res>
+    implements _$MembersResultCopyWith<$Res> {
+  __$MembersResultCopyWithImpl(this._self, this._then);
+
+  final _MembersResult _self;
+  final $Res Function(_MembersResult) _then;
+
+/// Create a copy of MembersResult
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? added = null,Object? createdContacts = null,Object? notFound = null,}) {
+  return _then(_MembersResult(
+added: null == added ? _self.added : added // ignore: cast_nullable_to_non_nullable
+as int,createdContacts: null == createdContacts ? _self.createdContacts : createdContacts // ignore: cast_nullable_to_non_nullable
+as int,notFound: null == notFound ? _self._notFound : notFound // ignore: cast_nullable_to_non_nullable
+as List<String>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$ProviderDetail {
+
+ String get id; String get name; String get channel; String get type; int get priority;@JsonKey(name: 'is_active') bool get isActive;@JsonKey(name: 'rate_limit_per_sec') int get rateLimitPerSec; Map<String, dynamic> get settings;
+/// Create a copy of ProviderDetail
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ProviderDetailCopyWith<ProviderDetail> get copyWith => _$ProviderDetailCopyWithImpl<ProviderDetail>(this as ProviderDetail, _$identity);
+
+  /// Serializes this ProviderDetail to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ProviderDetail;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProviderDetail&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.channel, _this.channel) || other.channel == _this.channel)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.priority, _this.priority) || other.priority == _this.priority)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&(identical(other.rateLimitPerSec, _this.rateLimitPerSec) || other.rateLimitPerSec == _this.rateLimitPerSec)&&const DeepCollectionEquality().equals(other.settings, _this.settings));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as ProviderDetail;
+  return Object.hash(runtimeType,_this.id,_this.name,_this.channel,_this.type,_this.priority,_this.isActive,_this.rateLimitPerSec,const DeepCollectionEquality().hash(_this.settings));
+}
+
+@override
+String toString() {
+  final _this = this as ProviderDetail;
+  return 'ProviderDetail(id: ${_this.id}, name: ${_this.name}, channel: ${_this.channel}, type: ${_this.type}, priority: ${_this.priority}, isActive: ${_this.isActive}, rateLimitPerSec: ${_this.rateLimitPerSec}, settings: ${_this.settings})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ProviderDetailCopyWith<$Res>  {
+  factory $ProviderDetailCopyWith(ProviderDetail value, $Res Function(ProviderDetail) _then) = _$ProviderDetailCopyWithImpl;
+@useResult
+$Res call({
+ String id, String name, String channel, String type, int priority,@JsonKey(name: 'is_active') bool isActive,@JsonKey(name: 'rate_limit_per_sec') int rateLimitPerSec, Map<String, dynamic> settings
+});
+
+
+
+
+}
+/// @nodoc
+class _$ProviderDetailCopyWithImpl<$Res>
+    implements $ProviderDetailCopyWith<$Res> {
+  _$ProviderDetailCopyWithImpl(this._self, this._then);
+
+  final ProviderDetail _self;
+  final $Res Function(ProviderDetail) _then;
+
+/// Create a copy of ProviderDetail
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? channel = null,Object? type = null,Object? priority = null,Object? isActive = null,Object? rateLimitPerSec = null,Object? settings = null,}) {
+  return _then(ProviderDetail(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,channel: null == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
+as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as int,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,rateLimitPerSec: null == rateLimitPerSec ? _self.rateLimitPerSec : rateLimitPerSec // ignore: cast_nullable_to_non_nullable
+as int,settings: null == settings ? _self.settings : settings // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ProviderDetail].
+extension ProviderDetailPatterns on ProviderDetail {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ProviderDetail value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ProviderDetail() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ProviderDetail value)  $default,){
+final _that = this;
+switch (_that) {
+case _ProviderDetail():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ProviderDetail value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ProviderDetail() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String channel,  String type,  int priority, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'rate_limit_per_sec')  int rateLimitPerSec,  Map<String, dynamic> settings)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ProviderDetail() when $default != null:
+return $default(_that.id,_that.name,_that.channel,_that.type,_that.priority,_that.isActive,_that.rateLimitPerSec,_that.settings);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String channel,  String type,  int priority, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'rate_limit_per_sec')  int rateLimitPerSec,  Map<String, dynamic> settings)  $default,) {final _that = this;
+switch (_that) {
+case _ProviderDetail():
+return $default(_that.id,_that.name,_that.channel,_that.type,_that.priority,_that.isActive,_that.rateLimitPerSec,_that.settings);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String channel,  String type,  int priority, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'rate_limit_per_sec')  int rateLimitPerSec,  Map<String, dynamic> settings)?  $default,) {final _that = this;
+switch (_that) {
+case _ProviderDetail() when $default != null:
+return $default(_that.id,_that.name,_that.channel,_that.type,_that.priority,_that.isActive,_that.rateLimitPerSec,_that.settings);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ProviderDetail implements ProviderDetail {
+  const _ProviderDetail({required this.id, required this.name, required this.channel, required this.type, this.priority = 100, @JsonKey(name: 'is_active') this.isActive = true, @JsonKey(name: 'rate_limit_per_sec') this.rateLimitPerSec = 0,  Map<String, dynamic> settings = const <String, dynamic>{}}): _settings = settings;
+  factory _ProviderDetail.fromJson(Map<String, dynamic> json) => _$ProviderDetailFromJson(json);
+
+@override final  String id;
+@override final  String name;
+@override final  String channel;
+@override final  String type;
+@override@JsonKey() final  int priority;
+@override@JsonKey(name: 'is_active') final  bool isActive;
+@override@JsonKey(name: 'rate_limit_per_sec') final  int rateLimitPerSec;
+ final  Map<String, dynamic> _settings;
+@override@JsonKey() Map<String, dynamic> get settings {
+  if (_settings is EqualUnmodifiableMapView) return _settings;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_settings);
+}
+
+
+/// Create a copy of ProviderDetail
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ProviderDetailCopyWith<_ProviderDetail> get copyWith => __$ProviderDetailCopyWithImpl<_ProviderDetail>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ProviderDetailToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProviderDetail&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.type, type) || other.type == type)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.rateLimitPerSec, rateLimitPerSec) || other.rateLimitPerSec == rateLimitPerSec)&&const DeepCollectionEquality().equals(other.settings, _settings));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,name,channel,type,priority,isActive,rateLimitPerSec,const DeepCollectionEquality().hash(_settings));
+}
+
+@override
+String toString() {
+    return 'ProviderDetail(id: $id, name: $name, channel: $channel, type: $type, priority: $priority, isActive: $isActive, rateLimitPerSec: $rateLimitPerSec, settings: $settings)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ProviderDetailCopyWith<$Res> implements $ProviderDetailCopyWith<$Res> {
+  factory _$ProviderDetailCopyWith(_ProviderDetail value, $Res Function(_ProviderDetail) _then) = __$ProviderDetailCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String name, String channel, String type, int priority,@JsonKey(name: 'is_active') bool isActive,@JsonKey(name: 'rate_limit_per_sec') int rateLimitPerSec, Map<String, dynamic> settings
+});
+
+
+
+
+}
+/// @nodoc
+class __$ProviderDetailCopyWithImpl<$Res>
+    implements _$ProviderDetailCopyWith<$Res> {
+  __$ProviderDetailCopyWithImpl(this._self, this._then);
+
+  final _ProviderDetail _self;
+  final $Res Function(_ProviderDetail) _then;
+
+/// Create a copy of ProviderDetail
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? channel = null,Object? type = null,Object? priority = null,Object? isActive = null,Object? rateLimitPerSec = null,Object? settings = null,}) {
+  return _then(_ProviderDetail(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,channel: null == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
+as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as int,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,rateLimitPerSec: null == rateLimitPerSec ? _self.rateLimitPerSec : rateLimitPerSec // ignore: cast_nullable_to_non_nullable
+as int,settings: null == settings ? _self._settings : settings // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$Pairing {
+
+@JsonKey(name: 'api_url') String get apiUrl;@JsonKey(name: 'gateway_key') String get gatewayKey; String get qr; bool get online;@JsonKey(name: 'last_seen_at') DateTime? get lastSeenAt;
+/// Create a copy of Pairing
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PairingCopyWith<Pairing> get copyWith => _$PairingCopyWithImpl<Pairing>(this as Pairing, _$identity);
+
+  /// Serializes this Pairing to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as Pairing;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Pairing&&(identical(other.apiUrl, _this.apiUrl) || other.apiUrl == _this.apiUrl)&&(identical(other.gatewayKey, _this.gatewayKey) || other.gatewayKey == _this.gatewayKey)&&(identical(other.qr, _this.qr) || other.qr == _this.qr)&&(identical(other.online, _this.online) || other.online == _this.online)&&(identical(other.lastSeenAt, _this.lastSeenAt) || other.lastSeenAt == _this.lastSeenAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as Pairing;
+  return Object.hash(runtimeType,_this.apiUrl,_this.gatewayKey,_this.qr,_this.online,_this.lastSeenAt);
+}
+
+@override
+String toString() {
+  final _this = this as Pairing;
+  return 'Pairing(apiUrl: ${_this.apiUrl}, gatewayKey: ${_this.gatewayKey}, qr: ${_this.qr}, online: ${_this.online}, lastSeenAt: ${_this.lastSeenAt})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PairingCopyWith<$Res>  {
+  factory $PairingCopyWith(Pairing value, $Res Function(Pairing) _then) = _$PairingCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'api_url') String apiUrl,@JsonKey(name: 'gateway_key') String gatewayKey, String qr, bool online,@JsonKey(name: 'last_seen_at') DateTime? lastSeenAt
+});
+
+
+
+
+}
+/// @nodoc
+class _$PairingCopyWithImpl<$Res>
+    implements $PairingCopyWith<$Res> {
+  _$PairingCopyWithImpl(this._self, this._then);
+
+  final Pairing _self;
+  final $Res Function(Pairing) _then;
+
+/// Create a copy of Pairing
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? apiUrl = null,Object? gatewayKey = null,Object? qr = null,Object? online = null,Object? lastSeenAt = freezed,}) {
+  return _then(Pairing(
+apiUrl: null == apiUrl ? _self.apiUrl : apiUrl // ignore: cast_nullable_to_non_nullable
+as String,gatewayKey: null == gatewayKey ? _self.gatewayKey : gatewayKey // ignore: cast_nullable_to_non_nullable
+as String,qr: null == qr ? _self.qr : qr // ignore: cast_nullable_to_non_nullable
+as String,online: null == online ? _self.online : online // ignore: cast_nullable_to_non_nullable
+as bool,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [Pairing].
+extension PairingPatterns on Pairing {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Pairing value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Pairing() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Pairing value)  $default,){
+final _that = this;
+switch (_that) {
+case _Pairing():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Pairing value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Pairing() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'api_url')  String apiUrl, @JsonKey(name: 'gateway_key')  String gatewayKey,  String qr,  bool online, @JsonKey(name: 'last_seen_at')  DateTime? lastSeenAt)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Pairing() when $default != null:
+return $default(_that.apiUrl,_that.gatewayKey,_that.qr,_that.online,_that.lastSeenAt);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'api_url')  String apiUrl, @JsonKey(name: 'gateway_key')  String gatewayKey,  String qr,  bool online, @JsonKey(name: 'last_seen_at')  DateTime? lastSeenAt)  $default,) {final _that = this;
+switch (_that) {
+case _Pairing():
+return $default(_that.apiUrl,_that.gatewayKey,_that.qr,_that.online,_that.lastSeenAt);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'api_url')  String apiUrl, @JsonKey(name: 'gateway_key')  String gatewayKey,  String qr,  bool online, @JsonKey(name: 'last_seen_at')  DateTime? lastSeenAt)?  $default,) {final _that = this;
+switch (_that) {
+case _Pairing() when $default != null:
+return $default(_that.apiUrl,_that.gatewayKey,_that.qr,_that.online,_that.lastSeenAt);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _Pairing implements Pairing {
+  const _Pairing({@JsonKey(name: 'api_url') this.apiUrl = '', @JsonKey(name: 'gateway_key') this.gatewayKey = '', this.qr = '', this.online = false, @JsonKey(name: 'last_seen_at') this.lastSeenAt});
+  factory _Pairing.fromJson(Map<String, dynamic> json) => _$PairingFromJson(json);
+
+@override@JsonKey(name: 'api_url') final  String apiUrl;
+@override@JsonKey(name: 'gateway_key') final  String gatewayKey;
+@override@JsonKey() final  String qr;
+@override@JsonKey() final  bool online;
+@override@JsonKey(name: 'last_seen_at') final  DateTime? lastSeenAt;
+
+/// Create a copy of Pairing
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PairingCopyWith<_Pairing> get copyWith => __$PairingCopyWithImpl<_Pairing>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$PairingToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Pairing&&(identical(other.apiUrl, apiUrl) || other.apiUrl == apiUrl)&&(identical(other.gatewayKey, gatewayKey) || other.gatewayKey == gatewayKey)&&(identical(other.qr, qr) || other.qr == qr)&&(identical(other.online, online) || other.online == online)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,apiUrl,gatewayKey,qr,online,lastSeenAt);
+}
+
+@override
+String toString() {
+    return 'Pairing(apiUrl: $apiUrl, gatewayKey: $gatewayKey, qr: $qr, online: $online, lastSeenAt: $lastSeenAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PairingCopyWith<$Res> implements $PairingCopyWith<$Res> {
+  factory _$PairingCopyWith(_Pairing value, $Res Function(_Pairing) _then) = __$PairingCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'api_url') String apiUrl,@JsonKey(name: 'gateway_key') String gatewayKey, String qr, bool online,@JsonKey(name: 'last_seen_at') DateTime? lastSeenAt
+});
+
+
+
+
+}
+/// @nodoc
+class __$PairingCopyWithImpl<$Res>
+    implements _$PairingCopyWith<$Res> {
+  __$PairingCopyWithImpl(this._self, this._then);
+
+  final _Pairing _self;
+  final $Res Function(_Pairing) _then;
+
+/// Create a copy of Pairing
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? apiUrl = null,Object? gatewayKey = null,Object? qr = null,Object? online = null,Object? lastSeenAt = freezed,}) {
+  return _then(_Pairing(
+apiUrl: null == apiUrl ? _self.apiUrl : apiUrl // ignore: cast_nullable_to_non_nullable
+as String,gatewayKey: null == gatewayKey ? _self.gatewayKey : gatewayKey // ignore: cast_nullable_to_non_nullable
+as String,qr: null == qr ? _self.qr : qr // ignore: cast_nullable_to_non_nullable
+as String,online: null == online ? _self.online : online // ignore: cast_nullable_to_non_nullable
+as bool,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
+  ));
+}
+
+
+}
+
 // dart format on

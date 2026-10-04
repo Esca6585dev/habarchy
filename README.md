@@ -2,7 +2,7 @@
 
 **TK:** Habarçy — bir API bilen SMS, e-mail, push (Firebase FCM) we Telegram habarlaryny iberýän, köp proýektli (multi-tenant), nobatly (queue), gaýtadan synanyşýan (retry/fallback), şablonly we loglary bolan merkezi habar şlýuzy. Twilio + SendGrid + OneSignal ýaly, ýöne öz serweriňizde.
 
-**EN:** Habarchy is a self-hosted, multi-tenant notification gateway: one API to send SMS, email, push (FCM) and Telegram messages with queues, retries, provider fallback, templates, delivery status, webhooks and an admin panel.
+**EN:** Habarchy is a self-hosted, multi-tenant notification gateway: one API to send SMS, WhatsApp, Telegram, email, push (FCM) and Slack messages — to one recipient or to a whole contact group — with queues, retries, provider fallback, templates, delivery status, webhooks, an admin panel and a mobile app. A phone with a SIM card can be the SMS provider.
 
 ## Architecture
 
@@ -49,6 +49,7 @@ In progress — built step by step from [PROMPT.md](PROMPT.md).
 | 5 | Next.js admin panel (tk/ru/en, dark mode, live feed, template editor, Playwright e2e) + OpenAPI spec at `/api/docs` | ✅ done |
 | 6 | Flutter admin app (dashboard, message log, templates, providers, API keys, tk/ru/en, dark mode) + FCM push demo client | ✅ done |
 | 6b | Android SMS gateway: `android_sms` provider + Habarçy Gateway APK (phone sends SMS from its SIM, reports sent/delivered, forwards inbound) | ✅ done |
+| 6c | Contact groups (colleagues, customers…), broadcast to a group on any channel, WhatsApp Cloud API + Slack channels, compose screen in web + mobile, in-app provider setup (SMTP, SMPP, HTTP SMS, Telegram, WhatsApp, Slack, FCM, phone gateway) | ✅ done |
 | 7 | SDKs (Go, TypeScript, Dart, PHP/Laravel), Postman collection, Dockerfiles + `deploy/docker-compose.yml` (nginx, web, api, worker, scheduler, postgres, redis, asynqmon), `api -seed`, GitHub Actions (backend, web, flutter, sdks, docker images on tags) | ✅ done |
 
 ## Quick start (production-like, one command)
@@ -138,6 +139,8 @@ See [docs/architecture.md](docs/architecture.md) for the component and data-mode
 | Messages (public) | `POST /api/v1/messages` (202), `POST /messages/batch`, `GET /messages?status=&channel=&from=&to=&cursor=&limit=`, `GET /messages/{id}` (+timeline), `POST /messages/{id}/cancel`, `GET /batches/{id}` |
 | OTP (public) | `POST /api/v1/otp/send`, `POST /api/v1/otp/verify` |
 | Contacts & devices (public) | `GET/POST /api/v1/contacts`, `GET/PUT/DELETE /contacts/{id}`, `GET/POST /api/v1/devices`, `DELETE /devices/{token}` |
+| Groups (public) | `GET/POST /api/v1/groups`, `GET/PUT/DELETE /groups/{id}`, `GET/POST /groups/{id}/members`, `DELETE /groups/{id}/members/{contact_id}`; `group_ids` in `POST /messages/batch` |
+| Groups & compose (admin) | `/projects/{id}/groups…` (same shape), `POST/GET/PUT/DELETE /projects/{id}/contacts…`, `POST /projects/{id}/messages/send` `{channel, group_ids, contact_ids, to, template|body, is_test}` |
 | Providers (admin) | `GET/POST /projects/{id}/providers`, `GET/PUT/DELETE /providers/{pid}`, `POST /providers/{pid}/test` |
 | Message log (admin) | `GET /projects/{id}/messages?status=&channel=&from=&to=&search=&batch_id=&contact_id=&cursor=`, `GET /messages/{mid}` (timeline + raw provider response + webhooks), `POST /messages/{mid}/resend`, `POST /messages/{mid}/cancel`, `GET /batches`, `GET /batches/{bid}` |
 | Webhook log (admin) | `GET /projects/{id}/webhooks?event=&failed=`, `GET /webhooks/{did}`, `POST /webhooks/{did}/resend` |
@@ -175,6 +178,16 @@ curl -X POST $HABARCHY/api/v1/messages -H "X-Api-Key: hb_live_xxx" -H 'Content-T
 # Telegram
 curl -X POST $HABARCHY/api/v1/messages -H "X-Api-Key: hb_live_xxx" -H 'Content-Type: application/json' \
   -d '{"channel":"telegram","to":"123456789","body":"<b>Habarchy</b> işleýär","metadata":{"parse_mode":"HTML"}}'
+
+# WhatsApp (Cloud API) and Slack
+curl -X POST $HABARCHY/api/v1/messages -H "X-Api-Key: hb_live_xxx" -H 'Content-Type: application/json' \
+  -d '{"channel":"whatsapp","to":"+99365123456","body":"Sargydyňyz taýýar"}'
+curl -X POST $HABARCHY/api/v1/messages -H "X-Api-Key: hb_live_xxx" -H 'Content-Type: application/json' \
+  -d '{"channel":"slack","to":"C0123456789","subject":"Deploy","body":"v1.2 is live"}'
+
+# A whole group (create it in the admin panel / app or via POST /api/v1/groups)
+curl -X POST $HABARCHY/api/v1/messages/batch -H "X-Api-Key: hb_live_xxx" -H 'Content-Type: application/json' \
+  -d '{"channel":"sms","body":"Salam {{.name}}! Ertir ýygnak 10:00.","group_ids":["<group uuid>"]}'
 
 # Best channel for the contact (project order, default push → sms → email)
 curl -X POST $HABARCHY/api/v1/messages -H "X-Api-Key: hb_live_xxx" -H 'Content-Type: application/json' \

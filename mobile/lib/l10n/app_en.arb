@@ -68,7 +68,13 @@
   "retry": "Retry",
   "loading": "Loading…",
   "version": "Version {version}",
-  "@version": { "placeholders": { "version": { "type": "String" } } },
+  "@version": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "statusQueued": "Queued",
   "statusProcessing": "Processing",
   "statusSent": "Sent",
@@ -87,5 +93,87 @@
   "confirmResend": "Queue this message again?",
   "yes": "Yes",
   "no": "No",
-  "requiredVars": "Variables"
+  "requiredVars": "Variables",
+  "groups": "Groups",
+  "contacts": "Contacts",
+  "compose": "Send",
+  "more": "More",
+  "newGroup": "New group",
+  "groupName": "Group name",
+  "description": "Description",
+  "members": "Members",
+  "addMembers": "Add members",
+  "pickContacts": "Existing contacts",
+  "newContacts": "New contacts",
+  "newContactsHint": "One per line: Name, +99365…, mail@…",
+  "remove": "Remove",
+  "sendToGroup": "Send to group",
+  "name": "Name",
+  "phone": "Phone",
+  "whatsapp": "WhatsApp",
+  "telegram": "Telegram chat id",
+  "slack": "Slack id",
+  "newContact": "New contact",
+  "editContact": "Edit contact",
+  "delete": "Delete",
+  "confirmDelete": "Delete “{name}”?",
+  "@confirmDelete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "save": "Save",
+  "template": "Template",
+  "freeText": "Free text",
+  "subject": "Subject / title",
+  "body": "Message",
+  "templateData": "Template data (JSON)",
+  "sandboxMode": "Test mode (sandbox, nothing is really sent)",
+  "recipients": "Recipients",
+  "addresses": "Addresses, one per line",
+  "addressesHint": "Phones, e-mails or chat ids depending on the channel",
+  "queuedRejected": "{n} queued · {m} rejected",
+  "@queuedRejected": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "selectRecipients": "Choose a group or type an address",
+  "noGroupsYet": "No groups yet. Create “Colleagues”, “Customers”… and add members.",
+  "added": "{n} added · {created} new contacts",
+  "@added": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "created": {
+        "type": "int"
+      }
+    }
+  },
+  "newProvider": "New provider",
+  "editProvider": "Edit provider",
+  "providerType": "Type",
+  "priority": "Priority (lower first)",
+  "rateLimit": "Rate limit (msg/s, 0 = off)",
+  "active": "Active",
+  "credentials": "Credentials",
+  "keepCredentials": "Leave empty to keep the current credentials",
+  "pairing": "Pair phone",
+  "pairingHint": "Install the Habarçy Gateway APK on a phone with a SIM card, enter this URL and key, press Start.",
+  "gatewayKey": "Gateway key",
+  "apiUrl": "API URL",
+  "online": "Online",
+  "offline": "Offline",
+  "whatsappHint": "Free text works inside the 24 h window; otherwise an approved template is needed.",
+  "contactHint": "At least one of phone, e-mail, WhatsApp, Telegram or Slack is required.",
+  "openMessages": "Open message log",
+  "noMembers": "No members yet"
 }

@@ -415,3 +415,111 @@ Map<String, dynamic> _$DeviceToJson(_Device instance) => <String, dynamic>{
   'token_hint': instance.tokenHint,
   'is_active': instance.isActive,
 };
+
+_Contact _$ContactFromJson(Map<String, dynamic> json) => _Contact(
+  id: json['id'] as String,
+  externalId: json['external_id'] as String? ?? '',
+  name: json['name'] as String? ?? '',
+  phone: json['phone'] as String? ?? '',
+  email: json['email'] as String? ?? '',
+  whatsapp: json['whatsapp'] as String? ?? '',
+  telegramChatId: json['telegram_chat_id'] as String? ?? '',
+  slackId: json['slack_id'] as String? ?? '',
+  locale: json['locale'] as String? ?? 'tk',
+  tags:
+      (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const <String>[],
+  createdAt: json['created_at'] == null
+      ? null
+      : DateTime.parse(json['created_at'] as String),
+);
+
+Map<String, dynamic> _$ContactToJson(_Contact instance) => <String, dynamic>{
+  'id': instance.id,
+  'external_id': instance.externalId,
+  'name': instance.name,
+  'phone': instance.phone,
+  'email': instance.email,
+  'whatsapp': instance.whatsapp,
+  'telegram_chat_id': instance.telegramChatId,
+  'slack_id': instance.slackId,
+  'locale': instance.locale,
+  'tags': instance.tags,
+  'created_at': instance.createdAt?.toIso8601String(),
+};
+
+_Group _$GroupFromJson(Map<String, dynamic> json) => _Group(
+  id: json['id'] as String,
+  name: json['name'] as String,
+  description: json['description'] as String? ?? '',
+  memberCount: (json['member_count'] as num?)?.toInt() ?? 0,
+);
+
+Map<String, dynamic> _$GroupToJson(_Group instance) => <String, dynamic>{
+  'id': instance.id,
+  'name': instance.name,
+  'description': instance.description,
+  'member_count': instance.memberCount,
+};
+
+_MembersResult _$MembersResultFromJson(Map<String, dynamic> json) =>
+    _MembersResult(
+      added: (json['added'] as num?)?.toInt() ?? 0,
+      createdContacts: (json['created_contacts'] as num?)?.toInt() ?? 0,
+      notFound:
+          (json['not_found'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const <String>[],
+    );
+
+Map<String, dynamic> _$MembersResultToJson(_MembersResult instance) =>
+    <String, dynamic>{
+      'added': instance.added,
+      'created_contacts': instance.createdContacts,
+      'not_found': instance.notFound,
+    };
+
+_ProviderDetail _$ProviderDetailFromJson(Map<String, dynamic> json) =>
+    _ProviderDetail(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      channel: json['channel'] as String,
+      type: json['type'] as String,
+      priority: (json['priority'] as num?)?.toInt() ?? 100,
+      isActive: json['is_active'] as bool? ?? true,
+      rateLimitPerSec: (json['rate_limit_per_sec'] as num?)?.toInt() ?? 0,
+      settings:
+          json['settings'] as Map<String, dynamic>? ??
+          const <String, dynamic>{},
+    );
+
+Map<String, dynamic> _$ProviderDetailToJson(_ProviderDetail instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'channel': instance.channel,
+      'type': instance.type,
+      'priority': instance.priority,
+      'is_active': instance.isActive,
+      'rate_limit_per_sec': instance.rateLimitPerSec,
+      'settings': instance.settings,
+    };
+
+_Pairing _$PairingFromJson(Map<String, dynamic> json) => _Pairing(
+  apiUrl: json['api_url'] as String? ?? '',
+  gatewayKey: json['gateway_key'] as String? ?? '',
+  qr: json['qr'] as String? ?? '',
+  online: json['online'] as bool? ?? false,
+  lastSeenAt: json['last_seen_at'] == null
+      ? null
+      : DateTime.parse(json['last_seen_at'] as String),
+);
+
+Map<String, dynamic> _$PairingToJson(_Pairing instance) => <String, dynamic>{
+  'api_url': instance.apiUrl,
+  'gateway_key': instance.gatewayKey,
+  'qr': instance.qr,
+  'online': instance.online,
+  'last_seen_at': instance.lastSeenAt?.toIso8601String(),
+};

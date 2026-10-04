@@ -8,6 +8,8 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/models/models.dart';
 import '../../l10n/app_localizations.dart';
 import '../common/widgets.dart';
+import '../contacts/contacts_screen.dart' show confirm;
+import 'provider_edit_screen.dart';
 
 final healthProvider = FutureProvider.autoDispose<Health>((ref) async {
   final pid = ref.watch(selectedProjectProvider);
@@ -26,6 +28,14 @@ class ProvidersScreen extends ConsumerWidget {
     final isAdmin = project != null && (project.role == 'admin' || project.role == 'owner');
     return Scaffold(
       appBar: AppBar(title: Text(t.providers), actions: [IconButton(icon: const Icon(Icons.refresh), onPressed: () => ref.invalidate(healthProvider))]),
+      floatingActionButton: isAdmin && project.id.isNotEmpty
+          ? FloatingActionButton.extended(
+              key: const Key('new-provider'),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ProviderEditScreen(projectId: project.id))),
+              icon: const Icon(Icons.add),
+              label: Text(t.newProvider),
+            )
+          : null,
       body: health.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorRetry(error: e, onRetry: () => ref.invalidate(healthProvider)),
@@ -40,7 +50,7 @@ class ProvidersScreen extends ConsumerWidget {
                   title: Text(p.name),
                   subtitle: Text('${p.type} · ✓ ${p.okCount} · ✕ ${p.failedCount}${p.lastSentAt != null ? ' · ${shortDate(p.lastSentAt)}' : ''}'),
                   trailing: StatusChip(p.status),
-                  onTap: isAdmin && project.id.isNotEmpty ? () => _testSend(context, ref, project.id, p) : null,
+                  onTap: isAdmin && project.id.isNotEmpty ? () => _actions(context, ref, project.id, p) : null,
                 ),
               ),
             const SizedBox(height: 16),
@@ -61,6 +71,57 @@ class ProvidersScreen extends ConsumerWidget {
           ]),
         ),
       ),
+    );
+  }
+
+  Future<void> _actions(BuildContext context, WidgetRef ref, String projectId, ProviderHealth p) async {
+    final t = AppLocalizations.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => ListView(shrinkWrap: true, children: [
+        ListTile(leading: Icon(channelIcon(p.channel), color: channelColor(p.channel)), title: Text(p.name), subtitle: Text(p.type)),
+        if (p.type == 'android_sms')
+          ListTile(
+            leading: const Icon(Icons.phone_android),
+            title: Text(t.pairing),
+            onTap: () {
+              Navigator.pop(ctx);
+              showPairing(context, ref, projectId, p.id);
+            },
+          ),
+        ListTile(
+          leading: const Icon(Icons.science_outlined),
+          title: Text(t.testSend),
+          onTap: () {
+            Navigator.pop(ctx);
+            _testSend(context, ref, projectId, p);
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.edit_outlined),
+          title: Text(t.editProvider),
+          onTap: () async {
+            Navigator.pop(ctx);
+            try {
+              final detail = await ref.read(adminRepositoryProvider).provider(projectId, p.id);
+              if (context.mounted) await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ProviderEditScreen(projectId: projectId, initial: detail)));
+            } catch (e) {
+              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+            }
+          },
+        ),
+        ListTile(
+          leading: Icon(Icons.delete_outline, color: Theme.of(ctx).colorScheme.error),
+          title: Text(t.delete),
+          onTap: () async {
+            Navigator.pop(ctx);
+            if (!await confirm(context, t.confirmDelete(p.name))) return;
+            await ref.read(adminRepositoryProvider).deleteProvider(projectId, p.id);
+            ref.invalidate(healthProvider);
+          },
+        ),
+      ]),
     );
   }
 
