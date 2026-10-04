@@ -20,11 +20,13 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/email/smtp"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/push/fcm"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/sandbox"
+	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/sms/androidgw"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/sms/httpgeneric"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/telegram"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/audit"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
 	"github.com/Esca6585dev/habarchy/backend/internal/ports"
+	"github.com/Esca6585dev/habarchy/backend/pkg/crypto"
 )
 
 // Service holds provider use cases.
@@ -38,6 +40,9 @@ type Service struct {
 	// SMPPFactory builds SMPP sessions; set by the worker (keeps the heavy
 	// dependency out of the API binary). nil => smpp providers fail to build.
 	SMPPFactory func(ctx context.Context, id uuid.UUID, creds json.RawMessage) (ports.SMSProvider, error)
+	// GatewayFactory builds the Android gateway provider (needs the outbox
+	// store); set by the worker. nil => android_sms providers fail to build.
+	GatewayFactory func(id uuid.UUID, creds json.RawMessage) (ports.SMSProvider, error)
 }
 
 type cached struct {
@@ -67,7 +72,13 @@ func (s *Service) Create(ctx context.Context, projectID uuid.UUID, in Input) (*s
 		return nil, domain.ErrValidation.WithDetails(map[string]any{"name": "required"})
 	}
 	if !in.Type.Valid() {
-		return nil, domain.ErrValidation.WithDetails(map[string]any{"type": "http_sms, smpp, smtp, fcm or telegram_bot"})
+		return nil, domain.ErrValidation.WithDetails(map[string]any{"type": "http_sms, smpp, android_sms, smtp, fcm or telegram_bot"})
+	}
+	if in.Type == domain.ProviderAndroidSMS {
+		var err error
+		if in.Credentials, err = withGatewayKey(in.Credentials); err != nil {
+			return nil, err
+		}
 	}
 	if err := ValidateCredentials(ctx, in.Type, in.Credentials); err != nil {
 		return nil, err
@@ -97,6 +108,9 @@ func (s *Service) Create(ctx context.Context, projectID uuid.UUID, in Input) (*s
 		if err != nil {
 			return err
 		}
+		if err := registerGatewayKey(ctx, q, &p, in.Credentials); err != nil {
+			return err
+		}
 		audit.Record(ctx, q, &projectID, "provider.create", "provider", p.ID.String(), map[string]any{"name": p.Name, "type": p.Type})
 		return nil
 	})
@@ -104,6 +118,43 @@ func (s *Service) Create(ctx context.Context, projectID uuid.UUID, in Input) (*s
 		return nil, err
 	}
 	return &p, nil
+}
+
+// withGatewayKey fills in a random gateway_key when the admin left it out.
+func withGatewayKey(creds json.RawMessage) (json.RawMessage, error) {
+	m := map[string]any{}
+	if len(creds) > 0 {
+		if err := json.Unmarshal(creds, &m); err != nil {
+			return nil, domain.ErrValidation.WithDetails(map[string]any{"credentials": "must be a JSON object"})
+		}
+	}
+	if k, _ := m["gateway_key"].(string); strings.TrimSpace(k) == "" {
+		tok, err := crypto.RandomToken(24)
+		if err != nil {
+			return nil, err
+		}
+		m["gateway_key"] = "gw_" + tok
+	}
+	return json.Marshal(m)
+}
+
+// registerGatewayKey stores the hash of an android_sms provider's pairing
+// key so the phone can be authenticated without decrypting every row.
+func registerGatewayKey(ctx context.Context, q *sqlcgen.Queries, p *sqlcgen.Provider, creds json.RawMessage) error {
+	if domain.ProviderType(p.Type) != domain.ProviderAndroidSMS {
+		return nil
+	}
+	cfg, err := androidgw.ParseConfig(creds)
+	if err != nil {
+		return domain.ErrValidation.WithDetails(map[string]any{"credentials": err.Error()})
+	}
+	if _, err := q.UpsertGatewayDevice(ctx, sqlcgen.UpsertGatewayDeviceParams{ProviderID: p.ID, ProjectID: p.ProjectID, KeyHash: crypto.SHA256(cfg.GatewayKey)}); err != nil {
+		if postgres.IsUniqueViolation(err) {
+			return domain.ErrConflict.WithMessage("this gateway_key is already used by another provider")
+		}
+		return err
+	}
+	return nil
 }
 
 // Get returns one provider (credentials stay encrypted).
@@ -155,6 +206,11 @@ func (s *Service) Update(ctx context.Context, projectID, id uuid.UUID, in Input)
 	}
 	changes := map[string]any{"priority": cur.Priority, "is_active": cur.IsActive, "rate_limit_per_sec": cur.RateLimitPerSec}
 	if in.Credentials != nil {
+		if domain.ProviderType(cur.Type) == domain.ProviderAndroidSMS {
+			if in.Credentials, err = withGatewayKey(in.Credentials); err != nil {
+				return nil, err
+			}
+		}
 		if err := ValidateCredentials(ctx, domain.ProviderType(cur.Type), in.Credentials); err != nil {
 			return nil, err
 		}
@@ -172,6 +228,11 @@ func (s *Service) Update(ctx context.Context, projectID, id uuid.UUID, in Input)
 		})
 		if err != nil {
 			return err
+		}
+		if in.Credentials != nil {
+			if err := registerGatewayKey(ctx, q, &p, in.Credentials); err != nil {
+				return err
+			}
 		}
 		audit.Record(ctx, q, &projectID, "provider.update", "provider", id.String(), changes)
 		return nil
@@ -309,6 +370,11 @@ func (s *Service) build(ctx context.Context, p *sqlcgen.Provider, creds json.Raw
 			return nil, errors.New("smpp providers are only available in the worker")
 		}
 		return s.SMPPFactory(ctx, p.ID, creds)
+	case domain.ProviderAndroidSMS:
+		if s.GatewayFactory == nil {
+			return nil, errors.New("android_sms providers are only available in the worker")
+		}
+		return s.GatewayFactory(p.ID, creds)
 	}
 	return nil, fmt.Errorf("unknown provider type %q", p.Type)
 }
@@ -362,6 +428,8 @@ func ValidateCredentials(ctx context.Context, t domain.ProviderType, creds json.
 		}
 	case domain.ProviderSMPP:
 		err = ValidateSMPP(creds)
+	case domain.ProviderAndroidSMS:
+		_, err = androidgw.ParseConfig(creds)
 	default:
 		err = fmt.Errorf("unknown provider type %q", t)
 	}

@@ -61,7 +61,7 @@ SELECT
     p.id, p.name, p.channel, p.type, p.is_active, p.priority,
     count(m.id) FILTER (WHERE m.status IN ('sent','delivered'))::bigint AS ok_count,
     count(m.id) FILTER (WHERE m.status = 'failed')::bigint              AS failed_count,
-    max(m.sent_at)::timestamptz                                         AS last_sent_at
+    coalesce(max(m.sent_at), '0001-01-01 00:00:00+00'::timestamptz)::timestamptz AS last_sent_at
 FROM providers p
 LEFT JOIN messages m ON m.provider_id = p.id AND m.created_at >= @from_ts
 WHERE p.project_id = @project_id

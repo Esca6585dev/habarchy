@@ -16,6 +16,7 @@ const variants: Record<string, "success" | "destructive" | "warning" | "info" | 
   failing: "destructive",
   idle: "secondary",
   disabled: "outline",
+  offline: "destructive",
 };
 
 export function StatusBadge({ status }: { status?: string | null }) {
@@ -25,7 +26,7 @@ export function StatusBadge({ status }: { status?: string | null }) {
   if (!status) return null;
   let label: string = status;
   if (["queued", "processing", "sent", "delivered", "failed", "cancelled"].includes(status)) label = t(status as "queued");
-  else if (["healthy", "degraded", "failing", "idle", "disabled"].includes(status)) label = th(status as "healthy");
+  else if (["healthy", "degraded", "failing", "idle", "disabled", "offline"].includes(status)) label = th(status as "healthy");
   else if (status === "pending") label = tw("pending");
   return <Badge variant={variants[status] ?? "secondary"}>{label}</Badge>;
 }

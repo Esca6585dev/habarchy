@@ -2,6 +2,7 @@ package admin
 
 import (
 	"encoding/json"
+	"net/url"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -179,4 +180,58 @@ func (h *Handlers) testSendProvider(c *fiber.Ctx) error {
 		}
 	}
 	return httpx.OK(c, out)
+}
+
+// gatewayPairing returns what the Habarchy Gateway app needs to pair with
+// an android_sms provider: the API URL and the key (admin role only).
+func (h *Handlers) gatewayPairing(c *fiber.Ctx) error {
+	id, err := httpx.ParamUUID(c, "provider_id")
+	if err != nil {
+		return err
+	}
+	p, err := h.Providers.Get(c.UserContext(), membership(c).Project.ID, id)
+	if err != nil {
+		return err
+	}
+	if domain.ProviderType(p.Type) != domain.ProviderAndroidSMS {
+		return domain.ErrValidation.WithMessage("pairing is only available for android_sms providers")
+	}
+	raw, err := h.Providers.Decrypt(p)
+	if err != nil {
+		return err
+	}
+	var creds struct {
+		GatewayKey string `json:"gateway_key"`
+		SimSlot    int    `json:"sim_slot"`
+	}
+	if err := json.Unmarshal(raw, &creds); err != nil {
+		return err
+	}
+	var dev *sqlcgen.GatewayDevice
+	if d, err := h.DB.Queries.GetGatewayDevice(c.UserContext(), p.ID); err == nil {
+		dev = &d
+	}
+	q := url.Values{"url": {h.PublicURL}, "key": {creds.GatewayKey}, "name": {p.Name}}
+	out := fiber.Map{
+		"provider_id": p.ID, "name": p.Name, "api_url": h.PublicURL, "gateway_key": creds.GatewayKey, "sim_slot": creds.SimSlot,
+		"qr": "habarchy://gateway?" + q.Encode(),
+	}
+	if dev != nil {
+		out["last_seen_at"] = dev.LastSeenAt
+		out["online"] = dev.LastSeenAt != nil && time.Since(*dev.LastSeenAt) <= 90*time.Second
+		out["device_info"] = dev.DeviceInfo
+	}
+	return httpx.OK(c, out)
+}
+
+// listInbound lists SMS received by the project's gateway phones.
+func (h *Handlers) listInbound(c *fiber.Ctx) error {
+	pid := membership(c).Project.ID
+	page := httpx.ParsePage(c, 50, 200)
+	rows, err := h.DB.Queries.ListGatewayInbound(c.UserContext(), sqlcgen.ListGatewayInboundParams{ProjectID: pid, RowLimit: page.Limit, RowOffset: page.Offset})
+	if err != nil {
+		return err
+	}
+	total, _ := h.DB.Queries.CountGatewayInbound(c.UserContext(), pid)
+	return httpx.JSON(c, fiber.StatusOK, rows, fiber.Map{"total": total, "limit": page.Limit, "offset": page.Offset})
 }

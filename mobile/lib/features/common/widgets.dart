@@ -19,6 +19,8 @@ Color statusColor(BuildContext context, String status) {
     case 'queued.retry':
       return Colors.amber.shade700;
     case 'failed':
+    case 'failing':
+    case 'offline':
     case 'down':
     case 'provider.failed':
       return cs.error;

@@ -3,6 +3,7 @@ package stats
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -196,7 +197,17 @@ type ProviderHealth struct {
 	OkCount    int64      `json:"ok_count"`
 	FailCount  int64      `json:"failed_count"`
 	LastSentAt *time.Time `json:"last_sent_at"`
-	Status     string     `json:"status"` // healthy | degraded | failing | idle | disabled
+	Status     string     `json:"status"` // healthy | degraded | failing | idle | disabled | offline
+	// Gateway is set for android_sms providers (phone heartbeat).
+	Gateway *GatewayHealth `json:"gateway,omitempty"`
+}
+
+// GatewayHealth is the Android gateway phone's last heartbeat.
+type GatewayHealth struct {
+	Online     bool            `json:"online"`
+	LastSeenAt *time.Time      `json:"last_seen_at"`
+	Pending    int64           `json:"pending"`
+	Info       json.RawMessage `json:"info"`
 }
 
 // Health is the system health payload for one project.
@@ -222,6 +233,12 @@ func (s *Service) Health(ctx context.Context, projectID uuid.UUID) (*Health, err
 	if err != nil {
 		return nil, err
 	}
+	devices := map[uuid.UUID]sqlcgen.GatewayDevice{}
+	if devs, err := s.db.Queries.ListGatewayDevicesForProject(ctx, projectID); err == nil {
+		for _, d := range devs {
+			devices[d.ProviderID] = d
+		}
+	}
 	h.Providers = make([]ProviderHealth, 0, len(rows))
 	for _, r := range rows {
 		p := ProviderHealth{ID: r.ID, Name: r.Name, Channel: string(r.Channel), Type: string(r.Type), IsActive: r.IsActive, Priority: r.Priority,
@@ -241,6 +258,14 @@ func (s *Service) Health(ctx context.Context, projectID uuid.UUID) (*Health, err
 			p.Status = "degraded"
 		default:
 			p.Status = "failing"
+		}
+		if d, ok := devices[r.ID]; ok {
+			online := d.LastSeenAt != nil && time.Since(*d.LastSeenAt) <= 90*time.Second
+			pending, _ := s.db.Queries.CountGatewayOutboxPending(ctx, r.ID)
+			p.Gateway = &GatewayHealth{Online: online, LastSeenAt: d.LastSeenAt, Pending: pending, Info: d.DeviceInfo}
+			if r.IsActive && !online {
+				p.Status = "offline"
+			}
 		}
 		h.Providers = append(h.Providers, p)
 	}

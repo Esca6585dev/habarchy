@@ -1900,6 +1900,319 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/projects/{project_id}/providers/{provider_id}/pairing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectID"];
+                provider_id: components["parameters"]["ProviderID"];
+            };
+            cookie?: never;
+        };
+        /** Pairing data for an android_sms provider (API URL, gateway key, QR payload) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                    provider_id: components["parameters"]["ProviderID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Pairing info */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Envelope"] & {
+                            data?: components["schemas"]["GatewayPairing"];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/projects/{project_id}/inbound": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        /** SMS received by the project's gateway phones */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: components["parameters"]["Limit"];
+                    offset?: components["parameters"]["Offset"];
+                };
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Inbound SMS */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Envelope"] & {
+                            data?: components["schemas"]["InboundSMS"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gateway/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who am I (phone pairing check) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Provider */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid gateway key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gateway/v1/outbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lease pending SMS (long poll)
+         * @description Returns up to `limit` SMS the phone must send and marks them leased. Waits up to `wait` seconds (max 25) when the outbox is empty.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    wait?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Items to send */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Envelope"] & {
+                            data?: components["schemas"]["OutboxItem"][];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gateway/v1/outbox/{outbox_id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outbox_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Report sent / failed / delivered for an outbox item */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    outbox_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "sent" | "failed" | "delivered";
+                        /** @description Android SmsManager result: generic_failure, radio_off, null_pdu, no_service, limit_exceeded, … */
+                        error_code?: string;
+                        error_message?: string;
+                        parts?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description `{id, status, applied}` */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unknown outbox id for this phone */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gateway/v1/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Phone heartbeat (battery, network, operator, app version) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            responses: {
+                /** @description `{ok, pending, server_time}` */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gateway/v1/inbound": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Forward an SMS the phone received (fires the sms.inbound webhook) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        from: string;
+                        text: string;
+                        /** Format: date-time */
+                        received_at?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Stored */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/projects/{project_id}/templates": {
         parameters: {
             query?: never;
@@ -2866,7 +3179,7 @@ export interface components {
         /** @enum {string} */
         Role: "owner" | "admin" | "developer" | "viewer";
         /** @enum {string} */
-        ProviderType: "http_sms" | "smpp" | "smtp" | "fcm" | "telegram_bot";
+        ProviderType: "http_sms" | "smpp" | "android_sms" | "smtp" | "fcm" | "telegram_bot";
         /** @enum {string} */
         Scope: "messages:send" | "messages:read" | "otp" | "templates" | "contacts" | "devices" | "usage";
         /** @description A raw address (E.164 phone, email, FCM token, chat id) or a contact reference. */
@@ -3306,6 +3619,48 @@ export interface components {
             /** Format: date-time */
             updated_at?: string;
         };
+        GatewayPairing: {
+            /** Format: uuid */
+            provider_id?: string;
+            name?: string;
+            api_url?: string;
+            gateway_key?: string;
+            sim_slot?: number;
+            /** @description habarchy://gateway?url=…&key=… */
+            qr?: string;
+            online?: boolean;
+            /** Format: date-time */
+            last_seen_at?: string | null;
+            device_info?: {
+                [key: string]: unknown;
+            };
+        };
+        InboundSMS: {
+            /** Format: uuid */
+            ID?: string;
+            /** Format: uuid */
+            ProviderID?: string;
+            /** Format: uuid */
+            ProjectID?: string;
+            FromAddress?: string;
+            Text?: string;
+            /** Format: date-time */
+            ReceivedAt?: string;
+            /** Format: date-time */
+            CreatedAt?: string;
+        };
+        OutboxItem: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            message_id?: string;
+            to?: string;
+            text?: string;
+            /** @description -1 default SIM, 0 or 1 */
+            sim_slot?: number;
+            /** Format: date-time */
+            expires_at?: string;
+        };
         TestSendResult: {
             ok?: boolean;
             duration_ms?: number;
@@ -3403,7 +3758,17 @@ export interface components {
                 /** Format: date-time */
                 last_sent_at?: string | null;
                 /** @enum {string} */
-                status?: "healthy" | "degraded" | "failing" | "idle" | "disabled";
+                status?: "healthy" | "degraded" | "failing" | "idle" | "disabled" | "offline";
+                /** @description Present for android_sms providers (phone heartbeat) */
+                gateway?: {
+                    online?: boolean;
+                    /** Format: date-time */
+                    last_seen_at?: string | null;
+                    pending?: number;
+                    info?: {
+                        [key: string]: unknown;
+                    };
+                };
             }[];
             devices?: {
                 active?: number;

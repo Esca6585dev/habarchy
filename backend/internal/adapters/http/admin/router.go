@@ -34,6 +34,8 @@ type Handlers struct {
 	// QueueUI is the asynqmon handler, mounted at /admin/queues behind
 	// admin auth when set.
 	QueueUI http.Handler
+	// PublicURL is the API base URL phones should use (gateway pairing).
+	PublicURL string
 }
 
 // Register mounts the admin API under /api/admin.
@@ -127,5 +129,7 @@ func (h *Handlers) Register(app fiber.Router) {
 		pv.Put("/:provider_id", h.updateProvider)
 		pv.Delete("/:provider_id", h.deleteProvider)
 		pv.Post("/:provider_id/test", h.testSendProvider)
+		pv.Get("/:provider_id/pairing", h.gatewayPairing)
+		p.Get("/inbound", h.requireRole(domain.RoleViewer), h.listInbound)
 	}
 }

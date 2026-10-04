@@ -1,12 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FlaskConical, Pencil, Plus } from "lucide-react";
+import { FlaskConical, Pencil, Plus, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { api, unwrap, ApiError } from "@/lib/api/client";
 import { qk } from "@/lib/hooks";
-import type { Provider } from "@/lib/api/types";
+import type { GatewayPairing, Provider } from "@/lib/api/types";
 import { useProject } from "@/components/project-context";
 import { PageHeader } from "@/components/common/page-header";
 import { ChannelBadge } from "@/components/common/status-badge";
@@ -26,10 +26,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const types = ["http_sms", "smpp", "smtp", "fcm", "telegram_bot"] as const;
+const types = ["http_sms", "smpp", "android_sms", "smtp", "fcm", "telegram_bot"] as const;
 const samples: Record<string, string> = {
   http_sms: JSON.stringify({ url: "https://sms.example.tm/api/send", method: "POST", headers: { Authorization: "Bearer TOKEN" }, body_template: '{"to":"{{.To}}","text":{{.TextJSON}},"from":"{{.Sender}}"}', sender: "HABARCHY", success: { json_path: "status", json_equals: "OK" }, message_id: { json_path: "id" }, dlr: { message_id_param: "msgid", status_param: "status", delivered_values: ["DELIVRD"], failed_values: ["UNDELIV", "EXPIRED"] } }, null, 2),
   smpp: JSON.stringify({ host: "smsc.operator.tm", port: 2775, system_id: "habarchy", password: "secret", source_addr: "HABARCHY", source_ton: 5, source_npi: 0, dest_ton: 1, dest_npi: 1, enquire_link_sec: 60, request_dlr: true }, null, 2),
+  android_sms: JSON.stringify({ gateway_key: "", sim_slot: -1, timeout_sec: 45 }, null, 2),
   smtp: JSON.stringify({ host: "smtp.example.tm", port: 587, tls_mode: "starttls", username: "no-reply@example.tm", password: "secret", from_name: "Habarchy", from_email: "no-reply@example.tm" }, null, 2),
   fcm: JSON.stringify({ service_account: { type: "service_account", project_id: "my-firebase", private_key: "-----BEGIN PRIVATE KEY-----\n...", client_email: "firebase-adminsdk@my-firebase.iam.gserviceaccount.com" } }, null, 2),
   telegram_bot: JSON.stringify({ bot_token: "123456:ABC-DEF", parse_mode: "HTML" }, null, 2),
@@ -48,6 +49,16 @@ export default function ProvidersPage() {
   const [testTo, setTestTo] = useState("");
   const [testResult, setTestResult] = useState<unknown>(null);
   const [detail, setDetail] = useState<Provider | null>(null);
+  const [pairing, setPairing] = useState<GatewayPairing | null>(null);
+  useEffect(() => {
+    if (!detail || detail.type !== "android_sms" || !projectId) { setPairing(null); return; }
+    let cancelled = false;
+    void (async () => {
+      const res = await api.GET("/api/admin/projects/{project_id}/providers/{provider_id}/pairing", { params: { path: { project_id: projectId, provider_id: detail.id! } } });
+      if (!cancelled && res.data) setPairing(res.data.data ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [detail, projectId]);
 
   const q = useQuery({
     queryKey: qk.providers(projectId ?? ""),
@@ -149,6 +160,28 @@ export default function ProvidersPage() {
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <DialogContent wide>
           <DialogHeader><DialogTitle>{detail?.name}</DialogTitle><DialogDescription>{t("settings")}</DialogDescription></DialogHeader>
+          {detail?.type === "android_sms" ? (
+            <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm" data-testid="pairing">
+              <div className="flex items-center gap-2 font-medium"><Smartphone className="h-4 w-4" /> {t("pairing")}
+                {pairing ? <Badge variant={pairing.online ? "success" : "destructive"}>{pairing.online ? t("online") : t("offline")}</Badge> : null}
+              </div>
+              <p className="text-muted-foreground">{t("pairingHint")}</p>
+              {pairing ? (
+                <div className="grid gap-2 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+                  <span className="text-muted-foreground">API URL</span>
+                  <code className="truncate rounded bg-background px-1.5 py-0.5 text-xs">{pairing.api_url}</code>
+                  <CopyButton size="icon" value={pairing.api_url ?? ""} />
+                  <span className="text-muted-foreground">{t("gatewayKey")}</span>
+                  <code className="truncate rounded bg-background px-1.5 py-0.5 text-xs" data-testid="gateway-key">{pairing.gateway_key}</code>
+                  <CopyButton size="icon" value={pairing.gateway_key ?? ""} />
+                  <span className="text-muted-foreground">QR</span>
+                  <code className="truncate rounded bg-background px-1.5 py-0.5 text-xs">{pairing.qr}</code>
+                  <CopyButton size="icon" value={pairing.qr ?? ""} />
+                  {pairing.last_seen_at ? <><span className="text-muted-foreground">{t("lastSeen")}</span><span className="sm:col-span-2">{new Date(pairing.last_seen_at).toLocaleString()}{pairing.device_info && typeof pairing.device_info === "object" ? ` · ${Object.entries(pairing.device_info as Record<string, unknown>).filter(([k]) => ["battery", "network", "operator", "model"].includes(k)).map(([k, v]) => `${k}: ${String(v)}`).join(" · ")}` : ""}</span></> : null}
+                </div>
+              ) : <Skeleton className="h-16" />}
+            </div>
+          ) : null}
           {detail?.type === "http_sms" ? (
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">{t("dlrUrl")}:</span>

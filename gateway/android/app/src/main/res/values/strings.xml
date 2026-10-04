@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Habarçy Gateway</string>
+    <string name="notif_channel">SMS gateway</string>
+    <string name="notif_connecting">Serwere birikýär…</string>
+    <string name="notif_online">Işleýär · %1$s</string>
+    <string name="notif_offline">Serwer elýeterli däl, gaýtadan synanyşýar…</string>
+    <string name="notif_unauthorized">Gateway açary nädogry</string>
+    <string name="notif_not_configured">Sazlanmadyk: API URL we açary giriziň</string>
+    <string name="notif_stop">Duruz</string>
+</resources>

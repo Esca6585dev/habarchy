@@ -37,6 +37,9 @@ type SMSMessage struct {
 	To     string // E.164
 	Text   string
 	Sender string
+	// Ref is the Habarchy message id, for providers that need to correlate
+	// asynchronous results (the Android gateway outbox).
+	Ref string
 }
 
 // EmailMessage is the payload for email providers.

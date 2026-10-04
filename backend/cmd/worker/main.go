@@ -16,6 +16,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/events"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/gateway"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/webhooks"
 	"github.com/Esca6585dev/habarchy/backend/internal/config"
@@ -80,6 +81,7 @@ func run() error {
 	smppPool := worker.NewSMPPPool(log, deliverySvc)
 	defer smppPool.Close()
 	providerSvc.SMPPFactory = smppPool.Factory
+	providerSvc.GatewayFactory = gateway.New(db, nil, nil).Factory
 
 	srv := asynq.NewServer(queue.RedisOpt(rdb.Options()), asynq.Config{
 		Concurrency:    cfg.Queue.Concurrency,

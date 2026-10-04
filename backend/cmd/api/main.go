@@ -16,6 +16,7 @@ import (
 
 	httpadapter "github.com/Esca6585dev/habarchy/backend/internal/adapters/http"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/admin"
+	gatewayhttp "github.com/Esca6585dev/habarchy/backend/internal/adapters/http/gateway"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/public"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/redis"
@@ -23,10 +24,12 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/events"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/gateway"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/seed"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/stats"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/templates"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/webhooks"
@@ -42,6 +45,8 @@ func main() {
 	migrateOnly := flag.Bool("migrate", false, "apply database migrations and exit")
 	showEnv := flag.Bool("env", false, "print documented environment variables and exit")
 	createAdmin := flag.Bool("create-admin", false, "create an admin user from HABARCHY_ADMIN_EMAIL / HABARCHY_ADMIN_PASSWORD and exit")
+	seedDemo := flag.Bool("seed", false, "create the demo project, sample templates (otp, welcome, password_reset in tk/ru/en) and print an API key, then exit")
+	seedLive := flag.Bool("seed-live-key", false, "with -seed: also issue an hb_live_ key")
 	flag.Parse()
 
 	switch {
@@ -58,13 +63,13 @@ func main() {
 		return
 	}
 
-	if err := run(*migrateOnly, *createAdmin); err != nil {
+	if err := run(*migrateOnly, *createAdmin, *seedDemo, *seedLive); err != nil {
 		fmt.Fprintln(os.Stderr, "api:", err)
 		os.Exit(1)
 	}
 }
 
-func run(migrateOnly, createAdmin bool) error {
+func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 	cfg, err := config.Load()
 	if err != nil {
 		return err
@@ -112,6 +117,18 @@ func run(migrateOnly, createAdmin bool) error {
 		log.Info().Str("email", user.Email).Str("id", user.ID.String()).Msg("admin user created")
 		return nil
 	}
+	if seedDemo {
+		s := &seed.Seeder{DB: db, Auth: authSvc, Projects: projectSvc, Templates: templateSvc}
+		res, err := s.Run(ctx, seed.Options{
+			AdminEmail: os.Getenv("HABARCHY_ADMIN_EMAIL"), AdminPassword: os.Getenv("HABARCHY_ADMIN_PASSWORD"), AdminName: os.Getenv("HABARCHY_ADMIN_NAME"),
+			ProjectSlug: os.Getenv("HABARCHY_SEED_PROJECT"), LiveKey: seedLive,
+		})
+		if err != nil {
+			return err
+		}
+		res.Print(os.Stdout)
+		return nil
+	}
 
 	rdb, err := redis.Connect(ctx, cfg.Redis)
 	if err != nil {
@@ -138,6 +155,7 @@ func run(migrateOnly, createAdmin bool) error {
 	publisher := events.NewPublisher(rdb.Raw())
 	messageSvc.Events, deliverySvc.Events = publisher, publisher
 	statsSvc := stats.New(db, q)
+	gatewaySvc := gateway.New(db, deliverySvc, webhookSvc)
 
 	app := httpadapter.NewServer(cfg, log, httpadapter.Deps{DB: db, Redis: rdb})
 	httpadapter.RegisterDocs(app)
@@ -148,8 +166,9 @@ func run(migrateOnly, createAdmin bool) error {
 	queueUI := asynqmon.New(asynqmon.Options{RootPath: "/admin/queues", RedisConnOpt: queue.RedisOpt(rdb.Options())})
 	(&admin.Handlers{
 		Auth: authSvc, Projects: projectSvc, Templates: templateSvc, Providers: providerSvc, Messages: messageSvc,
-		Webhooks: webhookSvc, Stats: statsSvc, DB: db, Redis: rdb.Raw(), QueueUI: queueUI,
+		Webhooks: webhookSvc, Stats: statsSvc, DB: db, Redis: rdb.Raw(), QueueUI: queueUI, PublicURL: cfg.HTTP.PublicURL,
 	}).Register(app)
+	(&gatewayhttp.Handlers{Gateway: gatewaySvc}).Register(app)
 	(&public.Handlers{
 		Projects: projectSvc, Templates: templateSvc, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc,
 		Providers: providerSvc, Delivery: deliverySvc, Stats: statsSvc, SignatureTolerance: cfg.Security.SignatureTolerance,

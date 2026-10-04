@@ -29,3 +29,5 @@ export interface Envelope<T> {
   meta?: Record<string, unknown>;
   error?: APIError;
 }
+
+export type GatewayPairing = components["schemas"]["GatewayPairing"];

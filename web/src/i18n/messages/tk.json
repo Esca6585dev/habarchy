@@ -152,7 +152,15 @@
     "ok": "Providere gowşuryldy",
     "failed": "Provider ýalňyşlygy",
     "settings": "Sazlamalar (syrlar gizlenen)",
-    "dlrUrl": "Gowşuryş hasabaty URL"
+    "dlrUrl": "Gowşuryş hasabaty URL",
+    "pairing": "Telefony birikdir",
+    "pairingHint": "SIM-kartaly telefona Habarçy Gateway APK-ny gurnaň, şu URL bilen açary giriziň (ýa-da QR skanirläň) we «Işe gir» basyň.",
+    "gatewayKey": "Gateway açary",
+    "online": "Telefon onlaýn",
+    "offline": "Telefon oflaýn",
+    "lastSeen": "Soňky habar",
+    "pendingSms": "Telefonda garaşýan SMS",
+    "inbound": "Gelen SMS"
   },
   "templates": {
     "title": "Şablonlar",
@@ -260,7 +268,9 @@
     "degraded": "Pese gaçan",
     "failing": "Şowsuz",
     "idle": "Boş",
-    "disabled": "Öçürilen"
+    "disabled": "Öçürilen",
+    "offline": "Oflaýn",
+    "battery": "Batareýa"
   },
   "audit": {
     "title": "Audit žurnaly",

@@ -478,6 +478,7 @@ const (
 	ProviderTypeSmtp        ProviderType = "smtp"
 	ProviderTypeFcm         ProviderType = "fcm"
 	ProviderTypeTelegramBot ProviderType = "telegram_bot"
+	ProviderTypeAndroidSms  ProviderType = "android_sms"
 )
 
 func (e *ProviderType) Scan(src interface{}) error {
@@ -521,7 +522,8 @@ func (e ProviderType) Valid() bool {
 		ProviderTypeSmpp,
 		ProviderTypeSmtp,
 		ProviderTypeFcm,
-		ProviderTypeTelegramBot:
+		ProviderTypeTelegramBot,
+		ProviderTypeAndroidSms:
 		return true
 	}
 	return false
@@ -534,6 +536,7 @@ func AllProviderTypeValues() []ProviderType {
 		ProviderTypeSmtp,
 		ProviderTypeFcm,
 		ProviderTypeTelegramBot,
+		ProviderTypeAndroidSms,
 	}
 }
 
@@ -606,6 +609,45 @@ type Device struct {
 	LastSeenAt time.Time
 	IsActive   bool
 	CreatedAt  time.Time
+}
+
+type GatewayDevice struct {
+	ProviderID uuid.UUID
+	ProjectID  uuid.UUID
+	KeyHash    []byte
+	LastSeenAt *time.Time
+	DeviceInfo json.RawMessage
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+type GatewayInbound struct {
+	ID          uuid.UUID
+	ProviderID  uuid.UUID
+	ProjectID   uuid.UUID
+	FromAddress string
+	Text        string
+	ReceivedAt  time.Time
+	CreatedAt   time.Time
+}
+
+type GatewayOutbox struct {
+	ID           uuid.UUID
+	ProviderID   uuid.UUID
+	MessageID    uuid.UUID
+	ToAddress    string
+	Text         string
+	SimSlot      int32
+	Status       string
+	ErrorCode    string
+	ErrorMessage string
+	Parts        int32
+	ExpiresAt    time.Time
+	LeasedAt     *time.Time
+	SentAt       *time.Time
+	DeliveredAt  *time.Time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 type Message struct {

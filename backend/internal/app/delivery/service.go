@@ -155,7 +155,7 @@ func (s *Service) attempt(ctx context.Context, msg *sqlcgen.Message, prov *sqlcg
 	var err error
 	switch domain.Channel(msg.Channel) {
 	case domain.ChannelSMS:
-		res, err = adapter.(ports.SMSProvider).Send(sendCtx, ports.SMSMessage{To: msg.ToAddress, Text: msg.RenderedBody})
+		res, err = adapter.(ports.SMSProvider).Send(sendCtx, ports.SMSMessage{To: msg.ToAddress, Text: msg.RenderedBody, Ref: msg.ID.String()})
 	case domain.ChannelEmail:
 		res, err = adapter.(ports.EmailProvider).Send(sendCtx, emailFrom(msg))
 	case domain.ChannelTelegram:

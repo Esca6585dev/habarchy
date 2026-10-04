@@ -10,7 +10,8 @@
 |------|------|
 | `backend/` | Go 1.23 + Fiber v2, PostgreSQL, Redis, asynq |
 | `web/` | Next.js 15 + TypeScript + Tailwind + shadcn/ui |
-| `mobile/` | Flutter 3 + Riverpod + firebase_messaging |
+| `mobile/` | Flutter 3 + Riverpod + firebase_messaging (admin app) |
+| `gateway/` | Flutter + Kotlin foreground service: a phone with a SIM card as SMS provider |
 | `sdk/` | Go, TypeScript, Dart, PHP clients |
 
 ## Status
@@ -25,6 +26,7 @@ In progress — built step by step from [PROMPT.md](PROMPT.md).
 | 4 | Admin API (message log, resend, webhooks, dashboard, usage, health, audit), SSE, usage aggregation, Prometheus, asynqmon | ✅ done |
 | 5 | Next.js admin panel (tk/ru/en, dark mode, live feed, template editor, Playwright e2e) + OpenAPI spec at `/api/docs` | ✅ done |
 | 6 | Flutter admin app (dashboard, message log, templates, providers, API keys, tk/ru/en, dark mode) + FCM push demo client | ✅ done |
+| 6b | Android SMS gateway: `android_sms` provider + Habarçy Gateway APK (phone sends SMS from its SIM, reports sent/delivered, forwards inbound) | ✅ done |
 | 7 | SDKs, docs, docker, CI | ⏳ |
 
 ## Development
@@ -78,6 +80,17 @@ See [docs/architecture.md](docs/architecture.md) for the component and data-mode
 | Live + ops (admin) | `GET /api/admin/stream` (SSE, `?project_id=`, token via header / `?access_token=` / cookie), `GET /api/admin/users`, `POST /users`, `GET /overview`, `/admin/queues` (asynqmon), `GET /metrics` (Prometheus) |
 | Usage (public) | `GET /api/v1/usage?from=&to=&group_by=channel\|day` |
 | Callbacks | `POST|GET /callbacks/sms/{provider_id}` (HTTP delivery reports) |
+| Phone gateway | `GET /api/gateway/v1/me`, `GET /outbox?wait=&limit=` (long poll), `POST /outbox/{id}/result`, `POST /heartbeat`, `POST /inbound` (header `X-Gateway-Key`); admin `GET /providers/{pid}/pairing`, `GET /projects/{id}/inbound` |
+
+### Sending SMS from a phone (no operator contract)
+
+```
+admin panel → Providers → Add provider → type android_sms → Save
+          → click the provider → Pairing: API URL + gateway key (+ QR)
+phone     → install gateway APK (see gateway/README.md) → paste URL + key → Start
+curl -X POST $HABARCHY/api/v1/messages -H "X-Api-Key: hb_live_xxx" \
+  -d '{"channel":"sms","to":"+99365123456","body":"Salam!"}'      # goes out through the phone's SIM
+```
 
 ## Quick examples
 

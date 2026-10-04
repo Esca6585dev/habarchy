@@ -23,6 +23,7 @@ tags:
   - name: public-contacts
   - name: public-usage
   - name: callbacks
+  - name: gateway
   - name: admin-auth
   - name: admin-projects
   - name: admin-api-keys
@@ -746,6 +747,113 @@ paths:
                   - type: object
                     properties: { data: { $ref: "#/components/schemas/TestSendResult" } }
 
+  /api/admin/projects/{project_id}/providers/{provider_id}/pairing:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { $ref: "#/components/parameters/ProviderID" }]
+    get:
+      tags: [admin-providers]
+      summary: Pairing data for an android_sms provider (API URL, gateway key, QR payload)
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Pairing info
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/GatewayPairing" } }
+
+  /api/admin/projects/{project_id}/inbound:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-providers]
+      summary: SMS received by the project's gateway phones
+      security: [{ BearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Limit" }, { $ref: "#/components/parameters/Offset" }]
+      responses:
+        "200":
+          description: Inbound SMS
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/InboundSMS" } } }
+
+  /api/gateway/v1/me:
+    get:
+      tags: [gateway]
+      summary: Who am I (phone pairing check)
+      security: [{ GatewayKey: [] }]
+      responses:
+        "200": { description: Provider, project and pending count }
+        "401": { description: Invalid gateway key, disabled provider or suspended project }
+  /api/gateway/v1/outbox:
+    get:
+      tags: [gateway]
+      summary: Lease pending SMS (long poll)
+      description: Returns up to `limit` SMS the phone must send and marks them leased. Waits up to `wait` seconds (max 25) when the outbox is empty.
+      security: [{ GatewayKey: [] }]
+      parameters:
+        - { name: wait, in: query, schema: { type: integer, default: 20, minimum: 0, maximum: 25 } }
+        - { name: limit, in: query, schema: { type: integer, default: 5, minimum: 1, maximum: 20 } }
+      responses:
+        "200":
+          description: Items to send
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/OutboxItem" } } }
+  /api/gateway/v1/outbox/{outbox_id}/result:
+    parameters: [{ name: outbox_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    post:
+      tags: [gateway]
+      summary: Report sent / failed / delivered for an outbox item
+      security: [{ GatewayKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [sent, failed, delivered] }
+                error_code: { type: string, description: "Android SmsManager result: generic_failure, radio_off, null_pdu, no_service, limit_exceeded, …" }
+                error_message: { type: string }
+                parts: { type: integer }
+      responses:
+        "200": { description: "`{id, status, applied}`" }
+        "404": { description: Unknown outbox id for this phone }
+  /api/gateway/v1/heartbeat:
+    post:
+      tags: [gateway]
+      summary: Phone heartbeat (battery, network, operator, app version)
+      security: [{ GatewayKey: [] }]
+      requestBody: { content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+      responses:
+        "200": { description: "`{ok, pending, server_time}`" }
+  /api/gateway/v1/inbound:
+    post:
+      tags: [gateway]
+      summary: Forward an SMS the phone received (fires the sms.inbound webhook)
+      security: [{ GatewayKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, text]
+              properties: { from: { type: string }, text: { type: string }, received_at: { type: string, format: date-time } }
+      responses:
+        "201": { description: Stored }
+
   /api/admin/projects/{project_id}/templates:
     parameters: [{ $ref: "#/components/parameters/ProjectID" }]
     get:
@@ -1088,6 +1196,11 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    GatewayKey:
+      type: apiKey
+      in: header
+      name: X-Gateway-Key
+      description: "Pairing key of an `android_sms` provider (Habarçy Gateway app)."
 
   parameters:
     ProjectID: { name: project_id, in: path, required: true, schema: { type: string, format: uuid } }
@@ -1279,7 +1392,7 @@ components:
     Priority: { type: string, enum: [high, normal, low] }
     Locale: { type: string, enum: [tk, ru, en] }
     Role: { type: string, enum: [owner, admin, developer, viewer] }
-    ProviderType: { type: string, enum: [http_sms, smpp, smtp, fcm, telegram_bot] }
+    ProviderType: { type: string, enum: [http_sms, smpp, android_sms, smtp, fcm, telegram_bot] }
     Scope: { type: string, enum: ["messages:send", "messages:read", otp, templates, contacts, devices, usage] }
 
     Recipient:
@@ -1686,6 +1799,37 @@ components:
         settings: { type: object, additionalProperties: true, description: credentials with secrets masked }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+    GatewayPairing:
+      type: object
+      properties:
+        provider_id: { type: string, format: uuid }
+        name: { type: string }
+        api_url: { type: string }
+        gateway_key: { type: string }
+        sim_slot: { type: integer }
+        qr: { type: string, description: "habarchy://gateway?url=…&key=…" }
+        online: { type: boolean }
+        last_seen_at: { type: [string, "null"], format: date-time }
+        device_info: { type: object, additionalProperties: true }
+    InboundSMS:
+      type: object
+      properties:
+        ID: { type: string, format: uuid }
+        ProviderID: { type: string, format: uuid }
+        ProjectID: { type: string, format: uuid }
+        FromAddress: { type: string }
+        Text: { type: string }
+        ReceivedAt: { type: string, format: date-time }
+        CreatedAt: { type: string, format: date-time }
+    OutboxItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        message_id: { type: string, format: uuid }
+        to: { type: string }
+        text: { type: string }
+        sim_slot: { type: integer, description: "-1 default SIM, 0 or 1" }
+        expires_at: { type: string, format: date-time }
     TestSendResult:
       type: object
       properties:
@@ -1778,7 +1922,15 @@ components:
               ok_count: { type: integer }
               failed_count: { type: integer }
               last_sent_at: { type: [string, "null"], format: date-time }
-              status: { type: string, enum: [healthy, degraded, failing, idle, disabled] }
+              status: { type: string, enum: [healthy, degraded, failing, idle, disabled, offline] }
+              gateway:
+                type: object
+                description: Present for android_sms providers (phone heartbeat)
+                properties:
+                  online: { type: boolean }
+                  last_seen_at: { type: [string, "null"], format: date-time }
+                  pending: { type: integer }
+                  info: { type: object, additionalProperties: true }
         devices:
           type: object
           properties: { active: { type: integer }, total: { type: integer } }

@@ -111,12 +111,15 @@ const (
 	ProviderSMTP        ProviderType = "smtp"
 	ProviderFCM         ProviderType = "fcm"
 	ProviderTelegramBot ProviderType = "telegram_bot"
+	// ProviderAndroidSMS is a phone running the Habarchy Gateway app: the
+	// worker queues SMS in its outbox and the phone sends them over its SIM.
+	ProviderAndroidSMS ProviderType = "android_sms"
 )
 
 // Channel returns the channel a provider type serves.
 func (t ProviderType) Channel() Channel {
 	switch t {
-	case ProviderHTTPSMS, ProviderSMPP:
+	case ProviderHTTPSMS, ProviderSMPP, ProviderAndroidSMS:
 		return ChannelSMS
 	case ProviderSMTP:
 		return ChannelEmail
@@ -222,6 +225,8 @@ const (
 	WebhookMessageDelivered WebhookEvent = "message.delivered"
 	WebhookMessageFailed    WebhookEvent = "message.failed"
 	WebhookBatchCompleted   WebhookEvent = "batch.completed"
+	// WebhookSMSInbound is fired when an Android gateway phone receives an SMS.
+	WebhookSMSInbound WebhookEvent = "sms.inbound"
 )
 
 // APIKeyScope restricts what an API key may do.
