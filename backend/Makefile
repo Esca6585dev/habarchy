@@ -8,7 +8,7 @@ BIN      := bin
 DB_URL   ?= $(HABARCHY_DATABASE_URL)
 PKGS     := ./...
 
-.PHONY: all build run run-worker run-scheduler test test-unit test-integration lint fmt tidy sqlc migrate migrate-down migrate-status tools genkey clean
+.PHONY: all build run run-worker run-scheduler test test-unit test-integration lint fmt tidy sqlc openapi migrate migrate-down migrate-status tools genkey clean
 
 all: lint test build
 
@@ -62,6 +62,10 @@ migrate-status:
 tools:          ## install sqlc, goose, golangci-lint
 	$(GO) install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.29.0
 	$(GO) install github.com/pressly/goose/v3/cmd/goose@v3.24.3
+
+openapi:        ## validate the spec and copy it to docs/openapi.yaml
+	$(GO) run ./cmd/api -env >/dev/null 2>&1 || true
+	cp api/openapi.yaml ../docs/openapi.yaml
 
 genkey:         ## print a fresh HABARCHY_MASTER_KEY
 	$(GO) run ./cmd/api -genkey

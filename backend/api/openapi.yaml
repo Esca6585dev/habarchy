@@ -1,0 +1,1798 @@
+openapi: 3.1.0
+info:
+  title: Habarchy API
+  version: 0.5.0
+  description: |
+    Habarchy (Habarçy) is a self-hosted, multi-tenant notification gateway: one API to send
+    SMS, email, push (Firebase FCM) and Telegram messages with queues, retries, provider
+    fallback, templates, delivery status, webhooks and an admin panel.
+
+    Two APIs share this document:
+    * **Public API** `/api/v1` — called by client applications with an API key (`X-Api-Key`),
+      optionally HMAC-signed (`X-Signature`, `X-Timestamp`). Keys carry scopes.
+    * **Admin API** `/api/admin` — used by the web and mobile admin apps with a JWT
+      (`Authorization: Bearer`). Project routes are role based (owner > admin > developer > viewer).
+
+    Every response is wrapped in an envelope `{ "data": ..., "meta": ..., "error": {"code","message","details"} }`.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: public-messages
+  - name: public-otp
+  - name: public-templates
+  - name: public-contacts
+  - name: public-usage
+  - name: callbacks
+  - name: admin-auth
+  - name: admin-projects
+  - name: admin-api-keys
+  - name: admin-providers
+  - name: admin-templates
+  - name: admin-messages
+  - name: admin-webhooks
+  - name: admin-insights
+  - name: admin-system
+  - name: health
+
+security: []
+
+paths:
+  /healthz:
+    get:
+      tags: [health]
+      summary: Liveness
+      responses:
+        "200": { $ref: "#/components/responses/Status" }
+  /readyz:
+    get:
+      tags: [health]
+      summary: Readiness (database + Redis)
+      responses:
+        "200": { $ref: "#/components/responses/Status" }
+        "503": { $ref: "#/components/responses/Status" }
+
+  # ---------------------------------------------------------------- public
+  /api/v1/me:
+    get:
+      tags: [public-usage]
+      summary: Identify the API key and its project
+      security: [{ ApiKey: [] }]
+      responses:
+        "200":
+          description: Key info
+          content: { application/json: { schema: { $ref: "#/components/schemas/Envelope" } } }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /api/v1/messages:
+    post:
+      tags: [public-messages]
+      summary: Send a message
+      description: "Returns **202** once the message is queued. Use `channel: auto` with a contact reference to let Habarchy pick the best channel."
+      security: [{ ApiKey: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/SendMessageRequest" } } }
+      responses:
+        "202":
+          description: Queued
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/Accepted" } }
+        "200":
+          description: Idempotent replay of an earlier request (`meta.duplicate = true`)
+          content: { application/json: { schema: { $ref: "#/components/schemas/MessageEnvelope" } } }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+    get:
+      tags: [public-messages]
+      summary: List messages (cursor pagination)
+      security: [{ ApiKey: [] }]
+      parameters:
+        - { name: status, in: query, schema: { $ref: "#/components/schemas/MessageStatus" } }
+        - { name: channel, in: query, schema: { $ref: "#/components/schemas/Channel" } }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+        - { name: cursor, in: query, schema: { type: string, format: uuid }, description: id of the last item of the previous page }
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
+      responses:
+        "200":
+          description: Page of messages
+          content: { application/json: { schema: { $ref: "#/components/schemas/MessageListEnvelope" } } }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/v1/messages/batch:
+    post:
+      tags: [public-messages]
+      summary: Send one template to up to 1000 recipients
+      security: [{ ApiKey: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/SendBatchRequest" } } }
+      responses:
+        "202":
+          description: Batch created; `meta.accepted` and `meta.rejected` describe the recipients
+          content: { application/json: { schema: { $ref: "#/components/schemas/BatchEnvelope" } } }
+        "200":
+          description: Idempotent replay
+          content: { application/json: { schema: { $ref: "#/components/schemas/BatchEnvelope" } } }
+        "400": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/messages/{message_id}:
+    parameters: [{ $ref: "#/components/parameters/MessageID" }]
+    get:
+      tags: [public-messages]
+      summary: Message status and timeline
+      security: [{ ApiKey: [] }]
+      responses:
+        "200":
+          description: Message with events
+          content: { application/json: { schema: { $ref: "#/components/schemas/MessageDetailEnvelope" } } }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/messages/{message_id}/cancel:
+    parameters: [{ $ref: "#/components/parameters/MessageID" }]
+    post:
+      tags: [public-messages]
+      summary: Cancel a queued or scheduled message
+      security: [{ ApiKey: [] }]
+      responses:
+        "200":
+          description: Cancelled message
+          content: { application/json: { schema: { $ref: "#/components/schemas/MessageEnvelope" } } }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/batches/{batch_id}:
+    parameters: [{ name: batch_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      tags: [public-messages]
+      summary: Batch progress
+      security: [{ ApiKey: [] }]
+      responses:
+        "200":
+          description: Batch
+          content: { application/json: { schema: { $ref: "#/components/schemas/BatchEnvelope" } } }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /api/v1/otp/send:
+    post:
+      tags: [public-otp]
+      summary: Send a one-time code
+      security: [{ ApiKey: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/OTPSendRequest" } } }
+      responses:
+        "202":
+          description: Code sent
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/OTPSendResult" } }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/otp/verify:
+    post:
+      tags: [public-otp]
+      summary: Verify a one-time code
+      security: [{ ApiKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, code]
+              properties: { to: { type: string }, code: { type: string } }
+      responses:
+        "200":
+          description: Verified
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/OTPVerifyResult" } }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+
+  /api/v1/templates:
+    get:
+      tags: [public-templates]
+      summary: List templates
+      security: [{ ApiKey: [] }]
+      parameters: [{ name: key, in: query, schema: { type: string } }]
+      responses:
+        "200": { $ref: "#/components/responses/TemplateList" }
+    post:
+      tags: [public-templates]
+      summary: Create a template
+      security: [{ ApiKey: [] }]
+      requestBody: { $ref: "#/components/requestBodies/Template" }
+      responses:
+        "201": { $ref: "#/components/responses/Template" }
+        "400": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/templates/preview:
+    post:
+      tags: [public-templates]
+      summary: Render ad hoc content with sample data
+      security: [{ ApiKey: [] }]
+      requestBody: { $ref: "#/components/requestBodies/Preview" }
+      responses:
+        "200": { $ref: "#/components/responses/Preview" }
+  /api/v1/templates/{template_id}:
+    parameters: [{ $ref: "#/components/parameters/TemplateID" }]
+    get:
+      tags: [public-templates]
+      summary: Get a template
+      security: [{ ApiKey: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Template" }
+        "404": { $ref: "#/components/responses/Error" }
+    put:
+      tags: [public-templates]
+      summary: Update a template (creates a new version)
+      security: [{ ApiKey: [] }]
+      requestBody: { $ref: "#/components/requestBodies/TemplateUpdate" }
+      responses:
+        "200": { $ref: "#/components/responses/Template" }
+    delete:
+      tags: [public-templates]
+      summary: Delete a template
+      security: [{ ApiKey: [] }]
+      responses:
+        "204": { description: Deleted }
+
+  /api/v1/contacts:
+    get:
+      tags: [public-contacts]
+      summary: List contacts
+      security: [{ ApiKey: [] }]
+      parameters:
+        - { name: tag, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Offset" }
+      responses:
+        "200": { $ref: "#/components/responses/ContactList" }
+    post:
+      tags: [public-contacts]
+      summary: Create or upsert (by external_id) a contact
+      security: [{ ApiKey: [] }]
+      requestBody: { $ref: "#/components/requestBodies/Contact" }
+      responses:
+        "201": { $ref: "#/components/responses/Contact" }
+        "200": { $ref: "#/components/responses/Contact" }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/v1/contacts/{contact_id}:
+    parameters: [{ name: contact_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      tags: [public-contacts]
+      summary: Get a contact
+      security: [{ ApiKey: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Contact" }
+        "404": { $ref: "#/components/responses/Error" }
+    put:
+      tags: [public-contacts]
+      summary: Update a contact
+      security: [{ ApiKey: [] }]
+      requestBody: { $ref: "#/components/requestBodies/Contact" }
+      responses:
+        "200": { $ref: "#/components/responses/Contact" }
+    delete:
+      tags: [public-contacts]
+      summary: Delete a contact
+      security: [{ ApiKey: [] }]
+      responses:
+        "204": { description: Deleted }
+  /api/v1/devices:
+    get:
+      tags: [public-contacts]
+      summary: List devices
+      security: [{ ApiKey: [] }]
+      parameters: [{ $ref: "#/components/parameters/Limit" }, { $ref: "#/components/parameters/Offset" }]
+      responses:
+        "200":
+          description: Devices
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/Device" } } }
+    post:
+      tags: [public-contacts]
+      summary: Register an FCM token
+      security: [{ ApiKey: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/DeviceRequest" } } }
+      responses:
+        "201":
+          description: Device
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/Device" } }
+  /api/v1/devices/{token}:
+    parameters: [{ name: token, in: path, required: true, schema: { type: string } }]
+    delete:
+      tags: [public-contacts]
+      summary: Remove an FCM token
+      security: [{ ApiKey: [] }]
+      responses:
+        "204": { description: Removed }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/usage:
+    get:
+      tags: [public-usage]
+      summary: Usage report
+      security: [{ ApiKey: [] }]
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: group_by, in: query, schema: { type: string, enum: [channel, day] } }
+      responses:
+        "200": { $ref: "#/components/responses/UsageList" }
+
+  /callbacks/sms/{provider_id}:
+    parameters: [{ name: provider_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    post:
+      tags: [callbacks]
+      summary: HTTP SMS delivery report
+      description: Called by the SMS gateway. Fields are mapped by the provider's `dlr` configuration (query, form or JSON).
+      responses:
+        "200": { $ref: "#/components/responses/Status" }
+        "404": { $ref: "#/components/responses/Error" }
+    get:
+      tags: [callbacks]
+      summary: HTTP SMS delivery report (GET variant)
+      responses:
+        "200": { $ref: "#/components/responses/Status" }
+
+  # ---------------------------------------------------------------- admin auth
+  /api/admin/auth/login:
+    post:
+      tags: [admin-auth]
+      summary: Login with email and password (+ TOTP code when enabled)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+                totp_code: { type: string }
+      responses:
+        "200":
+          description: Tokens and user
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          tokens: { $ref: "#/components/schemas/Tokens" }
+                          user: { $ref: "#/components/schemas/User" }
+        "401":
+          description: Invalid credentials, or `error.details.totp_required = true`
+          content: { application/json: { schema: { $ref: "#/components/schemas/ErrorEnvelope" } } }
+  /api/admin/auth/refresh:
+    post:
+      tags: [admin-auth]
+      summary: Rotate the refresh token
+      requestBody: { $ref: "#/components/requestBodies/RefreshToken" }
+      responses:
+        "200":
+          description: New token pair
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties: { tokens: { $ref: "#/components/schemas/Tokens" } }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/admin/auth/logout:
+    post:
+      tags: [admin-auth]
+      summary: Revoke a refresh token
+      requestBody: { $ref: "#/components/requestBodies/RefreshToken" }
+      responses:
+        "204": { description: Logged out }
+  /api/admin/auth/logout-all:
+    post:
+      tags: [admin-auth]
+      summary: Revoke all sessions of the current user
+      security: [{ BearerAuth: [] }]
+      responses:
+        "204": { description: Done }
+  /api/admin/me:
+    get:
+      tags: [admin-auth]
+      summary: Current user
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/User" }
+  /api/admin/me/password:
+    put:
+      tags: [admin-auth]
+      summary: Change password (revokes other sessions)
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, new_password]
+              properties: { current_password: { type: string }, new_password: { type: string, minLength: 8 } }
+      responses:
+        "204": { description: Changed }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/admin/me/totp/setup:
+    post:
+      tags: [admin-auth]
+      summary: Start 2FA setup (returns secret and otpauth URL once)
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Secret
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties: { secret: { type: string }, otpauth_url: { type: string } }
+  /api/admin/me/totp/confirm:
+    post:
+      tags: [admin-auth]
+      summary: Enable 2FA with a valid code
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [code], properties: { code: { type: string } } } } }
+      responses:
+        "204": { description: Enabled }
+  /api/admin/me/totp/disable:
+    post:
+      tags: [admin-auth]
+      summary: Disable 2FA (password required)
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [password], properties: { password: { type: string } } } } }
+      responses:
+        "204": { description: Disabled }
+
+  # ---------------------------------------------------------------- admin system
+  /api/admin/users:
+    get:
+      tags: [admin-system]
+      summary: List users
+      security: [{ BearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Limit" }, { $ref: "#/components/parameters/Offset" }]
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/User" } } }
+    post:
+      tags: [admin-system]
+      summary: Create a user
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties: { email: { type: string, format: email }, password: { type: string, minLength: 8 }, full_name: { type: string } }
+      responses:
+        "201": { $ref: "#/components/responses/User" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/admin/overview:
+    get:
+      tags: [admin-system]
+      summary: Global counters
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Counters
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/Overview" } }
+  /api/admin/stream:
+    get:
+      tags: [admin-system]
+      summary: Server-Sent Events of live message status
+      description: Token via `Authorization` header, `?access_token=` or the `habarchy_access` cookie. Events `message.queued|sent|delivered|failed` with a JSON body.
+      security: [{ BearerAuth: [] }]
+      parameters: [{ name: project_id, in: query, schema: { type: string, format: uuid } }]
+      responses:
+        "200": { description: text/event-stream }
+
+  # ---------------------------------------------------------------- admin projects
+  /api/admin/projects:
+    get:
+      tags: [admin-projects]
+      summary: Projects of the current user
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/ProjectList" }
+    post:
+      tags: [admin-projects]
+      summary: Create a project (caller becomes owner)
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/CreateProjectRequest" } } }
+      responses:
+        "201": { $ref: "#/components/responses/Project" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/admin/projects/{project_id}:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-projects]
+      summary: Project details
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Project" }
+        "404": { $ref: "#/components/responses/Error" }
+    patch:
+      tags: [admin-projects]
+      summary: Update project settings (admin role)
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/UpdateProjectRequest" } } }
+      responses:
+        "200": { $ref: "#/components/responses/Project" }
+    delete:
+      tags: [admin-projects]
+      summary: Delete a project (owner role)
+      security: [{ BearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+  /api/admin/projects/{project_id}/members:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-projects]
+      summary: List members
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Members
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/Member" } } }
+    put:
+      tags: [admin-projects]
+      summary: Add a member by email or change their role
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties: { email: { type: string, format: email }, role: { $ref: "#/components/schemas/Role" } }
+      responses:
+        "200":
+          description: Member
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/Member" } }
+  /api/admin/projects/{project_id}/members/{user_id}:
+    parameters:
+      - { $ref: "#/components/parameters/ProjectID" }
+      - { name: user_id, in: path, required: true, schema: { type: string, format: uuid } }
+    delete:
+      tags: [admin-projects]
+      summary: Remove a member
+      security: [{ BearerAuth: [] }]
+      responses:
+        "204": { description: Removed }
+        "409": { $ref: "#/components/responses/Error" }
+
+  /api/admin/projects/{project_id}/api-keys:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-api-keys]
+      summary: List API keys (hashes never returned)
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Keys
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/APIKey" } } }
+    post:
+      tags: [admin-api-keys]
+      summary: Create an API key (plaintext returned once in `data.key`)
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/CreateAPIKeyRequest" } } }
+      responses:
+        "201":
+          description: Key with plaintext
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/APIKey" } }
+  /api/admin/projects/{project_id}/api-keys/{key_id}:
+    parameters:
+      - { $ref: "#/components/parameters/ProjectID" }
+      - { name: key_id, in: path, required: true, schema: { type: string, format: uuid } }
+    delete:
+      tags: [admin-api-keys]
+      summary: Revoke an API key
+      security: [{ BearerAuth: [] }]
+      responses:
+        "204": { description: Revoked }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /api/admin/projects/{project_id}/providers:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-providers]
+      summary: List providers
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/ProviderList" }
+    post:
+      tags: [admin-providers]
+      summary: Create a provider (credentials validated for the type, stored encrypted)
+      security: [{ BearerAuth: [] }]
+      requestBody: { $ref: "#/components/requestBodies/Provider" }
+      responses:
+        "201": { $ref: "#/components/responses/Provider" }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/admin/projects/{project_id}/providers/{provider_id}:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { $ref: "#/components/parameters/ProviderID" }]
+    get:
+      tags: [admin-providers]
+      summary: Provider with masked settings
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Provider" }
+    put:
+      tags: [admin-providers]
+      summary: Update a provider (omit credentials to keep them)
+      security: [{ BearerAuth: [] }]
+      requestBody: { $ref: "#/components/requestBodies/Provider" }
+      responses:
+        "200": { $ref: "#/components/responses/Provider" }
+    delete:
+      tags: [admin-providers]
+      summary: Delete a provider
+      security: [{ BearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+  /api/admin/projects/{project_id}/providers/{provider_id}/test:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { $ref: "#/components/parameters/ProviderID" }]
+    post:
+      tags: [admin-providers]
+      summary: Test-send through the provider directly (nothing stored)
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to]
+              properties: { to: { type: string }, text: { type: string }, subject: { type: string } }
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/TestSendResult" } }
+
+  /api/admin/projects/{project_id}/templates:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-templates]
+      summary: List templates
+      security: [{ BearerAuth: [] }]
+      parameters: [{ name: key, in: query, schema: { type: string } }]
+      responses:
+        "200": { $ref: "#/components/responses/TemplateList" }
+    post:
+      tags: [admin-templates]
+      summary: Create a template
+      security: [{ BearerAuth: [] }]
+      requestBody: { $ref: "#/components/requestBodies/Template" }
+      responses:
+        "201": { $ref: "#/components/responses/Template" }
+  /api/admin/projects/{project_id}/templates/preview:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    post:
+      tags: [admin-templates]
+      summary: Render ad hoc content
+      security: [{ BearerAuth: [] }]
+      requestBody: { $ref: "#/components/requestBodies/Preview" }
+      responses:
+        "200": { $ref: "#/components/responses/Preview" }
+  /api/admin/projects/{project_id}/templates/{template_id}:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { $ref: "#/components/parameters/TemplateID" }]
+    get:
+      tags: [admin-templates]
+      summary: Get a template
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Template" }
+    put:
+      tags: [admin-templates]
+      summary: Update a template (new version)
+      security: [{ BearerAuth: [] }]
+      requestBody: { $ref: "#/components/requestBodies/TemplateUpdate" }
+      responses:
+        "200": { $ref: "#/components/responses/Template" }
+    delete:
+      tags: [admin-templates]
+      summary: Delete a template
+      security: [{ BearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+  /api/admin/projects/{project_id}/templates/{template_id}/versions:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { $ref: "#/components/parameters/TemplateID" }]
+    get:
+      tags: [admin-templates]
+      summary: Version history (newest first)
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Versions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/TemplateVersion" } } }
+  /api/admin/projects/{project_id}/templates/{template_id}/versions/{version}/restore:
+    parameters:
+      - { $ref: "#/components/parameters/ProjectID" }
+      - { $ref: "#/components/parameters/TemplateID" }
+      - { name: version, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [admin-templates]
+      summary: Restore an old version as the current content
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Template" }
+  /api/admin/projects/{project_id}/templates/{template_id}/preview:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { $ref: "#/components/parameters/TemplateID" }]
+    post:
+      tags: [admin-templates]
+      summary: Render a stored template with sample data
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { data: { type: object, additionalProperties: true } } }
+      responses:
+        "200": { $ref: "#/components/responses/Preview" }
+
+  /api/admin/projects/{project_id}/messages:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-messages]
+      summary: Message log
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: status, in: query, schema: { $ref: "#/components/schemas/MessageStatus" } }
+        - { name: channel, in: query, schema: { $ref: "#/components/schemas/Channel" } }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+        - { name: search, in: query, schema: { type: string }, description: recipient, template key or provider message id }
+        - { name: batch_id, in: query, schema: { type: string, format: uuid } }
+        - { name: contact_id, in: query, schema: { type: string, format: uuid } }
+        - { name: include_test, in: query, schema: { type: boolean, default: true } }
+        - { name: cursor, in: query, schema: { type: string, format: uuid } }
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
+      responses:
+        "200":
+          description: Page
+          content: { application/json: { schema: { $ref: "#/components/schemas/MessageListEnvelope" } } }
+  /api/admin/projects/{project_id}/messages/{message_id}:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { $ref: "#/components/parameters/MessageID" }]
+    get:
+      tags: [admin-messages]
+      summary: Message detail with timeline and webhook deliveries
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message: { $ref: "#/components/schemas/Message" }
+                          events: { type: array, items: { $ref: "#/components/schemas/MessageEvent" } }
+                          webhooks: { type: array, items: { $ref: "#/components/schemas/WebhookDelivery" } }
+  /api/admin/projects/{project_id}/messages/{message_id}/resend:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { $ref: "#/components/parameters/MessageID" }]
+    post:
+      tags: [admin-messages]
+      summary: Re-queue a failed or cancelled message
+      security: [{ BearerAuth: [] }]
+      responses:
+        "202":
+          description: Queued again
+          content: { application/json: { schema: { $ref: "#/components/schemas/MessageEnvelope" } } }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/admin/projects/{project_id}/messages/{message_id}/cancel:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { $ref: "#/components/parameters/MessageID" }]
+    post:
+      tags: [admin-messages]
+      summary: Cancel a queued message
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Cancelled
+          content: { application/json: { schema: { $ref: "#/components/schemas/MessageEnvelope" } } }
+  /api/admin/projects/{project_id}/batches:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-messages]
+      summary: Batches
+      security: [{ BearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Limit" }, { $ref: "#/components/parameters/Offset" }]
+      responses:
+        "200":
+          description: Batches
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/Batch" } } }
+  /api/admin/projects/{project_id}/batches/{batch_id}:
+    parameters:
+      - { $ref: "#/components/parameters/ProjectID" }
+      - { name: batch_id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [admin-messages]
+      summary: Batch detail
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Batch
+          content: { application/json: { schema: { $ref: "#/components/schemas/BatchEnvelope" } } }
+
+  /api/admin/projects/{project_id}/webhooks:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-webhooks]
+      summary: Webhook deliveries
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: event, in: query, schema: { type: string } }
+        - { name: failed, in: query, schema: { type: boolean } }
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Offset" }
+      responses:
+        "200":
+          description: Deliveries
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/WebhookDelivery" } } }
+  /api/admin/projects/{project_id}/webhooks/{delivery_id}:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { $ref: "#/components/parameters/DeliveryID" }]
+    get:
+      tags: [admin-webhooks]
+      summary: Delivery detail
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Delivery
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/WebhookDelivery" } }
+  /api/admin/projects/{project_id}/webhooks/{delivery_id}/resend:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { $ref: "#/components/parameters/DeliveryID" }]
+    post:
+      tags: [admin-webhooks]
+      summary: Retry a delivery now
+      security: [{ BearerAuth: [] }]
+      responses:
+        "202":
+          description: Scheduled
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/WebhookDelivery" } }
+
+  /api/admin/projects/{project_id}/dashboard:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-insights]
+      summary: Dashboard statistics
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: days, in: query, schema: { type: integer, default: 14 } }
+        - { name: from, in: query, schema: { type: string } }
+        - { name: to, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Dashboard
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/Dashboard" } }
+  /api/admin/projects/{project_id}/usage:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-insights]
+      summary: Usage and cost report
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: days, in: query, schema: { type: integer, default: 30 } }
+        - { name: from, in: query, schema: { type: string } }
+        - { name: to, in: query, schema: { type: string } }
+        - { name: group_by, in: query, schema: { type: string, enum: [channel, day] } }
+        - { name: format, in: query, schema: { type: string, enum: [csv] } }
+      responses:
+        "200": { $ref: "#/components/responses/UsageList" }
+  /api/admin/projects/{project_id}/health:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-insights]
+      summary: Queues, providers, devices
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Health
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/Health" } }
+  /api/admin/projects/{project_id}/audit-logs:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-insights]
+      summary: Audit log (admin role)
+      security: [{ BearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Limit" }, { $ref: "#/components/parameters/Offset" }]
+      responses:
+        "200":
+          description: Entries
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/AuditLog" } } }
+  /api/admin/projects/{project_id}/contacts:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-insights]
+      summary: Contacts
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Offset" }
+      responses:
+        "200": { $ref: "#/components/responses/ContactList" }
+  /api/admin/projects/{project_id}/devices:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-insights]
+      summary: Devices (tokens masked)
+      security: [{ BearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Limit" }, { $ref: "#/components/parameters/Offset" }]
+      responses:
+        "200":
+          description: Devices
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: array, items: { $ref: "#/components/schemas/AdminDevice" } } }
+
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: "`hb_live_...` or `hb_test_...`. Optionally sign requests with `X-Timestamp` and `X-Signature` (see docs/auth.md)."
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ProjectID: { name: project_id, in: path, required: true, schema: { type: string, format: uuid } }
+    MessageID: { name: message_id, in: path, required: true, schema: { type: string, format: uuid } }
+    TemplateID: { name: template_id, in: path, required: true, schema: { type: string, format: uuid } }
+    ProviderID: { name: provider_id, in: path, required: true, schema: { type: string, format: uuid } }
+    DeliveryID: { name: delivery_id, in: path, required: true, schema: { type: string, format: uuid } }
+    Limit: { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
+    Offset: { name: offset, in: query, schema: { type: integer, default: 0 } }
+
+  requestBodies:
+    RefreshToken:
+      required: true
+      content:
+        application/json:
+          schema: { type: object, required: [refresh_token], properties: { refresh_token: { type: string } } }
+    Template:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/TemplateRequest" } } }
+    TemplateUpdate:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              subject: { type: string }
+              body: { type: string }
+              is_active: { type: boolean }
+    Preview:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              channel: { $ref: "#/components/schemas/Channel" }
+              subject: { type: string }
+              body: { type: string }
+              data: { type: object, additionalProperties: true }
+    Contact:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/ContactRequest" } } }
+    Provider:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/ProviderRequest" } } }
+
+  responses:
+    Error:
+      description: Error envelope
+      content: { application/json: { schema: { $ref: "#/components/schemas/ErrorEnvelope" } } }
+    Status:
+      description: Status envelope
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { type: object, additionalProperties: true } }
+    User:
+      description: User
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { $ref: "#/components/schemas/User" } }
+    Project:
+      description: Project
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { $ref: "#/components/schemas/Project" } }
+    ProjectList:
+      description: Projects
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { type: array, items: { $ref: "#/components/schemas/Project" } } }
+    Provider:
+      description: Provider
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { $ref: "#/components/schemas/Provider" } }
+    ProviderList:
+      description: Providers
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { type: array, items: { $ref: "#/components/schemas/Provider" } } }
+    Template:
+      description: Template
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { $ref: "#/components/schemas/Template" } }
+    TemplateList:
+      description: Templates
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { type: array, items: { $ref: "#/components/schemas/Template" } } }
+    Preview:
+      description: Rendered preview
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { $ref: "#/components/schemas/Preview" } }
+    Contact:
+      description: Contact
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { $ref: "#/components/schemas/Contact" } }
+    ContactList:
+      description: Contacts
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { type: array, items: { $ref: "#/components/schemas/Contact" } } }
+    UsageList:
+      description: Usage rows
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { type: array, items: { $ref: "#/components/schemas/UsageRow" } } }
+        text/csv:
+          schema: { type: string }
+
+  schemas:
+    Envelope:
+      type: object
+      properties:
+        data: {}
+        meta: { type: object, additionalProperties: true }
+        error: { $ref: "#/components/schemas/APIError" }
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error: { $ref: "#/components/schemas/APIError" }
+    APIError:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [validation_failed, unauthorized, forbidden_scope, not_found, quota_exceeded, rate_limited, duplicate_request, provider_unavailable, invalid_recipient, conflict, internal_error]
+        message: { type: string }
+        details: { type: object, additionalProperties: true }
+
+    Channel: { type: string, enum: [sms, email, push, telegram] }
+    ChannelOrAuto: { type: string, enum: [sms, email, push, telegram, auto] }
+    MessageStatus: { type: string, enum: [queued, processing, sent, delivered, failed, cancelled] }
+    Priority: { type: string, enum: [high, normal, low] }
+    Locale: { type: string, enum: [tk, ru, en] }
+    Role: { type: string, enum: [owner, admin, developer, viewer] }
+    ProviderType: { type: string, enum: [http_sms, smpp, smtp, fcm, telegram_bot] }
+    Scope: { type: string, enum: ["messages:send", "messages:read", otp, templates, contacts, devices, usage] }
+
+    Recipient:
+      description: A raw address (E.164 phone, email, FCM token, chat id) or a contact reference.
+      oneOf:
+        - type: string
+        - type: object
+          properties:
+            contact_id: { type: string, format: uuid }
+            external_id: { type: string }
+            address: { type: string }
+    SendMessageRequest:
+      type: object
+      required: [to]
+      properties:
+        channel: { $ref: "#/components/schemas/ChannelOrAuto" }
+        to: { $ref: "#/components/schemas/Recipient" }
+        template: { type: string, description: "template key; mutually exclusive with body" }
+        data: { type: object, additionalProperties: true }
+        subject: { type: string }
+        title: { type: string, description: push notification title }
+        body: { type: string, description: "ad hoc body; may contain {{.var}} placeholders" }
+        locale: { $ref: "#/components/schemas/Locale" }
+        scheduled_at: { type: string, format: date-time }
+        priority: { $ref: "#/components/schemas/Priority" }
+        idempotency_key: { type: string, maxLength: 128 }
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Returned in webhooks. Special keys - `data` (push data payload), `parse_mode` (telegram), `reply_to`, `text`, `attachments` (email).
+    SendBatchRequest:
+      type: object
+      required: [recipients]
+      properties:
+        channel: { $ref: "#/components/schemas/Channel" }
+        template: { type: string }
+        subject: { type: string }
+        title: { type: string }
+        body: { type: string }
+        locale: { $ref: "#/components/schemas/Locale" }
+        scheduled_at: { type: string, format: date-time }
+        priority: { $ref: "#/components/schemas/Priority" }
+        idempotency_key: { type: string }
+        metadata: { type: object, additionalProperties: true }
+        recipients:
+          type: array
+          maxItems: 1000
+          items:
+            type: object
+            required: [to]
+            properties:
+              to: { $ref: "#/components/schemas/Recipient" }
+              data: { type: object, additionalProperties: true }
+    Accepted:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        status: { $ref: "#/components/schemas/MessageStatus" }
+        channel: { $ref: "#/components/schemas/Channel" }
+        to: { type: string }
+        scheduled_at: { type: [string, "null"], format: date-time }
+    Message:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        status: { $ref: "#/components/schemas/MessageStatus" }
+        channel: { $ref: "#/components/schemas/Channel" }
+        to: { type: string }
+        contact_id: { type: string, format: uuid }
+        batch_id: { type: string, format: uuid }
+        template: { type: string }
+        template_version: { type: integer }
+        subject: { type: string }
+        body: { type: string }
+        priority: { $ref: "#/components/schemas/Priority" }
+        provider_id: { type: string, format: uuid }
+        provider_message_id: { type: string }
+        error_code: { type: string }
+        error_message: { type: string }
+        attempts: { type: integer }
+        scheduled_at: { type: string, format: date-time }
+        sent_at: { type: string, format: date-time }
+        delivered_at: { type: string, format: date-time }
+        cost_micros: { type: integer }
+        currency: { type: string }
+        metadata: { type: object, additionalProperties: true }
+        idempotency_key: { type: string }
+        is_test: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    MessageEvent:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [queued, attempt, provider_response, sent, delivered, failed, cancelled, webhook_sent] }
+        provider_id: { type: string, format: uuid }
+        payload: { type: object, additionalProperties: true }
+        created_at: { type: string, format: date-time }
+    MessageEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/Envelope"
+        - type: object
+          properties: { data: { $ref: "#/components/schemas/Message" } }
+    MessageListEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/Envelope"
+        - type: object
+          properties:
+            data: { type: array, items: { $ref: "#/components/schemas/Message" } }
+            meta:
+              type: object
+              properties:
+                next_cursor: { type: [string, "null"], format: uuid }
+                limit: { type: integer }
+    MessageDetailEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/Envelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                message: { $ref: "#/components/schemas/Message" }
+                events: { type: array, items: { $ref: "#/components/schemas/MessageEvent" } }
+    Batch:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [processing, completed] }
+        channel: { $ref: "#/components/schemas/Channel" }
+        template: { type: string }
+        total: { type: integer }
+        queued: { type: integer }
+        sent: { type: integer }
+        delivered: { type: integer }
+        failed: { type: integer }
+        created_at: { type: string, format: date-time }
+        completed_at: { type: string, format: date-time }
+    BatchEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/Envelope"
+        - type: object
+          properties:
+            data: { $ref: "#/components/schemas/Batch" }
+            meta:
+              type: object
+              properties:
+                accepted: { type: integer }
+                rejected:
+                  type: array
+                  items:
+                    type: object
+                    properties: { index: { type: integer }, to: { type: string }, reason: { type: string } }
+                duplicate: { type: boolean }
+
+    OTPSendRequest:
+      type: object
+      required: [to]
+      properties:
+        channel: { type: string, enum: [sms, email, telegram], default: sms }
+        to: { type: string }
+        length: { type: integer, minimum: 4, maximum: 10 }
+        ttl: { type: integer, description: seconds, minimum: 30, maximum: 3600 }
+        template: { type: string, default: otp }
+        locale: { $ref: "#/components/schemas/Locale" }
+        data: { type: object, additionalProperties: true }
+    OTPSendResult:
+      type: object
+      properties:
+        message_id: { type: string, format: uuid }
+        to: { type: string }
+        channel: { type: string }
+        expires_in: { type: integer }
+        length: { type: integer }
+    OTPVerifyResult:
+      type: object
+      properties:
+        verified: { type: boolean }
+        attempts_remaining: { type: integer }
+
+    TemplateRequest:
+      type: object
+      required: [key, channel, body]
+      properties:
+        key: { type: string, pattern: "^[a-z0-9][a-z0-9_.-]{0,63}$" }
+        channel: { $ref: "#/components/schemas/Channel" }
+        locale: { $ref: "#/components/schemas/Locale" }
+        subject: { type: string }
+        body: { type: string }
+    Template:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        key: { type: string }
+        channel: { $ref: "#/components/schemas/Channel" }
+        locale: { $ref: "#/components/schemas/Locale" }
+        subject: { type: string }
+        body: { type: string }
+        required_vars: { type: array, items: { type: string } }
+        version: { type: integer }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    TemplateVersion:
+      type: object
+      properties:
+        version: { type: integer }
+        subject: { type: string }
+        body: { type: string }
+        required_vars: { type: array, items: { type: string } }
+        created_by: { type: [string, "null"], format: uuid }
+        created_at: { type: string, format: date-time }
+    Preview:
+      type: object
+      properties:
+        subject: { type: string }
+        body: { type: string }
+        required_vars: { type: array, items: { type: string } }
+        missing_vars: { type: array, items: { type: string } }
+
+    ContactRequest:
+      type: object
+      properties:
+        external_id: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        telegram_chat_id: { type: string }
+        locale: { $ref: "#/components/schemas/Locale" }
+        tags: { type: array, items: { type: string } }
+        attributes: { type: object, additionalProperties: true }
+    Contact:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        external_id: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        telegram_chat_id: { type: string }
+        locale: { type: string }
+        tags: { type: array, items: { type: string } }
+        attributes: { type: object, additionalProperties: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    DeviceRequest:
+      type: object
+      required: [token, platform]
+      properties:
+        token: { type: string }
+        platform: { type: string, enum: [android, ios, web] }
+        app_version: { type: string }
+        contact_id: { type: string, format: uuid }
+        external_id: { type: string }
+    Device:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        contact_id: { type: string, format: uuid }
+        platform: { type: string }
+        token_hint: { type: string }
+        app_version: { type: string }
+        is_active: { type: boolean }
+        last_seen_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+    AdminDevice:
+      type: object
+      properties:
+        ID: { type: string, format: uuid }
+        ProjectID: { type: string, format: uuid }
+        ContactID: { type: [string, "null"], format: uuid }
+        Platform: { type: string }
+        fcm_token: { type: string, description: masked }
+        AppVersion: { type: string }
+        LastSeenAt: { type: string, format: date-time }
+        IsActive: { type: boolean }
+        CreatedAt: { type: string, format: date-time }
+    UsageRow:
+      type: object
+      properties:
+        day: { type: string }
+        channel: { type: string }
+        queued: { type: integer }
+        sent: { type: integer }
+        delivered: { type: integer }
+        failed: { type: integer }
+        cost_micros: { type: integer }
+        currency: { type: string }
+
+    Tokens:
+      type: object
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+        token_type: { type: string }
+        expires_in: { type: integer }
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        full_name: { type: string }
+        is_active: { type: boolean }
+        totp_enabled: { type: boolean }
+        last_login_at: { type: [string, "null"], format: date-time }
+        created_at: { type: string, format: date-time }
+    Overview:
+      type: object
+      properties:
+        projects: { type: integer }
+        users: { type: integer }
+        messages_24h: { type: integer }
+        pending: { type: integer }
+        webhooks_pending: { type: integer }
+
+    CreateProjectRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 2 }
+        slug: { type: string }
+        daily_quota: { type: integer }
+        monthly_quota: { type: integer }
+        default_locale: { $ref: "#/components/schemas/Locale" }
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name: { type: string }
+        status: { type: string, enum: [active, suspended, archived] }
+        daily_quota: { type: integer }
+        monthly_quota: { type: integer }
+        webhook_url: { type: string }
+        webhook_secret: { type: string, description: "plaintext; stored encrypted" }
+        default_locale: { $ref: "#/components/schemas/Locale" }
+        allowed_ips: { type: array, items: { type: string } }
+        auto_channel_order: { type: array, items: { $ref: "#/components/schemas/Channel" } }
+    Project:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        status: { type: string }
+        daily_quota: { type: integer }
+        monthly_quota: { type: integer }
+        webhook_url: { type: string }
+        has_webhook_secret: { type: boolean }
+        default_locale: { type: string }
+        allowed_ips: { type: array, items: { type: string } }
+        auto_channel_order: { type: array, items: { $ref: "#/components/schemas/Channel" } }
+        role: { $ref: "#/components/schemas/Role" }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Member:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        email: { type: string }
+        full_name: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        joined_at: { type: string, format: date-time }
+    CreateAPIKeyRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        live: { type: boolean, description: "true → hb_live_ key reaching real providers; false → hb_test_ sandbox" }
+        scopes: { type: array, items: { $ref: "#/components/schemas/Scope" } }
+        ip_allowlist: { type: array, items: { type: string } }
+        expires_at: { type: string, format: date-time }
+        require_signature: { type: boolean }
+    APIKey:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        prefix: { type: string }
+        hint: { type: string }
+        key: { type: string, description: plaintext, only on creation }
+        scopes: { type: array, items: { type: string } }
+        ip_allowlist: { type: array, items: { type: string } }
+        require_signature: { type: boolean }
+        last_used_at: { type: [string, "null"], format: date-time }
+        expires_at: { type: [string, "null"], format: date-time }
+        revoked_at: { type: [string, "null"], format: date-time }
+        created_at: { type: string, format: date-time }
+    ProviderRequest:
+      type: object
+      properties:
+        name: { type: string }
+        type: { $ref: "#/components/schemas/ProviderType" }
+        priority: { type: integer, description: lower is tried first }
+        is_active: { type: boolean }
+        credentials: { type: object, additionalProperties: true, description: see docs/providers.md for each type }
+        rate_limit_per_sec: { type: integer }
+    Provider:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        channel: { $ref: "#/components/schemas/Channel" }
+        type: { $ref: "#/components/schemas/ProviderType" }
+        priority: { type: integer }
+        is_active: { type: boolean }
+        rate_limit_per_sec: { type: integer }
+        settings: { type: object, additionalProperties: true, description: credentials with secrets masked }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    TestSendResult:
+      type: object
+      properties:
+        ok: { type: boolean }
+        duration_ms: { type: integer }
+        provider_message_id: { type: string }
+        raw: { type: object, additionalProperties: true }
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            retryable: { type: boolean }
+            raw: { type: object, additionalProperties: true }
+    WebhookDelivery:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        event: { type: string }
+        url: { type: string }
+        message_id: { type: string, format: uuid }
+        batch_id: { type: string, format: uuid }
+        payload: { type: object, additionalProperties: true }
+        response_code: { type: [integer, "null"] }
+        response_body: { type: string }
+        attempts: { type: integer }
+        next_retry_at: { type: [string, "null"], format: date-time }
+        delivered_at: { type: [string, "null"], format: date-time }
+        created_at: { type: string, format: date-time }
+        status: { type: string, enum: [delivered, pending, failed] }
+    Totals:
+      type: object
+      properties:
+        total: { type: integer }
+        sent: { type: integer }
+        delivered: { type: integer }
+        failed: { type: integer }
+        pending: { type: integer }
+        cost_micros: { type: integer }
+    Dashboard:
+      type: object
+      properties:
+        window:
+          type: object
+          properties: { From: { type: string, format: date-time }, To: { type: string, format: date-time } }
+        totals: { $ref: "#/components/schemas/Totals" }
+        latency:
+          type: object
+          properties:
+            p50_sent_sec: { type: number }
+            p95_sent_sec: { type: number }
+            p95_delivered_sec: { type: number }
+            samples: { type: integer }
+        daily:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/Totals"
+              - type: object
+                properties: { day: { type: string }, channel: { type: string } }
+        recent_failures: { type: array, items: { type: object, additionalProperties: true } }
+        by_channel: { type: object, additionalProperties: { $ref: "#/components/schemas/Totals" } }
+    Health:
+      type: object
+      properties:
+        queues:
+          type: array
+          items:
+            type: object
+            properties:
+              queue: { type: string }
+              pending: { type: integer }
+              active: { type: integer }
+              scheduled: { type: integer }
+              retry: { type: integer }
+              archived: { type: integer }
+              processed_today: { type: integer }
+              failed_today: { type: integer }
+        providers:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              name: { type: string }
+              channel: { type: string }
+              type: { type: string }
+              is_active: { type: boolean }
+              priority: { type: integer }
+              ok_count: { type: integer }
+              failed_count: { type: integer }
+              last_sent_at: { type: [string, "null"], format: date-time }
+              status: { type: string, enum: [healthy, degraded, failing, idle, disabled] }
+        devices:
+          type: object
+          properties: { active: { type: integer }, total: { type: integer } }
+        contacts: { type: integer }
+    AuditLog:
+      type: object
+      properties:
+        ID: { type: string, format: uuid }
+        ProjectID: { type: [string, "null"], format: uuid }
+        UserID: { type: [string, "null"], format: uuid }
+        Action: { type: string }
+        EntityType: { type: string }
+        EntityID: { type: string }
+        Changes: { type: object, additionalProperties: true }
+        Ip: { type: string }
+        UserAgent: { type: string }
+        CreatedAt: { type: string, format: date-time }

@@ -30,3 +30,8 @@ mobile/.flutter-plugins-dependencies
 backend/coverage.out
 *.test
 *.log
+
+# never commit locally built binaries (use make build -> backend/bin/)
+backend/worker
+backend/scheduler
+backend/api/api

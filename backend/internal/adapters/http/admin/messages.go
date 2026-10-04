@@ -134,7 +134,7 @@ func (h *Handlers) getMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return httpx.OK(c, fiber.Map{"message": toMessageRow(&d.Message), "events": d.Events, "webhooks": toWebhookRows(hooks)})
+	return httpx.OK(c, fiber.Map{"message": toMessageRow(&d.Message), "events": toEventRows(d.Events), "webhooks": toWebhookRows(hooks)})
 }
 
 // resendMessage re-queues a failed or cancelled message (developer role).
@@ -181,6 +181,24 @@ func (h *Handlers) getBatch(c *fiber.Ctx) error {
 		return err
 	}
 	return httpx.OK(c, b)
+}
+
+// EventRow is one timeline entry (snake_case for the clients).
+type EventRow struct {
+	ID         uuid.UUID       `json:"id"`
+	Type       string          `json:"type"`
+	ProviderID *uuid.UUID      `json:"provider_id,omitempty"`
+	Payload    json.RawMessage `json:"payload"`
+	CreatedAt  time.Time       `json:"created_at"`
+}
+
+func toEventRows(rows []sqlcgen.MessageEvent) []EventRow {
+	out := make([]EventRow, 0, len(rows))
+	for i := range rows {
+		r := &rows[i]
+		out = append(out, EventRow{ID: r.ID, Type: string(r.Type), ProviderID: r.ProviderID, Payload: r.Payload, CreatedAt: r.CreatedAt})
+	}
+	return out
 }
 
 // WebhookRow is the admin shape of a webhook delivery.

@@ -23,7 +23,7 @@ In progress — built step by step from [PROMPT.md](PROMPT.md).
 | 2 | Auth (admin JWT + 2FA, API keys + HMAC), projects, members, templates | ✅ done |
 | 3 | Messages API, asynq workers, providers (http_sms, smpp, smtp, fcm, telegram), fallback, webhooks, OTP, contacts, devices | ✅ done |
 | 4 | Admin API (message log, resend, webhooks, dashboard, usage, health, audit), SSE, usage aggregation, Prometheus, asynqmon | ✅ done |
-| 5 | Next.js admin panel | ⏳ |
+| 5 | Next.js admin panel (tk/ru/en, dark mode, live feed, template editor, Playwright e2e) + OpenAPI spec at `/api/docs` | ✅ done |
 | 6 | Flutter app | ⏳ |
 | 7 | SDKs, docs, docker, CI | ⏳ |
 
@@ -45,7 +45,13 @@ make test                                                 # unit tests; set HABA
 make run-worker                                           # delivers queued messages, posts webhooks (metrics on :9090)
 make run-scheduler                                        # partitions, usage_daily aggregation, cleanup
 make lint
+
+# web admin (needs the API on :8080)
+cd web && cp .env.example .env.local && npm install && npm run dev   # http://localhost:3000
 ```
+
+API reference: Swagger UI at `http://localhost:8080/api/docs`, spec in [docs/openapi.yaml](docs/openapi.yaml)
+(source: `backend/api/openapi.yaml`, `make -C backend openapi` regenerates the web client types).
 
 See [docs/architecture.md](docs/architecture.md) for the component and data-model diagrams and
 [docs/auth.md](docs/auth.md) for login, API keys and request signing.

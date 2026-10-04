@@ -1,0 +1,89 @@
+{
+  "app": { "name": "Habarchy", "tagline": "One API for SMS, email, push and Telegram" },
+  "nav": {
+    "dashboard": "Dashboard", "messages": "Messages", "templates": "Templates", "providers": "Providers",
+    "apiKeys": "API keys", "contacts": "Contacts", "webhooks": "Webhooks", "usage": "Usage & cost",
+    "health": "System health", "audit": "Audit log", "settings": "Project settings", "projects": "Projects",
+    "profile": "Profile", "logout": "Sign out", "docs": "API docs", "queues": "Queues"
+  },
+  "common": {
+    "save": "Save", "cancel": "Cancel", "create": "Create", "delete": "Delete", "edit": "Edit", "close": "Close",
+    "search": "Search", "loading": "Loading…", "empty": "Nothing here yet", "error": "Something went wrong",
+    "copy": "Copy", "copied": "Copied", "yes": "Yes", "no": "No", "actions": "Actions", "refresh": "Refresh",
+    "all": "All", "name": "Name", "status": "Status", "created": "Created", "updated": "Updated", "loadMore": "Load more",
+    "confirmDelete": "Delete {name}?", "confirmDeleteText": "This cannot be undone.", "none": "None", "retry": "Retry",
+    "export": "Export CSV", "today": "Today", "days": "{n} days", "role": "Role", "language": "Language", "theme": "Theme",
+    "light": "Light", "dark": "Dark", "system": "System"
+  },
+  "auth": {
+    "title": "Sign in to Habarchy", "subtitle": "Admin panel", "email": "Email", "password": "Password",
+    "totp": "Authenticator code", "totpHint": "Two-factor authentication is enabled for this account.",
+    "signIn": "Sign in", "signingIn": "Signing in…", "invalid": "Invalid email or password"
+  },
+  "dashboard": {
+    "title": "Dashboard", "total": "Total", "sent": "Sent", "delivered": "Delivered", "failed": "Failed",
+    "pending": "Pending", "cost": "Cost", "latencyP50": "p50 to sent", "latencyP95": "p95 to sent", "latencyDelivered": "p95 to delivered",
+    "perDay": "Messages per day", "byChannel": "By channel", "live": "Live feed", "liveHint": "Status changes appear here in real time.",
+    "recentFailures": "Recent failures", "noProject": "Create a project to get started.", "samples": "{n} samples", "waiting": "Waiting for events…"
+  },
+  "projects": {
+    "title": "Projects", "new": "New project", "name": "Name", "slug": "Slug", "dailyQuota": "Daily quota", "monthlyQuota": "Monthly quota",
+    "unlimited": "0 = unlimited", "defaultLocale": "Default locale", "switch": "Switch", "current": "Current", "role": "Your role",
+    "created": "Project created", "members": "Members", "addMember": "Add member", "memberEmail": "User email", "remove": "Remove",
+    "settings": "Settings", "webhookUrl": "Webhook URL", "webhookSecret": "Webhook secret", "webhookSecretHint": "Leave empty to keep the current secret.",
+    "allowedIps": "Allowed IPs / CIDRs (one per line)", "autoOrder": "Auto channel order", "statusLabel": "Status", "saved": "Project saved",
+    "dangerZone": "Danger zone", "deleteProject": "Delete project", "deleteHint": "Deletes every key, template, contact and message of this project."
+  },
+  "apiKeys": {
+    "title": "API keys", "new": "Create key", "live": "Live key (reaches real providers)", "test": "Test key (sandbox, free)",
+    "scopes": "Scopes", "ipAllowlist": "IP allowlist (one per line)", "requireSignature": "Require HMAC request signature",
+    "createdTitle": "Save this key now", "createdHint": "For security it will not be shown again.", "revoke": "Revoke", "revoked": "Revoked",
+    "lastUsed": "Last used", "never": "Never", "hint": "Key"
+  },
+  "providers": {
+    "title": "Providers", "new": "Add provider", "type": "Type", "channel": "Channel", "priority": "Priority", "priorityHint": "Lower is tried first",
+    "active": "Active", "rateLimit": "Rate limit (msg/s, 0 = unlimited)", "credentials": "Credentials (JSON)", "credentialsHint": "See docs/providers.md for each type. Omit to keep current credentials.",
+    "testSend": "Test send", "testTo": "Recipient", "testText": "Text", "testResult": "Result", "ok": "Delivered to provider", "failed": "Provider error",
+    "settings": "Settings (secrets masked)", "dlrUrl": "Delivery report URL"
+  },
+  "templates": {
+    "title": "Templates", "new": "New template", "key": "Key", "channel": "Channel", "locale": "Locale", "subject": "Subject", "body": "Body",
+    "variables": "Variables", "variablesHint": "Use {{.name}} placeholders. Email bodies may contain HTML.", "preview": "Live preview",
+    "sampleData": "Sample data (JSON)", "missing": "Missing: {vars}", "version": "Version {n}", "history": "Version history", "restore": "Restore",
+    "active": "Active", "inactive": "Inactive", "saved": "Template saved", "editor": "Editor"
+  },
+  "contacts": {
+    "title": "Contacts & devices", "contacts": "Contacts", "devices": "Devices", "externalId": "External ID", "phone": "Phone", "email": "Email",
+    "telegram": "Telegram chat", "tags": "Tags", "platform": "Platform", "token": "Token", "lastSeen": "Last seen", "active": "Active"
+  },
+  "messages": {
+    "title": "Messages", "to": "Recipient", "channel": "Channel", "status": "Status", "template": "Template", "provider": "Provider",
+    "attempts": "Attempts", "error": "Error", "timeline": "Timeline", "raw": "Raw provider response", "webhooks": "Webhook deliveries",
+    "resend": "Resend", "cancel": "Cancel message", "resent": "Message queued again", "body": "Body", "metadata": "Metadata",
+    "includeTest": "Include test messages", "detail": "Message details", "filters": "Filters", "from": "From", "toDate": "To"
+  },
+  "webhooks": {
+    "title": "Webhooks", "event": "Event", "url": "URL", "response": "Response", "attempts": "Attempts", "nextRetry": "Next retry",
+    "resend": "Resend", "onlyFailed": "Only failed / pending", "payload": "Payload", "delivered": "Delivered", "pending": "Pending", "failed": "Failed"
+  },
+  "usage": {
+    "title": "Usage & cost", "groupBy": "Group by", "day": "Day", "channel": "Channel", "both": "Day and channel",
+    "queued": "Queued", "sent": "Sent", "delivered": "Delivered", "failed": "Failed", "cost": "Cost", "hint": "Aggregated every 5 minutes from the message log."
+  },
+  "health": {
+    "title": "System health", "queues": "Queues", "queue": "Queue", "pending": "Pending", "active": "Active", "scheduled": "Scheduled",
+    "retry": "Retry", "archived": "Archived", "processed": "Processed today", "failedToday": "Failed today", "providers": "Providers (last 24 h)",
+    "ok": "OK", "failed": "Failed", "lastSent": "Last sent", "devices": "Devices", "contacts": "Contacts",
+    "healthy": "Healthy", "degraded": "Degraded", "failing": "Failing", "idle": "Idle", "disabled": "Disabled"
+  },
+  "audit": { "title": "Audit log", "action": "Action", "entity": "Entity", "user": "User", "ip": "IP", "when": "When", "changes": "Changes" },
+  "profile": {
+    "title": "Profile", "changePassword": "Change password", "currentPassword": "Current password", "newPassword": "New password",
+    "passwordChanged": "Password changed. Other sessions were signed out.", "twoFactor": "Two-factor authentication", "enabled": "Enabled",
+    "disabled": "Disabled", "enable": "Enable 2FA", "disable": "Disable 2FA", "scan": "Scan this URL in your authenticator app, then enter a code.",
+    "code": "6-digit code", "confirm": "Confirm", "twoFactorOn": "Two-factor authentication enabled", "twoFactorOff": "Two-factor authentication disabled",
+    "sessions": "Sign out everywhere"
+  },
+  "status": { "queued": "Queued", "processing": "Processing", "sent": "Sent", "delivered": "Delivered", "failed": "Failed", "cancelled": "Cancelled" },
+  "channel": { "sms": "SMS", "email": "Email", "push": "Push", "telegram": "Telegram", "auto": "Auto" }
+}

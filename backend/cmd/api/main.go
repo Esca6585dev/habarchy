@@ -140,6 +140,7 @@ func run(migrateOnly, createAdmin bool) error {
 	statsSvc := stats.New(db, q)
 
 	app := httpadapter.NewServer(cfg, log, httpadapter.Deps{DB: db, Redis: rdb})
+	httpadapter.RegisterDocs(app)
 	if cfg.Telemetry.MetricsEnabled {
 		app.Use(metrics.FiberMiddleware())
 		app.Get("/metrics", adaptor.HTTPHandler(metrics.Handler()))
