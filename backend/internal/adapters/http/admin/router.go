@@ -9,7 +9,9 @@ import (
 
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/middleware"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/attachments"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/chat"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contactimport"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/groups"
@@ -25,18 +27,20 @@ import (
 // Handlers groups the admin API dependencies. Optional fields may be nil
 // in tests; the routes that need them are then not mounted.
 type Handlers struct {
-	Auth      *auth.Service
-	Projects  *projects.Service
-	Templates *templates.Service
-	Providers *providers.Service
-	Contacts  *contacts.Service
-	Groups    *groups.Service
-	Imports   *contactimport.Service
-	Messages  *messages.Service
-	Webhooks  *webhooks.Service
-	Stats     *stats.Service
-	DB        *postgres.DB
-	Redis     *goredis.Client // live events (SSE)
+	Auth        *auth.Service
+	Projects    *projects.Service
+	Templates   *templates.Service
+	Providers   *providers.Service
+	Contacts    *contacts.Service
+	Groups      *groups.Service
+	Imports     *contactimport.Service
+	Chat        *chat.Service
+	Attachments *attachments.Service
+	Messages    *messages.Service
+	Webhooks    *webhooks.Service
+	Stats       *stats.Service
+	DB          *postgres.DB
+	Redis       *goredis.Client // live events (SSE)
 	// QueueUI is the asynqmon handler, mounted at /admin/queues behind
 	// admin auth when set.
 	QueueUI http.Handler
@@ -59,6 +63,12 @@ func (h *Handlers) Register(app fiber.Router) {
 	if h.QueueUI != nil {
 		app.Use("/admin/queues", middleware.RequireJWTFlexible(h.Auth), adaptor.HTTPHandler(h.QueueUI))
 	}
+	if h.Attachments != nil {
+		r.Get("/attachments/:attachment_id", middleware.RequireJWTFlexible(h.Auth), h.getAttachment)
+	}
+	if h.Chat != nil {
+		r.Get("/chat/stream", middleware.RequireJWTFlexible(h.Auth), h.chatStream)
+	}
 
 	if h.Imports != nil && h.Imports.Google != nil {
 		// OAuth redirect target: authenticated by the signed state, not a JWT.
@@ -74,7 +84,24 @@ func (h *Handlers) Register(app fiber.Router) {
 	}
 
 	r.Get("/me", h.me)
+	r.Put("/me/profile", h.updateProfile)
 	r.Put("/me/password", h.changePassword)
+	if h.Attachments != nil {
+		r.Post("/attachments", h.uploadAttachment)
+	}
+	if h.Chat != nil {
+		ch := r.Group("/chat")
+		ch.Get("/channels", h.chatChannels)
+		ch.Post("/channels", h.createChatChannel)
+		ch.Post("/direct", h.openDirect)
+		ch.Get("/channels/:channel_id/members", h.chatMembers)
+		ch.Post("/channels/:channel_id/members", h.addChatMembers)
+		ch.Post("/channels/:channel_id/leave", h.leaveChatChannel)
+		ch.Get("/channels/:channel_id/messages", h.chatMessages)
+		ch.Post("/channels/:channel_id/messages", h.postChatMessage)
+		ch.Delete("/channels/:channel_id/messages/:message_id", h.deleteChatMessage)
+		ch.Post("/channels/:channel_id/read", h.markChatRead)
+	}
 	r.Post("/me/totp/setup", h.totpSetup)
 	r.Post("/me/totp/confirm", h.totpConfirm)
 	r.Post("/me/totp/disable", h.totpDisable)

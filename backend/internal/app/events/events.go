@@ -95,3 +95,88 @@ func Subscribe(ctx context.Context, r *goredis.Client, projectIDs []uuid.UUID) <
 	}()
 	return out
 }
+
+// ---- chat ----
+
+const chatUserPrefix = "habarchy:chat:u:"
+const chatBroadcast = "habarchy:chat:all"
+
+// ChatEvent is pushed to the chat SSE stream.
+type ChatEvent struct {
+	Type      string          `json:"type"` // message | message.deleted | channel
+	ChannelID uuid.UUID       `json:"channel_id"`
+	Payload   json.RawMessage `json:"payload,omitempty"`
+	At        time.Time       `json:"at"`
+}
+
+// PublishChatToUsers sends an event to each listed user's personal stream
+// (private groups and direct messages).
+func (p *Publisher) PublishChatToUsers(ctx context.Context, userIDs []uuid.UUID, ev ChatEvent) {
+	p.publishChat(ctx, ev, func(b []byte) {
+		for _, u := range userIDs {
+			if p.r != nil {
+				_ = p.r.Publish(ctx, chatUserPrefix+u.String(), b).Err()
+			}
+		}
+	})
+}
+
+// PublishChatBroadcast sends an event to every connected user (public channels).
+func (p *Publisher) PublishChatBroadcast(ctx context.Context, ev ChatEvent) {
+	p.publishChat(ctx, ev, func(b []byte) {
+		if p.r != nil {
+			_ = p.r.Publish(ctx, chatBroadcast, b).Err()
+		}
+	})
+}
+
+func (p *Publisher) publishChat(_ context.Context, ev ChatEvent, send func([]byte)) {
+	if p == nil || p.r == nil {
+		return
+	}
+	if ev.At.IsZero() {
+		ev.At = time.Now().UTC()
+	}
+	b, err := json.Marshal(ev)
+	if err != nil {
+		return
+	}
+	send(b)
+}
+
+// SubscribeChat streams chat events for one user (their personal channel
+// plus the public broadcast) until ctx is done.
+func SubscribeChat(ctx context.Context, r *goredis.Client, userID uuid.UUID) <-chan ChatEvent {
+	out := make(chan ChatEvent, 64)
+	if r == nil {
+		close(out)
+		return out
+	}
+	sub := r.Subscribe(ctx, chatUserPrefix+userID.String(), chatBroadcast)
+	go func() {
+		defer close(out)
+		defer func() { _ = sub.Close() }()
+		ch := sub.Channel()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case m, ok := <-ch:
+				if !ok {
+					return
+				}
+				var ev ChatEvent
+				if json.Unmarshal([]byte(m.Payload), &ev) != nil {
+					continue
+				}
+				select {
+				case out <- ev:
+				case <-ctx.Done():
+					return
+				default:
+				}
+			}
+		}
+	}()
+	return out
+}

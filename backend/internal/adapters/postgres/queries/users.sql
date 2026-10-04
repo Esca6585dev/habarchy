@@ -22,6 +22,10 @@ UPDATE users SET password_hash = @password_hash, updated_at = now() WHERE id = @
 UPDATE users SET full_name = @full_name, is_active = @is_active, updated_at = now()
 WHERE id = @id RETURNING *;
 
+-- name: UpdateUserSelfProfile :one
+UPDATE users SET full_name = @full_name, bio = @bio, avatar_id = sqlc.narg('avatar_id'), updated_at = now()
+WHERE id = @id RETURNING *;
+
 -- name: SetUserTOTP :exec
 UPDATE users SET totp_enabled = @totp_enabled, totp_secret_enc = @totp_secret_enc, updated_at = now()
 WHERE id = @id;

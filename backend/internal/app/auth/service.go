@@ -303,6 +303,18 @@ func (s *Service) issueWith(ctx context.Context, q *sqlcgen.Queries, user *sqlcg
 const dummyHash = "$argon2id$v=19$m=65536,t=3,p=2$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 
 // User loads a user by id.
+// UpdateSelfProfile updates the signed-in user's name, bio and avatar.
+func (s *Service) UpdateSelfProfile(ctx context.Context, id uuid.UUID, fullName, bio string, avatarID *uuid.UUID) (*sqlcgen.User, error) {
+	u, err := s.db.Queries.UpdateUserSelfProfile(ctx, sqlcgen.UpdateUserSelfProfileParams{ID: id, FullName: fullName, Bio: bio, AvatarID: avatarID})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound.WithMessage("user not found")
+		}
+		return nil, err
+	}
+	return &u, nil
+}
+
 func (s *Service) User(ctx context.Context, id uuid.UUID) (*sqlcgen.User, error) {
 	user, err := s.db.Queries.GetUserByID(ctx, id)
 	if err != nil {

@@ -44,10 +44,12 @@ type UserResponse struct {
 	TOTPEnabled bool       `json:"totp_enabled"`
 	LastLoginAt *time.Time `json:"last_login_at"`
 	CreatedAt   time.Time  `json:"created_at"`
+	Bio         string     `json:"bio"`
+	AvatarID    *uuid.UUID `json:"avatar_id,omitempty"`
 }
 
 func toUser(u *sqlcgen.User) UserResponse {
-	return UserResponse{ID: u.ID, Email: u.Email, FullName: u.FullName, IsActive: u.IsActive, TOTPEnabled: u.TotpEnabled, LastLoginAt: u.LastLoginAt, CreatedAt: u.CreatedAt}
+	return UserResponse{ID: u.ID, Email: u.Email, FullName: u.FullName, IsActive: u.IsActive, TOTPEnabled: u.TotpEnabled, LastLoginAt: u.LastLoginAt, CreatedAt: u.CreatedAt, Bio: u.Bio, AvatarID: u.AvatarID}
 }
 
 // ---- projects ----

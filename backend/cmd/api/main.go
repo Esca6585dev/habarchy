@@ -21,7 +21,9 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/public"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/redis"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/attachments"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/chat"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contactimport"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
@@ -157,6 +159,8 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 	deliverySvc := delivery.New(db, rdb, providerSvc, webhookSvc, contactSvc, log, cfg.Queue.MaxRetry)
 	publisher := events.NewPublisher(rdb.Raw())
 	messageSvc.Events, deliverySvc.Events = publisher, publisher
+	attachmentSvc := attachments.New(db)
+	chatSvc := chat.New(db, publisher)
 	statsSvc := stats.New(db, q)
 	gatewaySvc := gateway.New(db, deliverySvc, webhookSvc).WithProviders(providerSvc)
 	groupSvc := groups.New(db, contactSvc)
@@ -173,7 +177,7 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 	queueUI := asynqmon.New(asynqmon.Options{RootPath: "/admin/queues", RedisConnOpt: queue.RedisOpt(rdb.Options())})
 	(&admin.Handlers{
 		Auth: authSvc, Projects: projectSvc, Templates: templateSvc, Providers: providerSvc, Messages: messageSvc,
-		Contacts: contactSvc, Groups: groupSvc, Imports: importSvc,
+		Contacts: contactSvc, Groups: groupSvc, Imports: importSvc, Chat: chatSvc, Attachments: attachmentSvc,
 		Webhooks: webhookSvc, Stats: statsSvc, DB: db, Redis: rdb.Raw(), QueueUI: queueUI, PublicURL: cfg.HTTP.PublicURL,
 	}).Register(app)
 	(&gatewayhttp.Handlers{Gateway: gatewaySvc}).Register(app)

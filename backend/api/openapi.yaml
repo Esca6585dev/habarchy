@@ -33,6 +33,7 @@ tags:
   - name: admin-webhooks
   - name: admin-insights
   - name: admin-contacts
+  - name: admin-chat
   - name: admin-system
   - name: health
 
@@ -1355,6 +1356,100 @@ paths:
       responses:
         "302": { description: Redirect to return_to with imported/created/skipped or import_error }
         "200": { description: HTML result page when return_to is empty }
+  /api/admin/me/profile:
+    put:
+      tags: [admin-auth]
+      summary: Update the signed-in user's name, bio and avatar
+      security: [{ BearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [full_name], properties: { full_name: { type: string }, bio: { type: string }, avatar_id: { type: string, format: uuid } } } } } }
+      responses: { "200": { description: User } }
+  /api/admin/attachments:
+    post:
+      tags: [admin-chat]
+      summary: Upload an image (avatar or chat image, max 5 MB)
+      security: [{ BearerAuth: [] }]
+      requestBody: { required: true, content: { multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary } } } } } }
+      responses: { "201": { description: "`{id, content_type, size_bytes, filename}`" } }
+  /api/admin/attachments/{attachment_id}:
+    get:
+      tags: [admin-chat]
+      summary: Serve an attachment (token via header, cookie or ?access_token=)
+      security: [{ BearerAuth: [] }]
+      parameters: [{ name: attachment_id, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses: { "200": { description: image bytes } }
+  /api/admin/chat/stream:
+    get:
+      tags: [admin-chat]
+      summary: SSE feed of chat events for the signed-in user (token via header, cookie or ?access_token=)
+      security: [{ BearerAuth: [] }]
+      responses: { "200": { description: "text/event-stream of message / message.deleted / channel events" } }
+  /api/admin/chat/channels:
+    get:
+      tags: [admin-chat]
+      summary: List my channels with unread counts, last message and DM peer
+      security: [{ BearerAuth: [] }]
+      responses: { "200": { description: channels } }
+    post:
+      tags: [admin-chat]
+      summary: Create a public or private (group) channel
+      security: [{ BearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [kind, name], properties: { kind: { type: string, enum: [public, private] }, name: { type: string }, topic: { type: string }, members: { type: array, items: { type: string, format: uuid } } } } } } }
+      responses: { "201": { description: channel } }
+  /api/admin/chat/direct:
+    post:
+      tags: [admin-chat]
+      summary: Open (or get) a direct chat with another user
+      security: [{ BearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [user_id], properties: { user_id: { type: string, format: uuid } } } } } }
+      responses: { "200": { description: "`{id, kind}`" } }
+  /api/admin/chat/channels/{channel_id}/members:
+    parameters: [{ name: channel_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      tags: [admin-chat]
+      summary: List channel members
+      security: [{ BearerAuth: [] }]
+      responses: { "200": { description: members } }
+    post:
+      tags: [admin-chat]
+      summary: Add members to a private group
+      security: [{ BearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [user_ids], properties: { user_ids: { type: array, items: { type: string, format: uuid } } } } } } }
+      responses: { "204": { description: added } }
+  /api/admin/chat/channels/{channel_id}/leave:
+    parameters: [{ name: channel_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    post:
+      tags: [admin-chat]
+      summary: Leave a channel
+      security: [{ BearerAuth: [] }]
+      responses: { "204": { description: left } }
+  /api/admin/chat/channels/{channel_id}/read:
+    parameters: [{ name: channel_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    post:
+      tags: [admin-chat]
+      summary: Mark the channel read up to now
+      security: [{ BearerAuth: [] }]
+      responses: { "204": { description: ok } }
+  /api/admin/chat/channels/{channel_id}/messages:
+    parameters: [{ name: channel_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      tags: [admin-chat]
+      summary: List messages (newest first; page back with before=<message id>)
+      security: [{ BearerAuth: [] }]
+      parameters: [{ name: before, in: query, schema: { type: string, format: uuid } }, { name: limit, in: query, schema: { type: integer, default: 50, maximum: 100 } }]
+      responses: { "200": { description: messages } }
+    post:
+      tags: [admin-chat]
+      summary: Post a message (text and/or an uploaded attachment_id)
+      security: [{ BearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { body: { type: string }, attachment_id: { type: string, format: uuid } } } } } }
+      responses: { "201": { description: message } }
+  /api/admin/chat/channels/{channel_id}/messages/{message_id}:
+    parameters: [{ name: channel_id, in: path, required: true, schema: { type: string, format: uuid } }, { name: message_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    delete:
+      tags: [admin-chat]
+      summary: Delete your own message
+      security: [{ BearerAuth: [] }]
+      responses: { "204": { description: deleted } }
   /api/admin/projects/{project_id}/contacts/trash:
     parameters: [{ $ref: "#/components/parameters/ProjectID" }]
     get:

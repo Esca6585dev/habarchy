@@ -83,6 +83,67 @@ func AllChannelValues() []Channel {
 	}
 }
 
+type ChatChannelKind string
+
+const (
+	ChatChannelKindPublic  ChatChannelKind = "public"
+	ChatChannelKindPrivate ChatChannelKind = "private"
+	ChatChannelKindDirect  ChatChannelKind = "direct"
+)
+
+func (e *ChatChannelKind) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ChatChannelKind(s)
+	case string:
+		*e = ChatChannelKind(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ChatChannelKind: %T", src)
+	}
+	return nil
+}
+
+type NullChatChannelKind struct {
+	ChatChannelKind ChatChannelKind
+	Valid           bool // Valid is true if ChatChannelKind is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullChatChannelKind) Scan(value interface{}) error {
+	if value == nil {
+		ns.ChatChannelKind, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ChatChannelKind.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullChatChannelKind) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ChatChannelKind), nil
+}
+
+func (e ChatChannelKind) Valid() bool {
+	switch e {
+	case ChatChannelKindPublic,
+		ChatChannelKindPrivate,
+		ChatChannelKindDirect:
+		return true
+	}
+	return false
+}
+
+func AllChatChannelKindValues() []ChatChannelKind {
+	return []ChatChannelKind{
+		ChatChannelKindPublic,
+		ChatChannelKindPrivate,
+		ChatChannelKindDirect,
+	}
+}
+
 type DevicePlatform string
 
 const (
@@ -568,6 +629,16 @@ type ApiKey struct {
 	RequireSignature bool
 }
 
+type Attachment struct {
+	ID          uuid.UUID
+	UploadedBy  *uuid.UUID
+	ContentType string
+	SizeBytes   int32
+	Filename    string
+	Data        []byte
+	CreatedAt   time.Time
+}
+
 type AuditLog struct {
 	ID         uuid.UUID
 	ProjectID  *uuid.UUID
@@ -595,6 +666,36 @@ type Batch struct {
 	IdempotencyKey *string
 	CreatedAt      time.Time
 	CompletedAt    *time.Time
+}
+
+type ChatChannel struct {
+	ID        uuid.UUID
+	Kind      ChatChannelKind
+	Name      string
+	Topic     string
+	CreatedBy *uuid.UUID
+	DmKey     *string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type ChatMember struct {
+	ChannelID  uuid.UUID
+	UserID     uuid.UUID
+	Role       string
+	LastReadAt time.Time
+	JoinedAt   time.Time
+}
+
+type ChatMessage struct {
+	ID           uuid.UUID
+	ChannelID    uuid.UUID
+	UserID       *uuid.UUID
+	Body         string
+	AttachmentID *uuid.UUID
+	CreatedAt    time.Time
+	EditedAt     *time.Time
+	DeletedAt    *time.Time
 }
 
 type Contact struct {
@@ -825,6 +926,8 @@ type User struct {
 	LastLoginAt   *time.Time
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
+	Bio           string
+	AvatarID      *uuid.UUID
 }
 
 type WebhookDelivery struct {

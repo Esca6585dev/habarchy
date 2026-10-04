@@ -22,7 +22,9 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/admin"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/public"
 	rds "github.com/Esca6585dev/habarchy/backend/internal/adapters/redis"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/attachments"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/chat"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contactimport"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
@@ -167,11 +169,13 @@ func newFlowEnv(t *testing.T) *flowEnv {
 	otpSvc := otp.New(rdb, messageSvc, otp.Limits{Length: 6, TTL: 5 * time.Minute, MaxAttempts: 3, PerAddressHour: 3, PerIPHour: 100})
 	deliverySvc := delivery.New(base.db, rdb, providerSvc, webhookSvc, contactSvc, zerolog.Nop(), 3)
 	publisher := events.NewPublisher(rdb.Raw())
+	chatSvc := chat.New(base.db, publisher)
+	attachmentSvc := attachments.New(base.db)
 	messageSvc.Events, deliverySvc.Events = publisher, publisher
 	statsSvc := stats.New(base.db, q)
 
 	app := httpx.NewServer(cfg, zerolog.Nop(), httpx.Deps{})
-	(&admin.Handlers{Auth: base.auth, Projects: base.projects, Templates: base.templates, Providers: providerSvc, Contacts: contactSvc, Groups: groupSvc, Imports: importSvc,
+	(&admin.Handlers{Auth: base.auth, Projects: base.projects, Templates: base.templates, Providers: providerSvc, Contacts: contactSvc, Groups: groupSvc, Imports: importSvc, Chat: chatSvc, Attachments: attachmentSvc,
 		Messages: messageSvc, Webhooks: webhookSvc, Stats: statsSvc, DB: base.db, Redis: rdb.Raw()}).Register(app)
 	(&public.Handlers{Projects: base.projects, Templates: base.templates, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc, Groups: groupSvc, Gateway: gatewaySvc, Imports: importSvc,
 		Providers: providerSvc, Delivery: deliverySvc, Stats: statsSvc, SignatureTolerance: cfg.Security.SignatureTolerance}).Register(app)
