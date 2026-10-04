@@ -1,5 +1,5 @@
-// Command worker consumes the asynq queues and delivers messages and
-// webhooks. Task handlers are registered as the build progresses.
+// Command worker consumes the asynq queues: it delivers messages through
+// the configured providers (with fallback and retries) and posts webhooks.
 package main
 
 import (
@@ -13,8 +13,14 @@ import (
 
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/redis"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/webhooks"
 	"github.com/Esca6585dev/habarchy/backend/internal/config"
 	"github.com/Esca6585dev/habarchy/backend/internal/queue"
+	"github.com/Esca6585dev/habarchy/backend/internal/worker"
+	"github.com/Esca6585dev/habarchy/backend/pkg/crypto"
 	"github.com/Esca6585dev/habarchy/backend/pkg/logger"
 )
 
@@ -32,6 +38,11 @@ func run() error {
 	}
 	log := logger.New("worker", cfg.LogLevel, cfg.LogPretty)
 
+	cipher, err := crypto.NewCipherFromString(cfg.Security.MasterKey)
+	if err != nil {
+		return err
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -47,15 +58,30 @@ func run() error {
 	}
 	defer func() { _ = rdb.Close() }()
 
+	q := queue.NewClient(queue.RedisOpt(rdb.Options()), cfg.Queue.MaxRetry, cfg.Queue.WebhookRetry)
+	defer func() { _ = q.Close() }()
+
+	contactSvc := contacts.New(db)
+	providerSvc := providers.New(db, cipher)
+	webhookSvc := webhooks.New(db, cipher, q, cfg.Queue.WebhookRetry, nil)
+	webhookSvc.AllowPrivate = cfg.Security.WebhookAllowPrivate
+	deliverySvc := delivery.New(db, rdb, providerSvc, webhookSvc, contactSvc, log, cfg.Queue.MaxRetry)
+
+	// SMPP sessions live only in the worker; they report receipts straight
+	// into the delivery service.
+	smppPool := worker.NewSMPPPool(log, deliverySvc)
+	defer smppPool.Close()
+	providerSvc.SMPPFactory = smppPool.Factory
+
 	srv := asynq.NewServer(queue.RedisOpt(rdb.Options()), asynq.Config{
-		Concurrency: cfg.Queue.Concurrency,
-		Queues:      queue.Weights(),
-		Logger:      queue.AsynqLogger{Logger: log},
-		LogLevel:    asynq.InfoLevel,
+		Concurrency:    cfg.Queue.Concurrency,
+		Queues:         queue.Weights(),
+		Logger:         queue.AsynqLogger{Logger: log},
+		LogLevel:       asynq.InfoLevel,
+		RetryDelayFunc: queue.RetryDelay,
+		IsFailure:      worker.IsFailure,
 	})
-	mux := asynq.NewServeMux()
-	// Handlers (send:sms, send:email, send:push, send:telegram, webhook)
-	// are registered here in step 3.
+	mux := worker.NewMux(deliverySvc, webhookSvc)
 
 	if err := srv.Start(mux); err != nil {
 		return err

@@ -17,9 +17,16 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/redis"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/templates"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/webhooks"
 	"github.com/Esca6585dev/habarchy/backend/internal/config"
+	"github.com/Esca6585dev/habarchy/backend/internal/queue"
 	"github.com/Esca6585dev/habarchy/backend/pkg/crypto"
 	"github.com/Esca6585dev/habarchy/backend/pkg/logger"
 )
@@ -106,9 +113,30 @@ func run(migrateOnly, createAdmin bool) error {
 	}
 	defer func() { _ = rdb.Close() }()
 
+	q := queue.NewClient(queue.RedisOpt(rdb.Options()), cfg.Queue.MaxRetry, cfg.Queue.WebhookRetry)
+	defer func() { _ = q.Close() }()
+
+	contactSvc := contacts.New(db)
+	providerSvc := providers.New(db, cipher)
+	webhookSvc := webhooks.New(db, cipher, q, cfg.Queue.WebhookRetry, nil)
+	webhookSvc.AllowPrivate = cfg.Security.WebhookAllowPrivate
+	messageSvc := messages.New(db, rdb, q, contactSvc, templateSvc, messages.Limits{
+		IdempotencyTTL: cfg.Security.IdempotencyTTL, BatchMaxRecipients: cfg.Limits.BatchMaxRecipients,
+	})
+	otpSvc := otp.New(rdb, messageSvc, otp.Limits{
+		Length: cfg.Limits.OTPLength, TTL: cfg.Limits.OTPTTL, MaxAttempts: cfg.Limits.OTPMaxAttempts,
+		PerAddressHour: cfg.Limits.OTPPerAddressRate, PerIPHour: cfg.Limits.OTPPerIPRate,
+	})
+	// The API only applies receipts (callbacks); it never sends.
+	deliverySvc := delivery.New(db, rdb, providerSvc, webhookSvc, contactSvc, log, cfg.Queue.MaxRetry)
+
 	app := httpadapter.NewServer(cfg, log, httpadapter.Deps{DB: db, Redis: rdb})
-	(&admin.Handlers{Auth: authSvc, Projects: projectSvc, Templates: templateSvc}).Register(app)
-	(&public.Handlers{Projects: projectSvc, Templates: templateSvc, SignatureTolerance: cfg.Security.SignatureTolerance}).Register(app)
+	(&admin.Handlers{Auth: authSvc, Projects: projectSvc, Templates: templateSvc, Providers: providerSvc}).Register(app)
+	(&public.Handlers{
+		Projects: projectSvc, Templates: templateSvc, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc,
+		Providers: providerSvc, Delivery: deliverySvc, SignatureTolerance: cfg.Security.SignatureTolerance,
+		APIRatePerSec: cfg.Limits.APIRatePerSec, Limiter: rdb,
+	}).Register(app)
 
 	errCh := make(chan error, 1)
 	go func() {

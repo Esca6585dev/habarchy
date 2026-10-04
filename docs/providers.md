@@ -1,0 +1,124 @@
+# Providers
+
+A provider is one configured delivery backend of a project. Each channel can have
+several providers; the worker tries them in `priority` order (lower first) and falls
+back to the next one on a **retryable** error. Permanent errors (invalid number,
+blocked user, bad credentials) fail the message immediately with a clear `error_code`.
+
+| Type | Channel | Transport |
+|------|---------|-----------|
+| `http_sms` | sms | any HTTP SMS gateway, configured declaratively |
+| `smpp` | sms | SMPP 3.4 transceiver bind (UCS2, UDH concatenation, DLR) |
+| `smtp` | email | SMTP with none / STARTTLS / TLS, auth auto-detect |
+| `fcm` | push | Firebase Cloud Messaging HTTP v1 with a service account |
+| `telegram_bot` | telegram | Telegram Bot API `sendMessage` |
+
+Credentials are stored **AES-256-GCM encrypted** (`HABARCHY_MASTER_KEY`), bound to the
+provider id, and are never returned by the API. `GET /providers/{id}` returns
+`settings` with secrets masked (`sup••••ken`). Test keys (`hb_test_`) never reach a
+provider: they go through a sandbox that reports every message as delivered.
+
+Admin endpoints (role `admin`): `GET/POST /api/admin/projects/{id}/providers`,
+`GET/PUT/DELETE /providers/{pid}`, `POST /providers/{pid}/test` `{to, text}`.
+
+## `http_sms` credentials
+
+```json
+{
+  "url": "https://sms.example.tm/api/send",
+  "method": "POST",
+  "content_type": "application/json",
+  "headers": { "Authorization": "Bearer {{.Sender}}-token" },
+  "body_template": "{\"to\":\"{{.To}}\",\"text\":{{.TextJSON}},\"from\":\"{{.Sender}}\"}",
+  "sender": "HABARCHY",
+  "timeout_sec": 15,
+  "success": { "status_codes": [200], "json_path": "result.status", "json_equals": "OK", "regex": "" },
+  "message_id": { "json_path": "result.id", "regex": "", "header": "" },
+  "retryable_status": [408, 429, 500, 502, 503, 504],
+  "dlr": {
+    "message_id_param": "msgid",
+    "status_param": "status",
+    "delivered_values": ["DELIVRD", "delivered"],
+    "failed_values": ["UNDELIV", "EXPIRED", "REJECTD"]
+  }
+}
+```
+
+Template variables: `{{.To}}` (E.164), `{{.Text}}`, `{{.TextJSON}}` (JSON-quoted text),
+`{{.Sender}}`, `{{.Length}}`. Functions: `urlquery`, `json`, plus Go's `slice`, `printf`.
+For GET gateways put everything in the URL:
+`https://gw/api?phone={{slice .To 1}}&msg={{.Text | urlquery}}`.
+
+Success: all configured matchers must hold; with none configured any 2xx is success.
+Non-matching responses with a status in `retryable_status` (default 408/429/5xx) fall back
+to the next provider; others fail the message as `provider_rejected`.
+
+**Delivery reports:** point the gateway's DLR URL at
+`POST|GET /callbacks/sms/{provider_id}`. Query, form and JSON fields are read; nested JSON
+is flattened (`result.id`). Intermediate statuses are acknowledged and ignored.
+
+## `smpp` credentials
+
+```json
+{
+  "host": "smsc.operator.tm", "port": 2775, "use_tls": false,
+  "system_id": "habarchy", "password": "secret", "system_type": "",
+  "source_addr": "HABARCHY", "source_ton": 5, "source_npi": 0,
+  "dest_ton": 1, "dest_npi": 1,
+  "enquire_link_sec": 60, "request_dlr": true, "submit_timeout_sec": 20
+}
+```
+
+Behaviour: `bind_transceiver`, GSM 7-bit when the text fits, otherwise UCS2
+(Turkmen ň ş ý ž and Cyrillic), long texts split with UDH (first part's SMSC id becomes
+`provider_message_id`), `enquire_link` keep-alive, automatic rebind every 5 s after a drop,
+`deliver_sm` receipts parsed from TLVs or the `id:... stat:...` text. Sessions live in the
+worker only; one bound session per provider. Set `rate_limit_per_sec` to the throughput the
+operator allows; the worker paces submits with a Redis token bucket.
+
+## `smtp` credentials
+
+```json
+{
+  "host": "smtp.example.tm", "port": 587, "tls_mode": "starttls",
+  "username": "no-reply@example.tm", "password": "secret", "auth_type": "auto",
+  "from_name": "Habarchy", "from_email": "no-reply@example.tm", "reply_to": "", "timeout_sec": 30
+}
+```
+
+Bodies that look like HTML are sent as HTML; `metadata.text` on the message adds a plain
+alternative. Attachments: `metadata.attachments: [{filename, content_type, content (base64) | url}]`.
+
+## `fcm` credentials
+
+```json
+{ "service_account": { "type": "service_account", "project_id": "...", "private_key": "...", "client_email": "..." }, "concurrency": 8 }
+```
+
+HTTP v1 (`projects/{id}/messages:send`), one request per token, up to 500 tokens per send,
+OAuth via the service account. `UNREGISTERED` / `INVALID_ARGUMENT` tokens are returned as
+invalid and the device is disabled automatically. `metadata.data` becomes the data payload;
+`title` / `subject` is the notification title.
+
+## `telegram_bot` credentials
+
+```json
+{ "bot_token": "123456:ABC...", "default_chat_id": "", "parse_mode": "HTML", "disable_web_page_preview": true }
+```
+
+`to` is the chat id. `metadata.parse_mode` overrides per message. Blocked bots and unknown
+chats fail as `invalid_recipient`; 429 is retried after `retry_after`.
+
+## Adding a new SMS provider in one Go file
+
+1. Create `backend/internal/adapters/providers/sms/<name>/<name>.go` with a `Config`
+   struct (the credentials JSON), `New(cfg Config, ...) (*Provider, error)` that validates
+   it, and `Send(ctx, ports.SMSMessage) (*ports.SendResult, error)`. Return
+   `*ports.ProviderError{Code, Message, Retryable}` so the worker knows whether to fall
+   back or fail.
+2. Add the type to `domain.ProviderType` and the `provider_type` enum (new migration).
+3. Register it in `internal/app/providers/service.go` in `build()` and
+   `ValidateCredentials()`.
+4. Write a unit test with `httptest` (see `sms/httpgeneric/httpgeneric_test.go`).
+
+Most gateways need no code at all: configure them as `http_sms`.

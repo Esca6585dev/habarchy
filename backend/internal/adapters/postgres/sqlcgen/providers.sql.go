@@ -12,12 +12,13 @@ import (
 )
 
 const createProvider = `-- name: CreateProvider :one
-INSERT INTO providers (project_id, name, channel, type, priority, is_active, credentials_enc, rate_limit_per_sec)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO providers (id, project_id, name, channel, type, priority, is_active, credentials_enc, rate_limit_per_sec)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id, project_id, name, channel, type, priority, is_active, credentials_enc, rate_limit_per_sec, created_at, updated_at
 `
 
 type CreateProviderParams struct {
+	ID              uuid.UUID
 	ProjectID       uuid.UUID
 	Name            string
 	Channel         Channel
@@ -30,6 +31,7 @@ type CreateProviderParams struct {
 
 func (q *Queries) CreateProvider(ctx context.Context, arg CreateProviderParams) (Provider, error) {
 	row := q.db.QueryRow(ctx, createProvider,
+		arg.ID,
 		arg.ProjectID,
 		arg.Name,
 		arg.Channel,

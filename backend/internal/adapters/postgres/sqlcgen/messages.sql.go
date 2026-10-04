@@ -31,6 +31,34 @@ func (q *Queries) CancelMessage(ctx context.Context, arg CancelMessageParams) (i
 	return result.RowsAffected(), nil
 }
 
+const completeBatchIfDone = `-- name: CompleteBatchIfDone :one
+UPDATE batches b SET status = 'completed', completed_at = now()
+WHERE b.id = $1 AND b.status = 'processing'
+  AND NOT EXISTS (SELECT 1 FROM messages m WHERE m.batch_id = b.id AND m.status IN ('queued', 'processing'))
+RETURNING b.id, b.project_id, b.template_key, b.channel, b.total, b.queued, b.sent, b.delivered, b.failed, b.status, b.idempotency_key, b.created_at, b.completed_at
+`
+
+func (q *Queries) CompleteBatchIfDone(ctx context.Context, id uuid.UUID) (Batch, error) {
+	row := q.db.QueryRow(ctx, completeBatchIfDone, id)
+	var i Batch
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.TemplateKey,
+		&i.Channel,
+		&i.Total,
+		&i.Queued,
+		&i.Sent,
+		&i.Delivered,
+		&i.Failed,
+		&i.Status,
+		&i.IdempotencyKey,
+		&i.CreatedAt,
+		&i.CompletedAt,
+	)
+	return i, err
+}
+
 const countMessagesSince = `-- name: CountMessagesSince :one
 SELECT count(*) FROM messages
 WHERE project_id = $1 AND created_at >= $2 AND status <> 'cancelled' AND NOT is_test
@@ -432,6 +460,91 @@ func (q *Queries) GetMessageByProviderMessageID(ctx context.Context, arg GetMess
 	return i, err
 }
 
+const listBatches = `-- name: ListBatches :many
+SELECT id, project_id, template_key, channel, total, queued, sent, delivered, failed, status, idempotency_key, created_at, completed_at FROM batches WHERE project_id = $1 ORDER BY created_at DESC LIMIT $3 OFFSET $2
+`
+
+type ListBatchesParams struct {
+	ProjectID uuid.UUID
+	RowOffset int32
+	RowLimit  int32
+}
+
+func (q *Queries) ListBatches(ctx context.Context, arg ListBatchesParams) ([]Batch, error) {
+	rows, err := q.db.Query(ctx, listBatches, arg.ProjectID, arg.RowOffset, arg.RowLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Batch{}
+	for rows.Next() {
+		var i Batch
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProjectID,
+			&i.TemplateKey,
+			&i.Channel,
+			&i.Total,
+			&i.Queued,
+			&i.Sent,
+			&i.Delivered,
+			&i.Failed,
+			&i.Status,
+			&i.IdempotencyKey,
+			&i.CreatedAt,
+			&i.CompletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDueWebhookDeliveries = `-- name: ListDueWebhookDeliveries :many
+SELECT id, project_id, message_id, batch_id, event, url, payload, signature, response_code, response_body, attempts, next_retry_at, delivered_at, created_at FROM webhook_deliveries
+WHERE delivered_at IS NULL AND next_retry_at IS NOT NULL AND next_retry_at <= now()
+ORDER BY next_retry_at LIMIT $1
+`
+
+func (q *Queries) ListDueWebhookDeliveries(ctx context.Context, rowLimit int32) ([]WebhookDelivery, error) {
+	rows, err := q.db.Query(ctx, listDueWebhookDeliveries, rowLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []WebhookDelivery{}
+	for rows.Next() {
+		var i WebhookDelivery
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProjectID,
+			&i.MessageID,
+			&i.BatchID,
+			&i.Event,
+			&i.Url,
+			&i.Payload,
+			&i.Signature,
+			&i.ResponseCode,
+			&i.ResponseBody,
+			&i.Attempts,
+			&i.NextRetryAt,
+			&i.DeliveredAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listMessageEvents = `-- name: ListMessageEvents :many
 SELECT id, message_id, type, provider_id, payload, created_at FROM message_events WHERE message_id = $1 ORDER BY created_at, id
 `
@@ -495,6 +608,64 @@ func (q *Queries) ListMessages(ctx context.Context, arg ListMessagesParams) ([]M
 		arg.CursorID,
 		arg.RowLimit,
 	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Message{}
+	for rows.Next() {
+		var i Message
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProjectID,
+			&i.BatchID,
+			&i.Channel,
+			&i.ToAddress,
+			&i.ContactID,
+			&i.TemplateKey,
+			&i.TemplateVersion,
+			&i.RenderedSubject,
+			&i.RenderedBody,
+			&i.Status,
+			&i.Priority,
+			&i.ProviderID,
+			&i.ProviderMessageID,
+			&i.ErrorCode,
+			&i.ErrorMessage,
+			&i.Attempts,
+			&i.ScheduledAt,
+			&i.SentAt,
+			&i.DeliveredAt,
+			&i.CostMicros,
+			&i.Currency,
+			&i.Metadata,
+			&i.IdempotencyKey,
+			&i.IsTest,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMessagesByBatch = `-- name: ListMessagesByBatch :many
+SELECT id, project_id, batch_id, channel, to_address, contact_id, template_key, template_version, rendered_subject, rendered_body, status, priority, provider_id, provider_message_id, error_code, error_message, attempts, scheduled_at, sent_at, delivered_at, cost_micros, currency, metadata, idempotency_key, is_test, created_at, updated_at FROM messages WHERE batch_id = $1 ORDER BY id LIMIT $3 OFFSET $2
+`
+
+type ListMessagesByBatchParams struct {
+	BatchID   *uuid.UUID
+	RowOffset int32
+	RowLimit  int32
+}
+
+func (q *Queries) ListMessagesByBatch(ctx context.Context, arg ListMessagesByBatchParams) ([]Message, error) {
+	rows, err := q.db.Query(ctx, listMessagesByBatch, arg.BatchID, arg.RowOffset, arg.RowLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -657,12 +828,10 @@ func (q *Queries) MarkMessageSent(ctx context.Context, arg MarkMessageSentParams
 
 const refreshBatchCounters = `-- name: RefreshBatchCounters :one
 UPDATE batches b SET
-    queued       = s.queued,
-    sent         = s.sent,
-    delivered    = s.delivered,
-    failed       = s.failed,
-    status       = CASE WHEN s.queued = 0 THEN 'completed' ELSE 'processing' END,
-    completed_at = CASE WHEN s.queued = 0 THEN COALESCE(b.completed_at, now()) ELSE NULL END
+    queued    = s.queued,
+    sent      = s.sent,
+    delivered = s.delivered,
+    failed    = s.failed
 FROM (
     SELECT
         count(*) FILTER (WHERE status IN ('queued', 'processing'))::int AS queued,
@@ -675,6 +844,8 @@ WHERE b.id = $1
 RETURNING b.id, b.project_id, b.template_key, b.channel, b.total, b.queued, b.sent, b.delivered, b.failed, b.status, b.idempotency_key, b.created_at, b.completed_at
 `
 
+// Counters only; the processing -> completed transition is done once by
+// CompleteBatchIfDone so the batch.completed webhook fires exactly once.
 func (q *Queries) RefreshBatchCounters(ctx context.Context, id uuid.UUID) (Batch, error) {
 	row := q.db.QueryRow(ctx, refreshBatchCounters, id)
 	var i Batch

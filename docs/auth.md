@@ -81,6 +81,28 @@ Http::withHeaders(['X-Api-Key' => $apiKey, 'X-Timestamp' => $ts, 'X-Signature' =
 The Go reference implementation is `projects.Sign` in
 `backend/internal/app/projects/service.go`; the SDKs (step 7) mirror it.
 
+## Webhook signatures (Habarchy → your server)
+
+Every webhook POST carries:
+
+```
+X-Habarchy-Event: message.delivered
+X-Habarchy-Delivery: <delivery uuid>
+X-Habarchy-Timestamp: 1700000000
+X-Habarchy-Signature: t=1700000000,v1=<hex HMAC-SHA256(webhook_secret, "1700000000." + raw_body)>
+```
+
+Verify in PHP:
+
+```php
+[$t, $v1] = [substr($parts[0], 2), substr($parts[1], 3)];   // from "t=...,v1=..."
+$expected = hash_hmac('sha256', "$t.$rawBody", $webhookSecret);
+abort_unless(hash_equals($expected, $v1) && abs(time() - (int) $t) < 300, 401);
+```
+
+The secret is set with `PATCH /api/admin/projects/{id}` `{ "webhook_secret": "..." }` and
+stored encrypted. Without a secret the signature is still present (empty key).
+
 ## Error envelope
 
 ```json

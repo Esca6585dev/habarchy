@@ -6,6 +6,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/middleware"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/templates"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
 )
@@ -15,6 +16,7 @@ type Handlers struct {
 	Auth      *auth.Service
 	Projects  *projects.Service
 	Templates *templates.Service
+	Providers *providers.Service // optional until wired
 }
 
 // Register mounts the admin API under /api/admin.
@@ -60,4 +62,14 @@ func (h *Handlers) Register(app fiber.Router) {
 	t.Get("/:template_id/versions", h.templateVersions)
 	t.Post("/:template_id/versions/:version/restore", h.restoreTemplateVersion)
 	t.Post("/:template_id/preview", h.previewStoredTemplate)
+
+	if h.Providers != nil {
+		pv := p.Group("/providers", h.requireRole(domain.RoleAdmin))
+		pv.Get("/", h.listProviders)
+		pv.Post("/", h.createProvider)
+		pv.Get("/:provider_id", h.getProvider)
+		pv.Put("/:provider_id", h.updateProvider)
+		pv.Delete("/:provider_id", h.deleteProvider)
+		pv.Post("/:provider_id/test", h.testSendProvider)
+	}
 }

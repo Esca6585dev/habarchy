@@ -26,15 +26,15 @@ run-worker:
 run-scheduler:
 	set -a && . ./.env && set +a && $(GO) run ./cmd/scheduler
 
-test:           ## unit + integration (integration skipped without HABARCHY_TEST_DATABASE_URL)
+test:           ## unit + integration (integration skipped without HABARCHY_TEST_DATABASE_URL / HABARCHY_TEST_REDIS_URL)
 	$(GO) test -race -count=1 $(PKGS)
 
 test-unit:
-	HABARCHY_TEST_DATABASE_URL= $(GO) test -race -count=1 $(PKGS)
+	HABARCHY_TEST_DATABASE_URL= HABARCHY_TEST_REDIS_URL= $(GO) test -race -count=1 $(PKGS)
 
 test-integration:
 	@test -n "$(HABARCHY_TEST_DATABASE_URL)" || (echo "set HABARCHY_TEST_DATABASE_URL" && exit 1)
-	$(GO) test -race -count=1 -run 'Integration|Migrations|WithTx' $(PKGS)
+	$(GO) test -race -count=1 -run 'Flow|Migrations|WithTx|Idempotency|TokenBucket|CountersAndOTP' $(PKGS)
 
 lint:
 	$(LINT) run ./...

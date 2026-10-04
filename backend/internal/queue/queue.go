@@ -58,20 +58,6 @@ func ForChannel(ch domain.Channel) (queueName, taskType string, err error) {
 	return "", "", fmt.Errorf("queue: no queue for channel %q", ch)
 }
 
-// PriorityOption maps a domain priority to an asynq option. asynq has no
-// per-task priority inside a queue, so high-priority tasks get a larger
-// retention and jump via a dedicated unique-id prefix later; for now the
-// mapping is expressed as task deadline/timeout differences.
-func PriorityOption(p domain.Priority) asynq.Option {
-	switch p {
-	case domain.PriorityHigh:
-		return asynq.MaxRetry(5)
-	case domain.PriorityLow:
-		return asynq.MaxRetry(2)
-	}
-	return asynq.MaxRetry(3)
-}
-
 // RedisOpt adapts parsed go-redis options to asynq's connection options so
 // both libraries share one HABARCHY_REDIS_URL.
 func RedisOpt(o *goredis.Options) asynq.RedisClientOpt {

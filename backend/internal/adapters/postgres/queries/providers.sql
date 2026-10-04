@@ -1,6 +1,6 @@
 -- name: CreateProvider :one
-INSERT INTO providers (project_id, name, channel, type, priority, is_active, credentials_enc, rate_limit_per_sec)
-VALUES (@project_id, @name, @channel, @type, @priority, @is_active, @credentials_enc, @rate_limit_per_sec)
+INSERT INTO providers (id, project_id, name, channel, type, priority, is_active, credentials_enc, rate_limit_per_sec)
+VALUES (@id, @project_id, @name, @channel, @type, @priority, @is_active, @credentials_enc, @rate_limit_per_sec)
 RETURNING *;
 
 -- name: GetProvider :one

@@ -63,3 +63,9 @@ GROUP BY project_id, channel;
 SELECT * FROM usage_daily
 WHERE project_id = @project_id AND day >= @from_day AND day <= @to_day
 ORDER BY day, channel;
+
+-- name: GetWebhookDeliveryByID :one
+SELECT * FROM webhook_deliveries WHERE id = @id;
+
+-- name: GetProjectWebhook :one
+SELECT id, webhook_url, webhook_secret_enc FROM projects WHERE id = @id;

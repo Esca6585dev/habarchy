@@ -76,6 +76,8 @@ type Security struct {
 	MasterKey          string        `envconfig:"MASTER_KEY" required:"true"`
 	SignatureTolerance time.Duration `envconfig:"SIGNATURE_TOLERANCE" default:"5m"`
 	IdempotencyTTL     time.Duration `envconfig:"IDEMPOTENCY_TTL" default:"24h"`
+	// WebhookAllowPrivate lets webhook URLs target private / loopback hosts.
+	WebhookAllowPrivate bool `envconfig:"WEBHOOK_ALLOW_PRIVATE" default:"false"`
 }
 
 // Queue configures asynq workers.
@@ -93,6 +95,8 @@ type Limits struct {
 	OTPPerAddressRate  int           `envconfig:"OTP_PER_ADDRESS_PER_HOUR" default:"5"`
 	OTPPerIPRate       int           `envconfig:"OTP_PER_IP_PER_HOUR" default:"30"`
 	BatchMaxRecipients int           `envconfig:"BATCH_MAX_RECIPIENTS" default:"1000"`
+	// APIRatePerSec limits public API requests per API key; 0 disables.
+	APIRatePerSec float64 `envconfig:"API_RATE_PER_SEC" default:"50"`
 }
 
 // Telemetry configures metrics and tracing.

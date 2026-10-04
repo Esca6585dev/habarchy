@@ -21,6 +21,7 @@ import (
 	httpx "github.com/Esca6585dev/habarchy/backend/internal/adapters/http"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/admin"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/public"
+	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres/pgtest"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
@@ -31,11 +32,15 @@ import (
 )
 
 type env struct {
-	t     *testing.T
-	app   *fiber.App
-	auth  *auth.Service
-	now   time.Time
-	clock func() time.Time
+	t         *testing.T
+	app       *fiber.App
+	auth      *auth.Service
+	projects  *projects.Service
+	templates *templates.Service
+	db        *postgres.DB
+	cfg       *config.Config
+	now       time.Time
+	clock     func() time.Time
 }
 
 func newEnv(t *testing.T) *env {
@@ -49,7 +54,7 @@ func newEnv(t *testing.T) *env {
 		t.Fatal(err)
 	}
 	cipher, _ := crypto.NewCipherFromString(cfg.Security.MasterKey)
-	e := &env{t: t, now: time.Now()}
+	e := &env{t: t, now: time.Now(), db: db, cfg: cfg}
 	e.clock = func() time.Time { return e.now }
 	fast := password.Params{Memory: 8 * 1024, Iterations: 1, Parallelism: 1, SaltLength: 16, KeyLength: 32}
 	e.auth = auth.New(db, cfg.Auth, cipher, auth.WithClock(e.clock), auth.WithPasswordHasher(func(p string) (string, error) {
@@ -57,6 +62,7 @@ func newEnv(t *testing.T) *env {
 	}))
 	projectSvc := projects.New(db, cipher)
 	templateSvc := templates.New(db)
+	e.projects, e.templates = projectSvc, templateSvc
 
 	e.app = httpx.NewServer(cfg, zerolog.Nop(), httpx.Deps{})
 	(&admin.Handlers{Auth: e.auth, Projects: projectSvc, Templates: templateSvc}).Register(e.app)

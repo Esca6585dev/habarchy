@@ -114,13 +114,13 @@ SELECT * FROM batches WHERE id = @id AND project_id = @project_id;
 SELECT * FROM batches WHERE project_id = @project_id AND idempotency_key = @idempotency_key;
 
 -- name: RefreshBatchCounters :one
+-- Counters only; the processing -> completed transition is done once by
+-- CompleteBatchIfDone so the batch.completed webhook fires exactly once.
 UPDATE batches b SET
-    queued       = s.queued,
-    sent         = s.sent,
-    delivered    = s.delivered,
-    failed       = s.failed,
-    status       = CASE WHEN s.queued = 0 THEN 'completed' ELSE 'processing' END,
-    completed_at = CASE WHEN s.queued = 0 THEN COALESCE(b.completed_at, now()) ELSE NULL END
+    queued    = s.queued,
+    sent      = s.sent,
+    delivered = s.delivered,
+    failed    = s.failed
 FROM (
     SELECT
         count(*) FILTER (WHERE status IN ('queued', 'processing'))::int AS queued,
@@ -131,3 +131,20 @@ FROM (
 ) s
 WHERE b.id = @id
 RETURNING b.*;
+
+-- name: CompleteBatchIfDone :one
+UPDATE batches b SET status = 'completed', completed_at = now()
+WHERE b.id = @id AND b.status = 'processing'
+  AND NOT EXISTS (SELECT 1 FROM messages m WHERE m.batch_id = b.id AND m.status IN ('queued', 'processing'))
+RETURNING b.*;
+
+-- name: ListMessagesByBatch :many
+SELECT * FROM messages WHERE batch_id = @batch_id ORDER BY id LIMIT @row_limit OFFSET @row_offset;
+
+-- name: ListBatches :many
+SELECT * FROM batches WHERE project_id = @project_id ORDER BY created_at DESC LIMIT @row_limit OFFSET @row_offset;
+
+-- name: ListDueWebhookDeliveries :many
+SELECT * FROM webhook_deliveries
+WHERE delivered_at IS NULL AND next_retry_at IS NOT NULL AND next_retry_at <= now()
+ORDER BY next_retry_at LIMIT @row_limit;

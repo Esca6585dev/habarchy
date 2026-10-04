@@ -163,6 +163,23 @@ func (q *Queries) CreateWebhookDelivery(ctx context.Context, arg CreateWebhookDe
 	return i, err
 }
 
+const getProjectWebhook = `-- name: GetProjectWebhook :one
+SELECT id, webhook_url, webhook_secret_enc FROM projects WHERE id = $1
+`
+
+type GetProjectWebhookRow struct {
+	ID               uuid.UUID
+	WebhookUrl       string
+	WebhookSecretEnc []byte
+}
+
+func (q *Queries) GetProjectWebhook(ctx context.Context, id uuid.UUID) (GetProjectWebhookRow, error) {
+	row := q.db.QueryRow(ctx, getProjectWebhook, id)
+	var i GetProjectWebhookRow
+	err := row.Scan(&i.ID, &i.WebhookUrl, &i.WebhookSecretEnc)
+	return i, err
+}
+
 const getWebhookDelivery = `-- name: GetWebhookDelivery :one
 SELECT id, project_id, message_id, batch_id, event, url, payload, signature, response_code, response_body, attempts, next_retry_at, delivered_at, created_at FROM webhook_deliveries WHERE id = $1 AND project_id = $2
 `
@@ -174,6 +191,32 @@ type GetWebhookDeliveryParams struct {
 
 func (q *Queries) GetWebhookDelivery(ctx context.Context, arg GetWebhookDeliveryParams) (WebhookDelivery, error) {
 	row := q.db.QueryRow(ctx, getWebhookDelivery, arg.ID, arg.ProjectID)
+	var i WebhookDelivery
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.MessageID,
+		&i.BatchID,
+		&i.Event,
+		&i.Url,
+		&i.Payload,
+		&i.Signature,
+		&i.ResponseCode,
+		&i.ResponseBody,
+		&i.Attempts,
+		&i.NextRetryAt,
+		&i.DeliveredAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getWebhookDeliveryByID = `-- name: GetWebhookDeliveryByID :one
+SELECT id, project_id, message_id, batch_id, event, url, payload, signature, response_code, response_body, attempts, next_retry_at, delivered_at, created_at FROM webhook_deliveries WHERE id = $1
+`
+
+func (q *Queries) GetWebhookDeliveryByID(ctx context.Context, id uuid.UUID) (WebhookDelivery, error) {
+	row := q.db.QueryRow(ctx, getWebhookDeliveryByID, id)
 	var i WebhookDelivery
 	err := row.Scan(
 		&i.ID,

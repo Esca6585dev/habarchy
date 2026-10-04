@@ -102,6 +102,76 @@ sequenceDiagram
 
 Details in [auth.md](auth.md).
 
-## Send sequence, fallback and webhook retry
+## Send sequence
 
-Documented in step 3 when the worker and providers land.
+```mermaid
+sequenceDiagram
+    participant App as Client app
+    participant API as cmd/api
+    participant R as Redis
+    participant PG as PostgreSQL
+    participant W as cmd/worker
+    participant P as Provider
+    participant H as Webhook URL
+    App->>API: POST /api/v1/messages {channel, to, template, data, idempotency_key}
+    API->>API: resolve contact · pick channel (auto) · normalize address · render template
+    API->>R: INCR quota:{project}:d:{day} (seed from DB on first use)
+    API->>R: SETNX idem:{project}:{key}
+    API->>PG: INSERT messages (queued) + message_events(queued) + idempotency key
+    API->>R: asynq enqueue send:sms (task id = message id, ProcessAt = scheduled_at)
+    API-->>App: 202 {id, status: queued}
+    R-->>W: dequeue
+    W->>PG: UPDATE status = processing, attempts + 1
+    W->>R: token bucket wait (provider rate_limit_per_sec)
+    W->>P: send
+    P-->>W: provider_message_id
+    W->>PG: status = sent, events(sent)
+    W->>PG: INSERT webhook_deliveries(message.sent) → enqueue webhook:deliver
+    W->>H: POST signed JSON (X-Habarchy-Signature)
+    P-->>API: DLR callback POST /callbacks/sms/{provider_id}
+    API->>PG: status = delivered, events(delivered) → webhook message.delivered
+```
+
+## Provider fallback and retries
+
+```mermaid
+flowchart TD
+    A[task send:*] --> B{providers for channel<br/>ordered by priority}
+    B -- none --> F1[failed: provider_unavailable]
+    B --> C[try provider i]
+    C -- success --> S[sent → webhook message.sent]
+    C -- permanent error<br/>invalid_recipient, auth... --> F2[failed immediately<br/>webhook message.failed]
+    C -- retryable error --> D{more providers?}
+    D -- yes --> C
+    D -- no --> E{attempt < max retry?}
+    E -- yes --> Q[status back to queued<br/>asynq retry 10s / 60s / 300s]
+    E -- no --> F3[failed: retries exhausted]
+    Q --> A
+```
+
+Test API keys (`hb_test_`) skip the provider list and use the sandbox, which accepts
+every message and marks it delivered (addresses containing `FAIL` / `RETRY` force errors).
+
+## Webhook delivery and retry
+
+```mermaid
+sequenceDiagram
+    participant W as worker
+    participant PG as PostgreSQL
+    participant H as Webhook URL
+    W->>PG: INSERT webhook_deliveries (event, payload, url)
+    loop up to 8 attempts
+        W->>H: POST payload · X-Habarchy-Signature: t=ts,v1=hmac(secret, ts.body)
+        alt 2xx
+            H-->>W: ok
+            W->>PG: delivered_at = now()
+        else error / timeout
+            W->>PG: attempts + 1, response_code, next_retry_at
+            Note over W: backoff 10s · 30s · 1m · 5m · 15m · 1h · 3h
+        end
+    end
+```
+
+Events: `message.sent`, `message.delivered`, `message.failed`, `batch.completed`.
+Receivers verify with HMAC-SHA256 over `"<timestamp>.<raw body>"` using the project's
+webhook secret and reject timestamps older than a few minutes (see [auth.md](auth.md)).

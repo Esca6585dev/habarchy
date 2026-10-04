@@ -1,5 +1,5 @@
 // Package public serves /api/v1, the API client applications call with an
-// API key.
+// API key, plus provider callbacks.
 package public
 
 import (
@@ -10,27 +10,45 @@ import (
 	httpx "github.com/Esca6585dev/habarchy/backend/internal/adapters/http"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/admin"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/middleware"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/templates"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
 )
 
-// Handlers groups the public API dependencies.
+// Handlers groups the public API dependencies. Messages, OTP, Contacts,
+// Providers and Delivery may be nil in tests that only exercise templates.
 type Handlers struct {
 	Projects           *projects.Service
 	Templates          *templates.Service
+	Messages           *messages.Service
+	OTP                *otp.Service
+	Contacts           *contacts.Service
+	Providers          *providers.Service
+	Delivery           *delivery.Service
 	SignatureTolerance time.Duration
+	// APIRatePerSec limits requests per API key (token bucket); 0 = off.
+	APIRatePerSec float64
+	Limiter       middleware.Limiter
 }
 
-// Register mounts the public API under /api/v1.
+// Register mounts the public API under /api/v1 and callbacks under
+// /callbacks.
 func (h *Handlers) Register(app fiber.Router) {
 	r := app.Group("/api/v1", middleware.RequireAPIKey(h.Projects, middleware.APIKeyConfig{SignatureTolerance: h.SignatureTolerance}))
+	if h.Limiter != nil && h.APIRatePerSec > 0 {
+		r.Use(middleware.RateLimitByKey(h.Limiter, h.APIRatePerSec))
+	}
 
 	r.Get("/me", func(c *fiber.Ctx) error {
-		caller := middleware.Caller(c)
+		k := middleware.Caller(c)
 		return httpx.OK(c, fiber.Map{
-			"project": fiber.Map{"id": caller.Project.ID, "name": caller.Project.Name, "slug": caller.Project.Slug},
-			"key":     fiber.Map{"name": caller.Key.Name, "prefix": caller.Key.Prefix, "scopes": caller.Key.Scopes, "test": caller.IsTest()},
+			"project": fiber.Map{"id": k.Project.ID, "name": k.Project.Name, "slug": k.Project.Slug, "default_locale": k.Project.DefaultLocale},
+			"key":     fiber.Map{"name": k.Key.Name, "prefix": k.Key.Prefix, "scopes": k.Key.Scopes, "test": k.IsTest()},
 		})
 	})
 
@@ -41,6 +59,39 @@ func (h *Handlers) Register(app fiber.Router) {
 	t.Get("/:template_id", h.getTemplate)
 	t.Put("/:template_id", h.updateTemplate)
 	t.Delete("/:template_id", h.deleteTemplate)
+
+	if h.Messages != nil {
+		send := middleware.RequireScope(domain.ScopeMessagesSend)
+		read := middleware.RequireScope(domain.ScopeMessagesRead)
+		r.Post("/messages", send, h.sendMessage)
+		r.Post("/messages/batch", send, h.sendBatch)
+		r.Get("/messages", read, h.listMessages)
+		r.Get("/messages/:message_id", read, h.getMessage)
+		r.Post("/messages/:message_id/cancel", send, h.cancelMessage)
+		r.Get("/batches/:batch_id", read, h.getBatch)
+	}
+	if h.OTP != nil {
+		o := r.Group("/otp", middleware.RequireScope(domain.ScopeOTP))
+		o.Post("/send", h.otpSend)
+		o.Post("/verify", h.otpVerify)
+	}
+	if h.Contacts != nil {
+		ct := r.Group("/contacts", middleware.RequireScope(domain.ScopeContacts))
+		ct.Get("/", h.listContacts)
+		ct.Post("/", h.createContact)
+		ct.Get("/:contact_id", h.getContact)
+		ct.Put("/:contact_id", h.updateContact)
+		ct.Delete("/:contact_id", h.deleteContact)
+
+		d := r.Group("/devices", middleware.RequireScope(domain.ScopeDevices))
+		d.Get("/", h.listDevices)
+		d.Post("/", h.registerDevice)
+		d.Delete("/:token", h.removeDevice)
+	}
+	if h.Delivery != nil && h.Providers != nil {
+		app.Post("/callbacks/sms/:provider_id", h.smsCallback)
+		app.Get("/callbacks/sms/:provider_id", h.smsCallback)
+	}
 }
 
 func (h *Handlers) listTemplates(c *fiber.Ctx) error {

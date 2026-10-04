@@ -21,7 +21,7 @@ In progress — built step by step from [PROMPT.md](PROMPT.md).
 |------|-------|--------|
 | 1 | Monorepo skeleton, backend config, migrations, domain models, sqlc | ✅ done |
 | 2 | Auth (admin JWT + 2FA, API keys + HMAC), projects, members, templates | ✅ done |
-| 3 | Messages API, asynq workers, providers, fallback, webhooks, OTP | ⏳ |
+| 3 | Messages API, asynq workers, providers (http_sms, smpp, smtp, fcm, telegram), fallback, webhooks, OTP, contacts, devices | ✅ done |
 | 4 | Admin API, SSE, usage aggregation | ⏳ |
 | 5 | Next.js admin panel | ⏳ |
 | 6 | Flutter app | ⏳ |
@@ -41,7 +41,8 @@ go run ./cmd/api -genkey                                  # prints a HABARCHY_MA
 make migrate                                              # goose up
 HABARCHY_ADMIN_EMAIL=you@example.com HABARCHY_ADMIN_PASSWORD='min 8 chars' go run ./cmd/api -create-admin
 make run                                                  # API on :8080  (/healthz, /readyz)
-make test                                                 # unit tests; set HABARCHY_TEST_DATABASE_URL for integration tests
+make test                                                 # unit tests; set HABARCHY_TEST_DATABASE_URL + HABARCHY_TEST_REDIS_URL for integration tests
+make run-worker                                           # delivers queued messages, posts webhooks
 make lint
 ```
 
@@ -57,13 +58,43 @@ See [docs/architecture.md](docs/architecture.md) for the component and data-mode
 | API keys | `GET/POST /projects/{id}/api-keys`, `DELETE /api-keys/{key_id}` |
 | Templates (admin) | `GET/POST /projects/{id}/templates`, `GET/PUT/DELETE /{tid}`, `GET /{tid}/versions`, `POST /{tid}/versions/{v}/restore`, `POST /preview`, `POST /{tid}/preview` |
 | Templates (public) | `GET/POST /api/v1/templates`, `GET/PUT/DELETE /{tid}`, `POST /preview`, `GET /api/v1/me` (key auth) |
+| Messages (public) | `POST /api/v1/messages` (202), `POST /messages/batch`, `GET /messages?status=&channel=&from=&to=&cursor=&limit=`, `GET /messages/{id}` (+timeline), `POST /messages/{id}/cancel`, `GET /batches/{id}` |
+| OTP (public) | `POST /api/v1/otp/send`, `POST /api/v1/otp/verify` |
+| Contacts & devices (public) | `GET/POST /api/v1/contacts`, `GET/PUT/DELETE /contacts/{id}`, `GET/POST /api/v1/devices`, `DELETE /devices/{token}` |
+| Providers (admin) | `GET/POST /projects/{id}/providers`, `GET/PUT/DELETE /providers/{pid}`, `POST /providers/{pid}/test` |
+| Callbacks | `POST|GET /callbacks/sms/{provider_id}` (HTTP delivery reports) |
 
-## Quick example (planned API)
+## Quick examples
 
-```http
-POST /api/v1/messages
-X-Api-Key: hb_live_xxx
-Content-Type: application/json
+```sh
+# SMS through a template (202 Accepted, delivered asynchronously by the worker)
+curl -X POST $HABARCHY/api/v1/messages -H "X-Api-Key: hb_live_xxx" -H 'Content-Type: application/json' \
+  -d '{"channel":"sms","to":"+99365123456","template":"otp","data":{"code":"4821","minutes":5},"idempotency_key":"order-77"}'
 
-{ "channel": "sms", "to": "+99365123456", "template": "otp", "data": { "code": "4821" } }
+# Email with an ad hoc body
+curl -X POST $HABARCHY/api/v1/messages -H "X-Api-Key: hb_live_xxx" -H 'Content-Type: application/json' \
+  -d '{"channel":"email","to":"user@example.tm","subject":"Salam {{.name}}","body":"<p>Hoş geldiňiz, {{.name}}!</p>","data":{"name":"Aman"}}'
+
+# Push to every device of a contact
+curl -X POST $HABARCHY/api/v1/messages -H "X-Api-Key: hb_live_xxx" -H 'Content-Type: application/json' \
+  -d '{"channel":"push","to":{"external_id":"user-42"},"title":"Täze habar","body":"Resminamaňyz taýýar","metadata":{"data":{"screen":"docs"}}}'
+
+# Telegram
+curl -X POST $HABARCHY/api/v1/messages -H "X-Api-Key: hb_live_xxx" -H 'Content-Type: application/json' \
+  -d '{"channel":"telegram","to":"123456789","body":"<b>Habarchy</b> işleýär","metadata":{"parse_mode":"HTML"}}'
+
+# Best channel for the contact (project order, default push → sms → email)
+curl -X POST $HABARCHY/api/v1/messages -H "X-Api-Key: hb_live_xxx" -H 'Content-Type: application/json' \
+  -d '{"channel":"auto","to":{"external_id":"user-42"},"template":"welcome","data":{}}'
+
+# OTP
+curl -X POST $HABARCHY/api/v1/otp/send   -H "X-Api-Key: hb_live_xxx" -d '{"channel":"sms","to":"+99365123456"}'
+curl -X POST $HABARCHY/api/v1/otp/verify -H "X-Api-Key: hb_live_xxx" -d '{"to":"+99365123456","code":"482193"}'
+
+# Status + timeline
+curl $HABARCHY/api/v1/messages/01a1057e-6a9e-7b19-878d-a769d3c78fa8 -H "X-Api-Key: hb_live_xxx"
 ```
+
+Responses use the envelope `{ "data": ..., "meta": ..., "error": { "code", "message", "details" } }`.
+Error codes: `validation_failed`, `unauthorized`, `forbidden_scope`, `not_found`, `quota_exceeded` (429),
+`rate_limited` (429), `duplicate_request`, `provider_unavailable`, `invalid_recipient`, `conflict`.
