@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/redis"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/contactimport"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/events"
@@ -158,6 +160,9 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 	statsSvc := stats.New(db, q)
 	gatewaySvc := gateway.New(db, deliverySvc, webhookSvc).WithProviders(providerSvc)
 	groupSvc := groups.New(db, contactSvc)
+	importSvc := contactimport.New(db, contactSvc, groupSvc)
+	importSvc.Google = contactimport.NewGoogleConnector(cfg.Integrations.GoogleClientID, cfg.Integrations.GoogleClientSecret,
+		strings.TrimRight(cfg.HTTP.PublicURL, "/")+"/api/admin/integrations/google/callback", []byte(cfg.Auth.JWTSecret))
 
 	app := httpadapter.NewServer(cfg, log, httpadapter.Deps{DB: db, Redis: rdb})
 	httpadapter.RegisterDocs(app)
@@ -168,12 +173,12 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 	queueUI := asynqmon.New(asynqmon.Options{RootPath: "/admin/queues", RedisConnOpt: queue.RedisOpt(rdb.Options())})
 	(&admin.Handlers{
 		Auth: authSvc, Projects: projectSvc, Templates: templateSvc, Providers: providerSvc, Messages: messageSvc,
-		Contacts: contactSvc, Groups: groupSvc,
+		Contacts: contactSvc, Groups: groupSvc, Imports: importSvc,
 		Webhooks: webhookSvc, Stats: statsSvc, DB: db, Redis: rdb.Raw(), QueueUI: queueUI, PublicURL: cfg.HTTP.PublicURL,
 	}).Register(app)
 	(&gatewayhttp.Handlers{Gateway: gatewaySvc}).Register(app)
 	(&public.Handlers{
-		Projects: projectSvc, Templates: templateSvc, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc, Groups: groupSvc, Gateway: gatewaySvc,
+		Projects: projectSvc, Templates: templateSvc, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc, Groups: groupSvc, Gateway: gatewaySvc, Imports: importSvc,
 		Providers: providerSvc, Delivery: deliverySvc, Stats: statsSvc, SignatureTolerance: cfg.Security.SignatureTolerance,
 		APIRatePerSec: cfg.Limits.APIRatePerSec, Limiter: rdb,
 	}).Register(app)

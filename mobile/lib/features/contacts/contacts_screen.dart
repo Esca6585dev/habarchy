@@ -6,7 +6,9 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/models/models.dart';
 import '../../l10n/app_localizations.dart';
 import '../common/widgets.dart';
+import '../groups/groups_screen.dart';
 import 'contact_form.dart';
+import 'import_sheet.dart';
 
 final contactSearchProvider = NotifierProvider<ContactSearch, String>(ContactSearch.new);
 
@@ -32,7 +34,24 @@ class ContactsScreen extends ConsumerWidget {
     final project = ref.watch(currentProjectProvider);
     final editable = project != null && project.role != 'viewer';
     return Scaffold(
-      appBar: AppBar(title: Text(t.contacts)),
+      appBar: AppBar(
+        title: Text(t.contacts),
+        actions: [
+          if (editable)
+            IconButton(
+              key: const Key('import-contacts'),
+              icon: const Icon(Icons.upload_file_outlined),
+              tooltip: t.importTitle,
+              onPressed: () async {
+                final groups = ref.read(groupsProvider).value ?? const [];
+                if (await showImportSheet(context, ref, project.id, groups: groups)) {
+                  ref.invalidate(contactsProvider);
+                  ref.invalidate(groupsProvider);
+                }
+              },
+            ),
+        ],
+      ),
       floatingActionButton: editable
           ? FloatingActionButton(
               onPressed: () async {

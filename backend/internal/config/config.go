@@ -32,6 +32,15 @@ type Config struct {
 	Queue
 	Limits
 	Telemetry
+	Integrations
+}
+
+// Integrations configures third-party connectors (contact import).
+type Integrations struct {
+	// GoogleClientID / GoogleClientSecret enable "Import from Google Contacts"
+	// (OAuth 2.0 web client; redirect URI = PUBLIC_URL + /api/admin/integrations/google/callback).
+	GoogleClientID     string `envconfig:"GOOGLE_CLIENT_ID" default:""`
+	GoogleClientSecret string `envconfig:"GOOGLE_CLIENT_SECRET" default:""`
 }
 
 // HTTP configures the API server.
@@ -41,7 +50,7 @@ type HTTP struct {
 	ReadTimeout     time.Duration `envconfig:"HTTP_READ_TIMEOUT" default:"15s"`
 	WriteTimeout    time.Duration `envconfig:"HTTP_WRITE_TIMEOUT" default:"30s"`
 	IdleTimeout     time.Duration `envconfig:"HTTP_IDLE_TIMEOUT" default:"120s"`
-	BodyLimitBytes  int           `envconfig:"HTTP_BODY_LIMIT_BYTES" default:"4194304"` // 4 MiB
+	BodyLimitBytes  int           `envconfig:"HTTP_BODY_LIMIT_BYTES" default:"16777216"` // 16 MiB (contact imports)
 	ShutdownTimeout time.Duration `envconfig:"HTTP_SHUTDOWN_TIMEOUT" default:"20s"`
 	CORSOrigins     []string      `envconfig:"CORS_ORIGINS" default:"http://localhost:3000"`
 	TrustedProxies  []string      `envconfig:"TRUSTED_PROXIES" default:""`

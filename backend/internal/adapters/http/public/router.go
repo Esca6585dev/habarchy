@@ -10,6 +10,7 @@ import (
 	httpx "github.com/Esca6585dev/habarchy/backend/internal/adapters/http"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/admin"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/middleware"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/contactimport"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/gateway"
@@ -33,6 +34,7 @@ type Handlers struct {
 	Contacts           *contacts.Service
 	Groups             *groups.Service
 	Gateway            *gateway.Service // inbound SMS listing
+	Imports            *contactimport.Service
 	Providers          *providers.Service
 	Delivery           *delivery.Service
 	Stats              *stats.Service
@@ -83,6 +85,9 @@ func (h *Handlers) Register(app fiber.Router) {
 	}
 	if h.Contacts != nil {
 		ct := r.Group("/contacts", middleware.RequireScope(domain.ScopeContacts))
+		if h.Imports != nil {
+			ct.Post("/import", func(c *fiber.Ctx) error { return admin.ImportFile(c, h.Imports, caller(c).Project.ID) })
+		}
 		ct.Get("/", h.listContacts)
 		ct.Post("/", h.createContact)
 		ct.Get("/:contact_id", h.getContact)

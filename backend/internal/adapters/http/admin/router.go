@@ -10,6 +10,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/middleware"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/contactimport"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/groups"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
@@ -30,6 +31,7 @@ type Handlers struct {
 	Providers *providers.Service
 	Contacts  *contacts.Service
 	Groups    *groups.Service
+	Imports   *contactimport.Service
 	Messages  *messages.Service
 	Webhooks  *webhooks.Service
 	Stats     *stats.Service
@@ -56,6 +58,11 @@ func (h *Handlers) Register(app fiber.Router) {
 	}
 	if h.QueueUI != nil {
 		app.Use("/admin/queues", middleware.RequireJWTFlexible(h.Auth), adaptor.HTTPHandler(h.QueueUI))
+	}
+
+	if h.Imports != nil && h.Imports.Google != nil {
+		// OAuth redirect target: authenticated by the signed state, not a JWT.
+		r.Get("/integrations/google/callback", h.googleCallback)
 	}
 
 	// Everything below requires a valid access token.
@@ -125,6 +132,11 @@ func (h *Handlers) Register(app fiber.Router) {
 		v.Get("/devices", h.listDevices)
 		if h.Contacts != nil {
 			ct := p.Group("/contacts", h.requireRole(domain.RoleDeveloper))
+			if h.Imports != nil {
+				ct.Post("/import", h.importContacts)
+				ct.Post("/import/carddav", h.importCardDAV)
+				ct.Get("/import/google/url", h.googleImportURL)
+			}
 			ct.Post("/", h.createContact)
 			ct.Get("/:contact_id", h.requireRole(domain.RoleViewer), h.getContact)
 			ct.Put("/:contact_id", h.updateContact)

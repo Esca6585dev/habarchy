@@ -143,14 +143,14 @@ func (s *Service) AddMembers(ctx context.Context, projectID, groupID uuid.UUID, 
 		idSet[c.ID] = true
 	}
 	for _, cin := range in.Contacts {
-		c, err := s.findOrCreate(ctx, projectID, cin)
+		c, created, err := s.contacts.Merge(ctx, projectID, cin)
 		if err != nil {
 			return nil, err
 		}
-		if c.created {
+		if created {
 			res.CreatedContacts++
 		}
-		idSet[c.id] = true
+		idSet[c.ID] = true
 	}
 	if len(idSet) == 0 {
 		if len(res.NotFound) > 0 {
@@ -168,36 +168,6 @@ func (s *Service) AddMembers(ctx context.Context, projectID, groupID uuid.UUID, 
 	}
 	res.Added = n
 	return res, nil
-}
-
-type found struct {
-	id      uuid.UUID
-	created bool
-}
-
-// findOrCreate matches an inline contact by external_id, phone or email
-// before creating it, so typing the same number twice does not duplicate.
-func (s *Service) findOrCreate(ctx context.Context, projectID uuid.UUID, in contacts.Input) (found, error) {
-	if ext := strings.TrimSpace(in.ExternalID); ext != "" {
-		if c, err := s.db.Queries.GetContactByExternalID(ctx, sqlcgen.GetContactByExternalIDParams{ProjectID: projectID, ExternalID: ext}); err == nil {
-			return found{id: c.ID}, nil
-		}
-	}
-	if p := strings.TrimSpace(in.Phone); p != "" {
-		if c, err := s.db.Queries.GetContactByPhone(ctx, sqlcgen.GetContactByPhoneParams{ProjectID: projectID, Phone: normalizePhone(p)}); err == nil {
-			return found{id: c.ID}, nil
-		}
-	}
-	if e := strings.TrimSpace(in.Email); e != "" {
-		if c, err := s.db.Queries.GetContactByEmail(ctx, sqlcgen.GetContactByEmailParams{ProjectID: projectID, Email: e}); err == nil {
-			return found{id: c.ID}, nil
-		}
-	}
-	c, err := s.contacts.Create(ctx, projectID, in)
-	if err != nil {
-		return found{}, err
-	}
-	return found{id: c.ID, created: true}, nil
 }
 
 // RemoveMember detaches one contact.

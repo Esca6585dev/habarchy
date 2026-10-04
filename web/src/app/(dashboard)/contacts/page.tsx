@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { api, unwrap, ApiError } from "@/lib/api/client";
 import type { AdminDevice, Contact } from "@/lib/api/types";
@@ -19,17 +19,23 @@ import { ConfirmButton } from "@/components/common/confirm-button";
 import { Field } from "@/components/common/field";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
+import { ImportDialog } from "@/components/contacts/import-dialog";
 
 type ContactForm = { id?: string; name: string; external_id: string; phone: string; email: string; whatsapp: string; telegram_chat_id: string; slack_id: string };
 const emptyContact: ContactForm = { name: "", external_id: "", phone: "", email: "", whatsapp: "", telegram_chat_id: "", slack_id: "" };
 
 export default function ContactsPage() {
+  return <Suspense><Contacts /></Suspense>;
+}
+
+function Contacts() {
   const t = useTranslations("contacts");
   const tc = useTranslations("common");
   const { projectId, can } = useProject();
   const qc = useQueryClient();
   const editable = can("developer");
   const [form, setForm] = useState<ContactForm | null>(null);
+  const [importing, setImporting] = useState(false);
   const [search, setSearch] = useState("");
   const [applied, setApplied] = useState("");
   const [offset, setOffset] = useState(0);
@@ -63,7 +69,8 @@ export default function ContactsPage() {
 
   return (
     <>
-      <PageHeader title={t("title")} actions={editable ? <Button size="sm" onClick={() => setForm(emptyContact)} data-testid="new-contact"><Plus /> {t("new")}</Button> : null} />
+      <PageHeader title={t("title")} actions={editable ? <><Button size="sm" variant="outline" onClick={() => setImporting(true)} data-testid="import-contacts"><Upload /> {t("import")}</Button><Button size="sm" onClick={() => setForm(emptyContact)} data-testid="new-contact"><Plus /> {t("new")}</Button></> : null} />
+      {editable ? <ImportDialog open={importing} onOpenChange={setImporting} /> : null}
       <Tabs defaultValue="contacts">
         <TabsList><TabsTrigger value="contacts">{t("contacts")} {contacts.data ? `(${contacts.data.total})` : ""}</TabsTrigger><TabsTrigger value="devices">{t("devices")} {devices.data ? `(${devices.data.length})` : ""}</TabsTrigger></TabsList>
         <TabsContent value="contacts">

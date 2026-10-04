@@ -7,7 +7,7 @@
   "totpCode": "Authenticator code",
   "totpRequired": "Two-factor authentication is enabled. Enter the 6-digit code.",
   "invalidCredentials": "Invalid email or password",
-  "serverUrl": "Server",
+  "serverUrl": "CardDAV server",
   "dashboard": "Dashboard",
   "messages": "Messages",
   "templates": "Templates",
@@ -177,5 +177,35 @@
   "openMessages": "Open message log",
   "noMembers": "No members yet",
   "inboundSms": "Inbound SMS",
-  "inboundHint": "SMS received by gateway phones appear here when forwarding is on (provider setting + switch in the phone app)."
+  "inboundHint": "SMS received by gateway phones appear here when forwarding is on (provider setting + switch in the phone app).",
+  "importTitle": "Import contacts",
+  "importFile": "From a file",
+  "importFileHint": "Excel, CSV, Word or vCard (.vcf). Existing contacts are merged, never duplicated.",
+  "importGoogle": "Google Contacts",
+  "importGoogleHint": "Opens Google’s consent screen; read-only, tokens are not stored.",
+  "importApple": "Apple / iCloud Contacts",
+  "importAppleHint": "Apple ID + app-specific password (appleid.apple.com). Used once, not stored.",
+  "appleId": "Apple ID (e-mail)",
+  "appPassword": "App-specific password",
+  "addToGroup": "Add to group",
+  "noGroup": "No group",
+  "importNow": "Import",
+  "importResult": "{total} rows: {created} created, {updated} updated, {skipped} skipped",
+  "@importResult": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "created": {
+        "type": "int"
+      },
+      "updated": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "googleNotConfigured": "Google import is not configured on this server"
 }

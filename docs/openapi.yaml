@@ -357,6 +357,25 @@ paths:
         "201": { $ref: "#/components/responses/Contact" }
         "200": { $ref: "#/components/responses/Contact" }
         "400": { $ref: "#/components/responses/Error" }
+  /api/v1/contacts/import:
+    post:
+      tags: [public-contacts]
+      summary: Import contacts from a file (same as the admin endpoint; scope contacts)
+      security: [{ ApiKey: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                group_id: { type: string, format: uuid }
+                dry_run: { type: string, enum: ["true", "false"] }
+                tag: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ImportResult" }
   /api/v1/contacts/{contact_id}:
     parameters: [{ name: contact_id, in: path, required: true, schema: { type: string, format: uuid } }]
     get:
@@ -1261,6 +1280,81 @@ paths:
       responses:
         "201": { $ref: "#/components/responses/Contact" }
         "200": { $ref: "#/components/responses/Contact" }
+  /api/admin/projects/{project_id}/contacts/import:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    post:
+      tags: [admin-contacts]
+      summary: Import contacts from a file (.xlsx, .csv, .tsv, .txt, .vcf, .docx; max 10 MB, 5000 rows)
+      description: Tabular files may have a header row (name, phone, email, whatsapp, telegram, slack, external_id, tags, locale — also tk/ru names); otherwise every cell is classified by shape. Existing contacts are matched by external_id, phone or e-mail and only their empty fields are filled.
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                group_id: { type: string, format: uuid, description: add imported contacts to this group }
+                dry_run: { type: string, enum: ["true", "false"], description: parse and preview only }
+                tag: { type: string, description: tag added to every imported contact }
+      responses:
+        "200": { $ref: "#/components/responses/ImportResult" }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/admin/projects/{project_id}/contacts/import/carddav:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    post:
+      tags: [admin-contacts]
+      summary: Import from iCloud (Apple ID + app-specific password) or any CardDAV server
+      description: Credentials are used for this request only and never stored. Default server_url is https://contacts.icloud.com/.
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                server_url: { type: string, default: "https://contacts.icloud.com/" }
+                username: { type: string, description: Apple ID e-mail }
+                password: { type: string, description: app-specific password from appleid.apple.com }
+                group_id: { type: string, format: uuid }
+                dry_run: { type: boolean }
+                tag: { type: string }
+      responses:
+        "200": { $ref: "#/components/responses/ImportResult" }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/admin/projects/{project_id}/contacts/import/google/url:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-contacts]
+      summary: Google Contacts consent URL (requires HABARCHY_GOOGLE_CLIENT_ID / SECRET)
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: group_id, in: query, schema: { type: string, format: uuid } }
+        - { name: return_to, in: query, schema: { type: string }, description: where the browser is sent after the import (web); empty shows a result page (mobile) }
+      responses:
+        "200":
+          description: "`{url}`"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { type: object, properties: { url: { type: string } } } }
+  /api/admin/integrations/google/callback:
+    get:
+      tags: [admin-contacts]
+      summary: OAuth redirect target (authenticated by the signed state); imports and redirects to return_to
+      parameters:
+        - { name: code, in: query, schema: { type: string } }
+        - { name: state, in: query, schema: { type: string } }
+      responses:
+        "302": { description: Redirect to return_to with imported/created/skipped or import_error }
+        "200": { description: HTML result page when return_to is empty }
   /api/admin/projects/{project_id}/contacts/{contact_id}:
     parameters: [{ $ref: "#/components/parameters/ProjectID" }, { name: contact_id, in: path, required: true, schema: { type: string, format: uuid } }]
     get:
@@ -1552,6 +1646,15 @@ components:
               - $ref: "#/components/schemas/Envelope"
               - type: object
                 properties: { data: { $ref: "#/components/schemas/Contact" } }
+    ImportResult:
+      description: Import summary
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { $ref: "#/components/schemas/ImportResult" } }
     Group:
       description: Group
       content:
@@ -1864,6 +1967,18 @@ components:
         member_count: { type: integer }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+    ImportResult:
+      type: object
+      properties:
+        total: { type: integer }
+        created: { type: integer }
+        updated: { type: integer }
+        unchanged: { type: integer }
+        skipped: { type: integer }
+        group_added: { type: integer }
+        dry_run: { type: boolean }
+        errors: { type: array, items: { type: object, properties: { row: { type: integer }, reason: { type: string }, line: { type: string } } } }
+        preview: { type: array, items: { type: object, additionalProperties: true }, description: first 20 parsed contacts }
     GroupRequest:
       type: object
       required: [name]

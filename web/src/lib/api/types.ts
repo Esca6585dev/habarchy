@@ -35,3 +35,4 @@ export type Group = Schemas["Group"];
 export type AdminSendRequest = Schemas["AdminSendRequest"];
 export type GroupMembersResult = Schemas["GroupMembersResult"];
 export type InboundSMS = Schemas["InboundSMS"];
+export type ImportResult = Schemas["ImportResult"];

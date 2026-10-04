@@ -32,7 +32,7 @@ class AppLocalizationsTk extends AppLocalizations {
   String get invalidCredentials => 'E-mail ýa-da parol nädogry';
 
   @override
-  String get serverUrl => 'Serwer';
+  String get serverUrl => 'CardDAV serwer';
 
   @override
   String get dashboard => 'Panel';
@@ -456,4 +456,51 @@ class AppLocalizationsTk extends AppLocalizations {
   @override
   String get inboundHint =>
       'Ugratmak açyk bolanda şlýuz-telefonlaryň alan SMS-leri şu ýerde görünýär (provider sazlamasy + telefon programmasyndaky düwme).';
+
+  @override
+  String get importTitle => 'Kontaktlary import et';
+
+  @override
+  String get importFile => 'Faýldan';
+
+  @override
+  String get importFileHint =>
+      'Excel, CSV, Word ýa-da vCard (.vcf). Bar bolan kontaktlar birleşdirilýär, gaýtalanmaýar.';
+
+  @override
+  String get importGoogle => 'Google Contacts';
+
+  @override
+  String get importGoogleHint =>
+      'Google-yň rugsat ekranyny açýar; diňe okalýar, token saklanmaýar.';
+
+  @override
+  String get importApple => 'Apple / iCloud Contacts';
+
+  @override
+  String get importAppleHint =>
+      'Apple ID + app-specific parol (appleid.apple.com). Bir gezek ulanylýar, saklanmaýar.';
+
+  @override
+  String get appleId => 'Apple ID (e-mail)';
+
+  @override
+  String get appPassword => 'App-specific parol';
+
+  @override
+  String get addToGroup => 'Topara goş';
+
+  @override
+  String get noGroup => 'Toparsyz';
+
+  @override
+  String get importNow => 'Import et';
+
+  @override
+  String importResult(int total, int created, int updated, int skipped) {
+    return '$total setir: $created döredildi, $updated täzelendi, $skipped geçildi';
+  }
+
+  @override
+  String get googleNotConfigured => 'Bu serwerde Google import sazlanmadyk';
 }

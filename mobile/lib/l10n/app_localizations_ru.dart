@@ -32,7 +32,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get invalidCredentials => 'Неверный e-mail или пароль';
 
   @override
-  String get serverUrl => 'Сервер';
+  String get serverUrl => 'CardDAV-сервер';
 
   @override
   String get dashboard => 'Панель';
@@ -458,4 +458,52 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get inboundHint =>
       'Здесь появляются SMS, полученные телефонами-шлюзами при включённой пересылке (настройка провайдера + переключатель в приложении).';
+
+  @override
+  String get importTitle => 'Импорт контактов';
+
+  @override
+  String get importFile => 'Из файла';
+
+  @override
+  String get importFileHint =>
+      'Excel, CSV, Word или vCard (.vcf). Существующие контакты объединяются, дубликаты не создаются.';
+
+  @override
+  String get importGoogle => 'Google Contacts';
+
+  @override
+  String get importGoogleHint =>
+      'Открывает экран согласия Google; только чтение, токены не сохраняются.';
+
+  @override
+  String get importApple => 'Apple / iCloud Contacts';
+
+  @override
+  String get importAppleHint =>
+      'Apple ID + пароль приложения (appleid.apple.com). Используется один раз, не сохраняется.';
+
+  @override
+  String get appleId => 'Apple ID (e-mail)';
+
+  @override
+  String get appPassword => 'Пароль приложения';
+
+  @override
+  String get addToGroup => 'Добавить в группу';
+
+  @override
+  String get noGroup => 'Без группы';
+
+  @override
+  String get importNow => 'Импортировать';
+
+  @override
+  String importResult(int total, int created, int updated, int skipped) {
+    return '$total строк: $created создано, $updated обновлено, $skipped пропущено';
+  }
+
+  @override
+  String get googleNotConfigured =>
+      'Импорт из Google не настроен на этом сервере';
 }

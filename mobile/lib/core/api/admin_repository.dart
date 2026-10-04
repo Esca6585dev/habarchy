@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
@@ -117,6 +118,30 @@ class AdminRepository {
 
   Future<List<InboundSms>> inbound(String projectId, {int limit = 100}) async =>
       (await _api.request<List<dynamic>>('GET', '/api/admin/projects/$projectId/inbound', query: {'limit': limit})).map((e) => InboundSms.fromJson(e as Map<String, dynamic>)).toList();
+
+  // ---- import ----
+  Future<Map<String, dynamic>> importFile(String projectId, {required String filename, required List<int> bytes, String? groupId, bool dryRun = false}) async {
+    final form = FormData.fromMap({
+      'file': MultipartFile.fromBytes(bytes, filename: filename),
+      if (groupId != null && groupId.isNotEmpty) 'group_id': groupId,
+      if (dryRun) 'dry_run': 'true',
+    });
+    return _api.request<Map<String, dynamic>>('POST', '/api/admin/projects/$projectId/contacts/import', data: form);
+  }
+
+  Future<Map<String, dynamic>> importCardDAV(String projectId, {required String username, required String password, String serverUrl = '', String? groupId, bool dryRun = false}) =>
+      _api.request<Map<String, dynamic>>('POST', '/api/admin/projects/$projectId/contacts/import/carddav', data: {
+        'server_url': serverUrl,
+        'username': username,
+        'password': password,
+        if (groupId != null && groupId.isNotEmpty) 'group_id': groupId,
+        'dry_run': dryRun,
+      });
+
+  Future<String> googleImportUrl(String projectId, {String? groupId}) async {
+    final data = await _api.request<Map<String, dynamic>>('GET', '/api/admin/projects/$projectId/contacts/import/google/url', query: {if (groupId != null && groupId.isNotEmpty) 'group_id': groupId});
+    return data['url'] as String;
+  }
 
   // ---- compose ----
   Future<SendOutcome> send(String projectId, Map<String, dynamic> body) async {

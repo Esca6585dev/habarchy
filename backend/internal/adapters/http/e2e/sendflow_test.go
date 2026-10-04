@@ -23,6 +23,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/public"
 	rds "github.com/Esca6585dev/habarchy/backend/internal/adapters/redis"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/contactimport"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/events"
@@ -159,6 +160,7 @@ func newFlowEnv(t *testing.T) *flowEnv {
 	groupSvc := groups.New(base.db, contactSvc)
 	providerSvc := providers.New(base.db, cipher)
 	gatewaySvc := gatewayapp.New(base.db, nil, nil).WithProviders(providerSvc)
+	importSvc := contactimport.New(base.db, contactSvc, groupSvc)
 	webhookSvc := webhooks.New(base.db, cipher, q, 8, nil)
 	webhookSvc.AllowPrivate = true
 	messageSvc := messages.New(base.db, rdb, q, contactSvc, base.templates, messages.Limits{IdempotencyTTL: time.Hour, BatchMaxRecipients: 1000})
@@ -169,9 +171,9 @@ func newFlowEnv(t *testing.T) *flowEnv {
 	statsSvc := stats.New(base.db, q)
 
 	app := httpx.NewServer(cfg, zerolog.Nop(), httpx.Deps{})
-	(&admin.Handlers{Auth: base.auth, Projects: base.projects, Templates: base.templates, Providers: providerSvc, Contacts: contactSvc, Groups: groupSvc,
+	(&admin.Handlers{Auth: base.auth, Projects: base.projects, Templates: base.templates, Providers: providerSvc, Contacts: contactSvc, Groups: groupSvc, Imports: importSvc,
 		Messages: messageSvc, Webhooks: webhookSvc, Stats: statsSvc, DB: base.db, Redis: rdb.Raw()}).Register(app)
-	(&public.Handlers{Projects: base.projects, Templates: base.templates, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc, Groups: groupSvc, Gateway: gatewaySvc,
+	(&public.Handlers{Projects: base.projects, Templates: base.templates, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc, Groups: groupSvc, Gateway: gatewaySvc, Imports: importSvc,
 		Providers: providerSvc, Delivery: deliverySvc, Stats: statsSvc, SignatureTolerance: cfg.Security.SignatureTolerance}).Register(app)
 	base.app = app
 

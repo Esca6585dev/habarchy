@@ -1812,6 +1812,126 @@
               }
             }
           }
+        },
+        {
+          "name": "Import contacts (file)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "group_id",
+                  "value": "{{group_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "dry_run",
+                  "value": "true",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/contacts/import",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "contacts",
+                "import"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Import from iCloud / CardDAV",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"server_url\": \"https://contacts.icloud.com/\",\n  \"username\": \"you@icloud.com\",\n  \"password\": \"app-specific-password\",\n  \"dry_run\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/contacts/import/carddav",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "contacts",
+                "import",
+                "carddav"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Google import URL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/projects/{{project_id}}/contacts/import/google/url?return_to=/contacts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "projects",
+                "{{project_id}}",
+                "contacts",
+                "import",
+                "google",
+                "url"
+              ],
+              "query": [
+                {
+                  "key": "return_to",
+                  "value": "/contacts"
+                }
+              ]
+            }
+          }
         }
       ]
     },

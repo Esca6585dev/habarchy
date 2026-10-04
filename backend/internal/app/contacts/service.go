@@ -269,3 +269,64 @@ func (s *Service) ActiveTokens(ctx context.Context, contactID uuid.UUID) ([]stri
 	}
 	return out, nil
 }
+
+// Merge finds an existing contact by external_id, phone or e-mail and fills
+// its empty fields from in; otherwise it creates the contact. Used by
+// imports and group quick-add so the same person is never duplicated.
+func (s *Service) Merge(ctx context.Context, projectID uuid.UUID, in Input) (*sqlcgen.Contact, bool, error) {
+	if err := in.normalize(); err != nil {
+		return nil, false, err
+	}
+	var existing *sqlcgen.Contact
+	if in.ExternalID != "" {
+		if c, err := s.db.Queries.GetContactByExternalID(ctx, sqlcgen.GetContactByExternalIDParams{ProjectID: projectID, ExternalID: in.ExternalID}); err == nil {
+			existing = &c
+		}
+	}
+	if existing == nil && in.Phone != "" {
+		if c, err := s.db.Queries.GetContactByPhone(ctx, sqlcgen.GetContactByPhoneParams{ProjectID: projectID, Phone: in.Phone}); err == nil {
+			existing = &c
+		}
+	}
+	if existing == nil && in.Email != "" {
+		if c, err := s.db.Queries.GetContactByEmail(ctx, sqlcgen.GetContactByEmailParams{ProjectID: projectID, Email: in.Email}); err == nil {
+			existing = &c
+		}
+	}
+	if existing == nil {
+		c, err := s.Create(ctx, projectID, in)
+		return c, true, err
+	}
+	merged := Input{
+		ExternalID: pick(existing.ExternalID, in.ExternalID), Name: pick(existing.Name, in.Name), Phone: pick(existing.Phone, in.Phone),
+		Email: pick(existing.Email, in.Email), WhatsApp: pick(existing.Whatsapp, in.WhatsApp), TelegramChatID: pick(existing.TelegramChatID, in.TelegramChatID),
+		SlackID: pick(existing.SlackID, in.SlackID), Locale: domain.Locale(existing.Locale), Tags: unionTags(existing.Tags, in.Tags),
+	}
+	unchanged := merged.ExternalID == existing.ExternalID && merged.Name == existing.Name && merged.Phone == existing.Phone && merged.Email == existing.Email &&
+		merged.WhatsApp == existing.Whatsapp && merged.TelegramChatID == existing.TelegramChatID && merged.SlackID == existing.SlackID && len(merged.Tags) == len(existing.Tags)
+	if unchanged {
+		return existing, false, nil // nothing new
+	}
+	merged.Attributes = nil // keep stored attributes
+	c, err := s.Update(ctx, projectID, existing.ID, merged)
+	return c, false, err
+}
+
+func pick(current, incoming string) string {
+	if current != "" {
+		return current
+	}
+	return incoming
+}
+
+func unionTags(a, b []string) []string {
+	seen := map[string]bool{}
+	out := make([]string, 0, len(a)+len(b))
+	for _, t := range append(append([]string{}, a...), b...) {
+		if t != "" && !seen[t] {
+			seen[t] = true
+			out = append(out, t)
+		}
+	}
+	return out
+}

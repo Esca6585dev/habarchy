@@ -145,7 +145,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverUrl.
   ///
   /// In en, this message translates to:
-  /// **'Server'**
+  /// **'CardDAV server'**
   String get serverUrl;
 
   /// No description provided for @dashboard.
@@ -963,6 +963,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SMS received by gateway phones appear here when forwarding is on (provider setting + switch in the phone app).'**
   String get inboundHint;
+
+  /// No description provided for @importTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import contacts'**
+  String get importTitle;
+
+  /// No description provided for @importFile.
+  ///
+  /// In en, this message translates to:
+  /// **'From a file'**
+  String get importFile;
+
+  /// No description provided for @importFileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel, CSV, Word or vCard (.vcf). Existing contacts are merged, never duplicated.'**
+  String get importFileHint;
+
+  /// No description provided for @importGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Contacts'**
+  String get importGoogle;
+
+  /// No description provided for @importGoogleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens Google’s consent screen; read-only, tokens are not stored.'**
+  String get importGoogleHint;
+
+  /// No description provided for @importApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple / iCloud Contacts'**
+  String get importApple;
+
+  /// No description provided for @importAppleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple ID + app-specific password (appleid.apple.com). Used once, not stored.'**
+  String get importAppleHint;
+
+  /// No description provided for @appleId.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple ID (e-mail)'**
+  String get appleId;
+
+  /// No description provided for @appPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'App-specific password'**
+  String get appPassword;
+
+  /// No description provided for @addToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to group'**
+  String get addToGroup;
+
+  /// No description provided for @noGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'No group'**
+  String get noGroup;
+
+  /// No description provided for @importNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get importNow;
+
+  /// No description provided for @importResult.
+  ///
+  /// In en, this message translates to:
+  /// **'{total} rows: {created} created, {updated} updated, {skipped} skipped'**
+  String importResult(int total, int created, int updated, int skipped);
+
+  /// No description provided for @googleNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Google import is not configured on this server'**
+  String get googleNotConfigured;
 }
 
 class _AppLocalizationsDelegate

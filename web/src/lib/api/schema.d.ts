@@ -897,6 +897,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/contacts/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import contacts from a file (same as the admin endpoint; scope contacts) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file: string;
+                        /** Format: uuid */
+                        group_id?: string;
+                        /** @enum {string} */
+                        dry_run?: "true" | "false";
+                        tag?: string;
+                    };
+                };
+            };
+            responses: {
+                200: components["responses"]["ImportResult"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/contacts/{contact_id}": {
         parameters: {
             query?: never;
@@ -3376,6 +3416,204 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/projects/{project_id}/contacts/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import contacts from a file (.xlsx, .csv, .tsv, .txt, .vcf, .docx; max 10 MB, 5000 rows)
+         * @description Tabular files may have a header row (name, phone, email, whatsapp, telegram, slack, external_id, tags, locale — also tk/ru names); otherwise every cell is classified by shape. Existing contacts are matched by external_id, phone or e-mail and only their empty fields are filled.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file: string;
+                        /**
+                         * Format: uuid
+                         * @description add imported contacts to this group
+                         */
+                        group_id?: string;
+                        /**
+                         * @description parse and preview only
+                         * @enum {string}
+                         */
+                        dry_run?: "true" | "false";
+                        /** @description tag added to every imported contact */
+                        tag?: string;
+                    };
+                };
+            };
+            responses: {
+                200: components["responses"]["ImportResult"];
+                400: components["responses"]["Error"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/projects/{project_id}/contacts/import/carddav": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import from iCloud (Apple ID + app-specific password) or any CardDAV server
+         * @description Credentials are used for this request only and never stored. Default server_url is https://contacts.icloud.com/.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @default https://contacts.icloud.com/ */
+                        server_url?: string;
+                        /** @description Apple ID e-mail */
+                        username: string;
+                        /** @description app-specific password from appleid.apple.com */
+                        password: string;
+                        /** Format: uuid */
+                        group_id?: string;
+                        dry_run?: boolean;
+                        tag?: string;
+                    };
+                };
+            };
+            responses: {
+                200: components["responses"]["ImportResult"];
+                400: components["responses"]["Error"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/projects/{project_id}/contacts/import/google/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        /** Google Contacts consent URL (requires HABARCHY_GOOGLE_CLIENT_ID / SECRET) */
+        get: {
+            parameters: {
+                query?: {
+                    group_id?: string;
+                    /** @description where the browser is sent after the import (web); empty shows a result page (mobile) */
+                    return_to?: string;
+                };
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description `{url}` */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Envelope"] & {
+                            data?: {
+                                url?: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/integrations/google/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** OAuth redirect target (authenticated by the signed state); imports and redirects to return_to */
+        get: {
+            parameters: {
+                query?: {
+                    code?: string;
+                    state?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description HTML result page when return_to is empty */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Redirect to return_to with imported/created/skipped or import_error */
+                302: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/projects/{project_id}/contacts/{contact_id}": {
         parameters: {
             query?: never;
@@ -4080,6 +4318,24 @@ export interface components {
             /** Format: date-time */
             updated_at?: string;
         };
+        ImportResult: {
+            total?: number;
+            created?: number;
+            updated?: number;
+            unchanged?: number;
+            skipped?: number;
+            group_added?: number;
+            dry_run?: boolean;
+            errors?: {
+                row?: number;
+                reason?: string;
+                line?: string;
+            }[];
+            /** @description first 20 parsed contacts */
+            preview?: {
+                [key: string]: unknown;
+            }[];
+        };
         GroupRequest: {
             name: string;
             description?: string;
@@ -4615,6 +4871,17 @@ export interface components {
             content: {
                 "application/json": components["schemas"]["Envelope"] & {
                     data?: components["schemas"]["Contact"];
+                };
+            };
+        };
+        /** @description Import summary */
+        ImportResult: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Envelope"] & {
+                    data?: components["schemas"]["ImportResult"];
                 };
             };
         };

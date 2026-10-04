@@ -32,7 +32,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidCredentials => 'Invalid email or password';
 
   @override
-  String get serverUrl => 'Server';
+  String get serverUrl => 'CardDAV server';
 
   @override
   String get dashboard => 'Dashboard';
@@ -457,4 +457,52 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get inboundHint =>
       'SMS received by gateway phones appear here when forwarding is on (provider setting + switch in the phone app).';
+
+  @override
+  String get importTitle => 'Import contacts';
+
+  @override
+  String get importFile => 'From a file';
+
+  @override
+  String get importFileHint =>
+      'Excel, CSV, Word or vCard (.vcf). Existing contacts are merged, never duplicated.';
+
+  @override
+  String get importGoogle => 'Google Contacts';
+
+  @override
+  String get importGoogleHint =>
+      'Opens Google’s consent screen; read-only, tokens are not stored.';
+
+  @override
+  String get importApple => 'Apple / iCloud Contacts';
+
+  @override
+  String get importAppleHint =>
+      'Apple ID + app-specific password (appleid.apple.com). Used once, not stored.';
+
+  @override
+  String get appleId => 'Apple ID (e-mail)';
+
+  @override
+  String get appPassword => 'App-specific password';
+
+  @override
+  String get addToGroup => 'Add to group';
+
+  @override
+  String get noGroup => 'No group';
+
+  @override
+  String get importNow => 'Import';
+
+  @override
+  String importResult(int total, int created, int updated, int skipped) {
+    return '$total rows: $created created, $updated updated, $skipped skipped';
+  }
+
+  @override
+  String get googleNotConfigured =>
+      'Google import is not configured on this server';
 }
