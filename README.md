@@ -24,7 +24,7 @@ In progress — built step by step from [PROMPT.md](PROMPT.md).
 | 3 | Messages API, asynq workers, providers (http_sms, smpp, smtp, fcm, telegram), fallback, webhooks, OTP, contacts, devices | ✅ done |
 | 4 | Admin API (message log, resend, webhooks, dashboard, usage, health, audit), SSE, usage aggregation, Prometheus, asynqmon | ✅ done |
 | 5 | Next.js admin panel (tk/ru/en, dark mode, live feed, template editor, Playwright e2e) + OpenAPI spec at `/api/docs` | ✅ done |
-| 6 | Flutter app | ⏳ |
+| 6 | Flutter admin app (dashboard, message log, templates, providers, API keys, tk/ru/en, dark mode) + FCM push demo client | ✅ done |
 | 7 | SDKs, docs, docker, CI | ⏳ |
 
 ## Development
@@ -48,6 +48,9 @@ make lint
 
 # web admin (needs the API on :8080)
 cd web && cp .env.example .env.local && npm install && npm run dev   # http://localhost:3000
+
+# mobile (Android emulator → host API)
+cd mobile && flutter pub get && dart run build_runner build -d && flutter run --flavor dev --dart-define=API_URL=http://10.0.2.2:8080
 ```
 
 API reference: Swagger UI at `http://localhost:8080/api/docs`, spec in [docs/openapi.yaml](docs/openapi.yaml)
