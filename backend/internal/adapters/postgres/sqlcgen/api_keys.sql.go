@@ -13,20 +13,21 @@ import (
 )
 
 const createAPIKey = `-- name: CreateAPIKey :one
-INSERT INTO api_keys (project_id, name, prefix, hint, key_hash, scopes, ip_allowlist, expires_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, project_id, name, prefix, hint, key_hash, scopes, ip_allowlist, last_used_at, expires_at, revoked_at, created_at
+INSERT INTO api_keys (project_id, name, prefix, hint, key_hash, scopes, ip_allowlist, expires_at, require_signature)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, project_id, name, prefix, hint, key_hash, scopes, ip_allowlist, last_used_at, expires_at, revoked_at, created_at, require_signature
 `
 
 type CreateAPIKeyParams struct {
-	ProjectID   uuid.UUID
-	Name        string
-	Prefix      string
-	Hint        string
-	KeyHash     []byte
-	Scopes      []string
-	IpAllowlist []string
-	ExpiresAt   *time.Time
+	ProjectID        uuid.UUID
+	Name             string
+	Prefix           string
+	Hint             string
+	KeyHash          []byte
+	Scopes           []string
+	IpAllowlist      []string
+	ExpiresAt        *time.Time
+	RequireSignature bool
 }
 
 func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) (ApiKey, error) {
@@ -39,6 +40,7 @@ func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) (Api
 		arg.Scopes,
 		arg.IpAllowlist,
 		arg.ExpiresAt,
+		arg.RequireSignature,
 	)
 	var i ApiKey
 	err := row.Scan(
@@ -54,12 +56,13 @@ func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) (Api
 		&i.ExpiresAt,
 		&i.RevokedAt,
 		&i.CreatedAt,
+		&i.RequireSignature,
 	)
 	return i, err
 }
 
 const getAPIKey = `-- name: GetAPIKey :one
-SELECT id, project_id, name, prefix, hint, key_hash, scopes, ip_allowlist, last_used_at, expires_at, revoked_at, created_at FROM api_keys WHERE id = $1 AND project_id = $2
+SELECT id, project_id, name, prefix, hint, key_hash, scopes, ip_allowlist, last_used_at, expires_at, revoked_at, created_at, require_signature FROM api_keys WHERE id = $1 AND project_id = $2
 `
 
 type GetAPIKeyParams struct {
@@ -83,12 +86,13 @@ func (q *Queries) GetAPIKey(ctx context.Context, arg GetAPIKeyParams) (ApiKey, e
 		&i.ExpiresAt,
 		&i.RevokedAt,
 		&i.CreatedAt,
+		&i.RequireSignature,
 	)
 	return i, err
 }
 
 const getAPIKeyByHash = `-- name: GetAPIKeyByHash :one
-SELECT id, project_id, name, prefix, hint, key_hash, scopes, ip_allowlist, last_used_at, expires_at, revoked_at, created_at FROM api_keys WHERE key_hash = $1
+SELECT id, project_id, name, prefix, hint, key_hash, scopes, ip_allowlist, last_used_at, expires_at, revoked_at, created_at, require_signature FROM api_keys WHERE key_hash = $1
 `
 
 func (q *Queries) GetAPIKeyByHash(ctx context.Context, keyHash []byte) (ApiKey, error) {
@@ -107,12 +111,13 @@ func (q *Queries) GetAPIKeyByHash(ctx context.Context, keyHash []byte) (ApiKey, 
 		&i.ExpiresAt,
 		&i.RevokedAt,
 		&i.CreatedAt,
+		&i.RequireSignature,
 	)
 	return i, err
 }
 
 const listAPIKeys = `-- name: ListAPIKeys :many
-SELECT id, project_id, name, prefix, hint, key_hash, scopes, ip_allowlist, last_used_at, expires_at, revoked_at, created_at FROM api_keys WHERE project_id = $1 ORDER BY created_at DESC
+SELECT id, project_id, name, prefix, hint, key_hash, scopes, ip_allowlist, last_used_at, expires_at, revoked_at, created_at, require_signature FROM api_keys WHERE project_id = $1 ORDER BY created_at DESC
 `
 
 func (q *Queries) ListAPIKeys(ctx context.Context, projectID uuid.UUID) ([]ApiKey, error) {
@@ -137,6 +142,7 @@ func (q *Queries) ListAPIKeys(ctx context.Context, projectID uuid.UUID) ([]ApiKe
 			&i.ExpiresAt,
 			&i.RevokedAt,
 			&i.CreatedAt,
+			&i.RequireSignature,
 		); err != nil {
 			return nil, err
 		}
@@ -172,4 +178,51 @@ UPDATE api_keys SET last_used_at = now() WHERE id = $1
 func (q *Queries) TouchAPIKey(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, touchAPIKey, id)
 	return err
+}
+
+const updateAPIKey = `-- name: UpdateAPIKey :one
+UPDATE api_keys SET
+    name              = $1,
+    scopes            = $2,
+    ip_allowlist      = $3,
+    require_signature = $4
+WHERE id = $5 AND project_id = $6 AND revoked_at IS NULL
+RETURNING id, project_id, name, prefix, hint, key_hash, scopes, ip_allowlist, last_used_at, expires_at, revoked_at, created_at, require_signature
+`
+
+type UpdateAPIKeyParams struct {
+	Name             string
+	Scopes           []string
+	IpAllowlist      []string
+	RequireSignature bool
+	ID               uuid.UUID
+	ProjectID        uuid.UUID
+}
+
+func (q *Queries) UpdateAPIKey(ctx context.Context, arg UpdateAPIKeyParams) (ApiKey, error) {
+	row := q.db.QueryRow(ctx, updateAPIKey,
+		arg.Name,
+		arg.Scopes,
+		arg.IpAllowlist,
+		arg.RequireSignature,
+		arg.ID,
+		arg.ProjectID,
+	)
+	var i ApiKey
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.Name,
+		&i.Prefix,
+		&i.Hint,
+		&i.KeyHash,
+		&i.Scopes,
+		&i.IpAllowlist,
+		&i.LastUsedAt,
+		&i.ExpiresAt,
+		&i.RevokedAt,
+		&i.CreatedAt,
+		&i.RequireSignature,
+	)
+	return i, err
 }

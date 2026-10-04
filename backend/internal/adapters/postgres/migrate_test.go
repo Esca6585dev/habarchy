@@ -1,4 +1,4 @@
-package postgres
+package postgres_test
 
 import (
 	"context"
@@ -8,19 +8,20 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 
+	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres"
+	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres/pgtest"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres/sqlcgen"
 	"github.com/Esca6585dev/habarchy/backend/pkg/ids"
 )
 
 func TestMigrationsAndCoreQueries(t *testing.T) {
-	db := testDB(t)
+	db := pgtest.Open(t)
 	ctx := context.Background()
 	q := db.Queries
 
 	v, err := db.MigrationVersion(ctx)
-	if err != nil || v < 6 {
+	if err != nil || v < 7 {
 		t.Fatalf("migration version %d, err %v", v, err)
 	}
 
@@ -46,7 +47,7 @@ func TestMigrationsAndCoreQueries(t *testing.T) {
 	if user.Email != "admin@example.com" {
 		t.Fatalf("email not lower-cased: %s", user.Email)
 	}
-	if _, err := q.CreateUser(ctx, sqlcgen.CreateUserParams{Email: "ADMIN@example.com", PasswordHash: "x"}); !isUniqueViolation(err) {
+	if _, err := q.CreateUser(ctx, sqlcgen.CreateUserParams{Email: "ADMIN@example.com", PasswordHash: "x"}); !postgres.IsUniqueViolation(err) {
 		t.Fatalf("duplicate email should violate unique index, got %v", err)
 	}
 
@@ -220,7 +221,7 @@ func TestMigrationsAndCoreQueries(t *testing.T) {
 }
 
 func TestWithTxRollsBack(t *testing.T) {
-	db := testDB(t)
+	db := pgtest.Open(t)
 	ctx := context.Background()
 	err := db.WithTx(ctx, func(q *sqlcgen.Queries) error {
 		if _, err := q.CreateProject(ctx, sqlcgen.CreateProjectParams{Name: "tx", Slug: "tx", DefaultLocale: "tk"}); err != nil {
@@ -234,9 +235,4 @@ func TestWithTxRollsBack(t *testing.T) {
 	if _, err := db.Queries.GetProjectBySlug(ctx, "tx"); !errors.Is(err, pgx.ErrNoRows) {
 		t.Fatalf("project should have been rolled back, got %v", err)
 	}
-}
-
-func isUniqueViolation(err error) bool {
-	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }

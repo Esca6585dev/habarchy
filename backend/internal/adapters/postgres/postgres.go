@@ -5,10 +5,12 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
@@ -136,4 +138,11 @@ func runGoose(_ context.Context, pool *pgxpool.Pool, _ zerolog.Logger, fn func(*
 		return fmt.Errorf("goose: %w", err)
 	}
 	return nil
+}
+
+// IsUniqueViolation reports whether err is a Postgres unique constraint
+// violation (SQLSTATE 23505).
+func IsUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }

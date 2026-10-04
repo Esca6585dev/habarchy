@@ -20,7 +20,7 @@ In progress — built step by step from [PROMPT.md](PROMPT.md).
 | Step | Scope | Status |
 |------|-------|--------|
 | 1 | Monorepo skeleton, backend config, migrations, domain models, sqlc | ✅ done |
-| 2 | Auth (admin JWT + API keys), projects, templates | ⏳ |
+| 2 | Auth (admin JWT + 2FA, API keys + HMAC), projects, members, templates | ✅ done |
 | 3 | Messages API, asynq workers, providers, fallback, webhooks, OTP | ⏳ |
 | 4 | Admin API, SSE, usage aggregation | ⏳ |
 | 5 | Next.js admin panel | ⏳ |
@@ -39,12 +39,24 @@ cp backend/.env.example backend/.env                      # set JWT_SECRET and M
 cd backend
 go run ./cmd/api -genkey                                  # prints a HABARCHY_MASTER_KEY
 make migrate                                              # goose up
+HABARCHY_ADMIN_EMAIL=you@example.com HABARCHY_ADMIN_PASSWORD='min 8 chars' go run ./cmd/api -create-admin
 make run                                                  # API on :8080  (/healthz, /readyz)
 make test                                                 # unit tests; set HABARCHY_TEST_DATABASE_URL for integration tests
 make lint
 ```
 
-See [docs/architecture.md](docs/architecture.md) for the component and data-model diagrams.
+See [docs/architecture.md](docs/architecture.md) for the component and data-model diagrams and
+[docs/auth.md](docs/auth.md) for login, API keys and request signing.
+
+### API surface so far
+
+| Area | Endpoints |
+|------|-----------|
+| Admin auth | `POST /api/admin/auth/login`, `/refresh`, `/logout`, `/logout-all`, `GET /me`, `PUT /me/password`, `POST /me/totp/{setup,confirm,disable}` |
+| Projects | `GET/POST /api/admin/projects`, `GET/PATCH/DELETE /projects/{id}`, `GET/PUT /members`, `DELETE /members/{user_id}` |
+| API keys | `GET/POST /projects/{id}/api-keys`, `DELETE /api-keys/{key_id}` |
+| Templates (admin) | `GET/POST /projects/{id}/templates`, `GET/PUT/DELETE /{tid}`, `GET /{tid}/versions`, `POST /{tid}/versions/{v}/restore`, `POST /preview`, `POST /{tid}/preview` |
+| Templates (public) | `GET/POST /api/v1/templates`, `GET/PUT/DELETE /{tid}`, `POST /preview`, `GET /api/v1/me` (key auth) |
 
 ## Quick example (planned API)
 

@@ -538,18 +538,19 @@ func AllProviderTypeValues() []ProviderType {
 }
 
 type ApiKey struct {
-	ID          uuid.UUID
-	ProjectID   uuid.UUID
-	Name        string
-	Prefix      string
-	Hint        string
-	KeyHash     []byte
-	Scopes      []string
-	IpAllowlist []string
-	LastUsedAt  *time.Time
-	ExpiresAt   *time.Time
-	RevokedAt   *time.Time
-	CreatedAt   time.Time
+	ID               uuid.UUID
+	ProjectID        uuid.UUID
+	Name             string
+	Prefix           string
+	Hint             string
+	KeyHash          []byte
+	Scopes           []string
+	IpAllowlist      []string
+	LastUsedAt       *time.Time
+	ExpiresAt        *time.Time
+	RevokedAt        *time.Time
+	CreatedAt        time.Time
+	RequireSignature bool
 }
 
 type AuditLog struct {

@@ -84,6 +84,24 @@ Notes:
 - Provider credentials, webhook secrets and TOTP seeds are AES-256-GCM encrypted
   with `HABARCHY_MASTER_KEY`; API keys are stored as SHA-256 hashes.
 
+## Request authentication
+
+```mermaid
+sequenceDiagram
+    participant App as Client app
+    participant API as cmd/api
+    participant DB as PostgreSQL
+    App->>API: POST /api/v1/... X-Api-Key (+ X-Timestamp, X-Signature)
+    API->>DB: SELECT api_keys WHERE key_hash = sha256(key)
+    DB-->>API: key + project
+    API->>API: revoked? expired? ip allowed? project active?
+    API->>API: verify HMAC(key, ts\nMETHOD\npath\nsha256(body)) if present/required
+    API->>API: scope check for the route
+    API-->>App: 2xx or {error:{code}}
+```
+
+Details in [auth.md](auth.md).
+
 ## Send sequence, fallback and webhook retry
 
 Documented in step 3 when the worker and providers land.
