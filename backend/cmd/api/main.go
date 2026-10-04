@@ -11,6 +11,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gofiber/adaptor/v2"
+	"github.com/hibiken/asynqmon"
+
 	httpadapter "github.com/Esca6585dev/habarchy/backend/internal/adapters/http"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/admin"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/public"
@@ -19,16 +22,19 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/events"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/stats"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/templates"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/webhooks"
 	"github.com/Esca6585dev/habarchy/backend/internal/config"
 	"github.com/Esca6585dev/habarchy/backend/internal/queue"
 	"github.com/Esca6585dev/habarchy/backend/pkg/crypto"
 	"github.com/Esca6585dev/habarchy/backend/pkg/logger"
+	"github.com/Esca6585dev/habarchy/backend/pkg/metrics"
 )
 
 func main() {
@@ -129,12 +135,23 @@ func run(migrateOnly, createAdmin bool) error {
 	})
 	// The API only applies receipts (callbacks); it never sends.
 	deliverySvc := delivery.New(db, rdb, providerSvc, webhookSvc, contactSvc, log, cfg.Queue.MaxRetry)
+	publisher := events.NewPublisher(rdb.Raw())
+	messageSvc.Events, deliverySvc.Events = publisher, publisher
+	statsSvc := stats.New(db, q)
 
 	app := httpadapter.NewServer(cfg, log, httpadapter.Deps{DB: db, Redis: rdb})
-	(&admin.Handlers{Auth: authSvc, Projects: projectSvc, Templates: templateSvc, Providers: providerSvc}).Register(app)
+	if cfg.Telemetry.MetricsEnabled {
+		app.Use(metrics.FiberMiddleware())
+		app.Get("/metrics", adaptor.HTTPHandler(metrics.Handler()))
+	}
+	queueUI := asynqmon.New(asynqmon.Options{RootPath: "/admin/queues", RedisConnOpt: queue.RedisOpt(rdb.Options())})
+	(&admin.Handlers{
+		Auth: authSvc, Projects: projectSvc, Templates: templateSvc, Providers: providerSvc, Messages: messageSvc,
+		Webhooks: webhookSvc, Stats: statsSvc, DB: db, Redis: rdb.Raw(), QueueUI: queueUI,
+	}).Register(app)
 	(&public.Handlers{
 		Projects: projectSvc, Templates: templateSvc, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc,
-		Providers: providerSvc, Delivery: deliverySvc, SignatureTolerance: cfg.Security.SignatureTolerance,
+		Providers: providerSvc, Delivery: deliverySvc, Stats: statsSvc, SignatureTolerance: cfg.Security.SignatureTolerance,
 		APIRatePerSec: cfg.Limits.APIRatePerSec, Limiter: rdb,
 	}).Register(app)
 

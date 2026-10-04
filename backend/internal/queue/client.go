@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -70,7 +71,14 @@ func (c *Client) EnqueueSend(ctx context.Context, messageID uuid.UUID, channel d
 	if at != nil && at.After(time.Now()) {
 		opts = append(opts, asynq.ProcessAt(*at))
 	}
-	_, err = c.c.EnqueueContext(ctx, asynq.NewTask(taskType, body), opts...)
+	task := asynq.NewTask(taskType, body)
+	_, err = c.c.EnqueueContext(ctx, task, opts...)
+	if errors.Is(err, asynq.ErrTaskIDConflict) {
+		// A resend of a message whose previous task is still retained
+		// (completed / archived): drop the old one and enqueue again.
+		_ = c.inspector.DeleteTask(queueName, SendTaskID(messageID))
+		_, err = c.c.EnqueueContext(ctx, task, opts...)
+	}
 	if err != nil {
 		return fmt.Errorf("queue: enqueue %s: %w", taskType, err)
 	}

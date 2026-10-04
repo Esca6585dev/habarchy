@@ -5,13 +5,31 @@ import (
 	"time"
 
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/stats"
 	"github.com/Esca6585dev/habarchy/backend/internal/config"
 )
 
 // DefaultJobs returns the maintenance jobs every deployment needs.
 // Usage aggregation and quota handling are added in step 4.
 func DefaultJobs(db *postgres.DB, cfg *config.Config) []Job {
+	st := stats.New(db, nil)
 	return []Job{
+		{
+			Name:     "aggregate_usage_daily",
+			Interval: 5 * time.Minute,
+			Timeout:  4 * time.Minute,
+			Run: func(ctx context.Context) error {
+				// Today and yesterday: late deliveries / receipts change
+				// yesterday's counters for a while after midnight.
+				now := time.Now().UTC()
+				for _, day := range []time.Time{now, now.AddDate(0, 0, -1)} {
+					if _, err := st.AggregateUsage(ctx, day); err != nil {
+						return err
+					}
+				}
+				return nil
+			},
+		},
 		{
 			Name:     "ensure_message_partitions",
 			Interval: 6 * time.Hour,

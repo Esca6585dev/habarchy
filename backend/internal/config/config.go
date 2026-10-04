@@ -101,9 +101,11 @@ type Limits struct {
 
 // Telemetry configures metrics and tracing.
 type Telemetry struct {
-	MetricsEnabled bool   `envconfig:"METRICS_ENABLED" default:"true"`
-	TracingEnabled bool   `envconfig:"TRACING_ENABLED" default:"false"`
-	OTLPEndpoint   string `envconfig:"OTLP_ENDPOINT" default:"localhost:4317"`
+	MetricsEnabled bool `envconfig:"METRICS_ENABLED" default:"true"`
+	// WorkerMetricsAddr is where cmd/worker exposes /metrics; empty disables.
+	WorkerMetricsAddr string `envconfig:"WORKER_METRICS_ADDR" default:":9090"`
+	TracingEnabled    bool   `envconfig:"TRACING_ENABLED" default:"false"`
+	OTLPEndpoint      string `envconfig:"OTLP_ENDPOINT" default:"localhost:4317"`
 }
 
 // Load reads configuration from the environment and validates it.

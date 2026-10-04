@@ -84,6 +84,25 @@ Notes:
 - Provider credentials, webhook secrets and TOTP seeds are AES-256-GCM encrypted
   with `HABARCHY_MASTER_KEY`; API keys are stored as SHA-256 hashes.
 
+## Live dashboard, metrics and maintenance
+
+- **SSE** `GET /api/admin/stream`: the API and the worker publish every status change
+  to a Redis pub/sub channel per project (`habarchy:events:{project_id}`); any API
+  replica streams them to the browser as `message.queued|sent|delivered|failed`
+  events, so the dashboard updates without polling.
+- **Prometheus** `GET /metrics` on the API and `:9090/metrics` on the worker:
+  `habarchy_http_requests_total`, `habarchy_http_request_duration_seconds`,
+  `habarchy_messages_total{channel,status}`, `habarchy_provider_calls_total{type,outcome}`,
+  `habarchy_provider_call_duration_seconds`, `habarchy_webhook_deliveries_total`.
+- **asynqmon** at `/admin/queues` (admin JWT via header, `?access_token=` or cookie).
+- **Scheduler** jobs: `aggregate_usage_daily` (every 5 min, today + yesterday →
+  `usage_daily`), `ensure_message_partitions` (6 h, current + next two months),
+  `expire_idempotency_keys` (hourly), `expire_refresh_tokens` (12 h). Daily / monthly
+  quota counters live in Redis with TTL, seeded from the database on first use.
+- **Dashboard** read model: counts per day per channel, p50/p95 creation→sent and
+  p95 creation→delivered latency (`percentile_cont`), recent failures, per-provider
+  outcome counts over 24 h (`healthy / degraded / failing / idle / disabled`).
+
 ## Request authentication
 
 ```mermaid

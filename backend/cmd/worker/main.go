@@ -15,6 +15,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/redis"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/events"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/webhooks"
 	"github.com/Esca6585dev/habarchy/backend/internal/config"
@@ -22,6 +23,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/worker"
 	"github.com/Esca6585dev/habarchy/backend/pkg/crypto"
 	"github.com/Esca6585dev/habarchy/backend/pkg/logger"
+	"github.com/Esca6585dev/habarchy/backend/pkg/metrics"
 )
 
 func main() {
@@ -66,6 +68,12 @@ func run() error {
 	webhookSvc := webhooks.New(db, cipher, q, cfg.Queue.WebhookRetry, nil)
 	webhookSvc.AllowPrivate = cfg.Security.WebhookAllowPrivate
 	deliverySvc := delivery.New(db, rdb, providerSvc, webhookSvc, contactSvc, log, cfg.Queue.MaxRetry)
+	deliverySvc.Events = events.NewPublisher(rdb.Raw())
+	if cfg.Telemetry.MetricsEnabled && cfg.Telemetry.WorkerMetricsAddr != "" {
+		msrv := metrics.Serve(cfg.Telemetry.WorkerMetricsAddr)
+		defer func() { _ = msrv.Close() }()
+		log.Info().Str("addr", cfg.Telemetry.WorkerMetricsAddr).Msg("worker metrics listening")
+	}
 
 	// SMPP sessions live only in the worker; they report receipts straight
 	// into the delivery service.

@@ -22,7 +22,7 @@ In progress — built step by step from [PROMPT.md](PROMPT.md).
 | 1 | Monorepo skeleton, backend config, migrations, domain models, sqlc | ✅ done |
 | 2 | Auth (admin JWT + 2FA, API keys + HMAC), projects, members, templates | ✅ done |
 | 3 | Messages API, asynq workers, providers (http_sms, smpp, smtp, fcm, telegram), fallback, webhooks, OTP, contacts, devices | ✅ done |
-| 4 | Admin API, SSE, usage aggregation | ⏳ |
+| 4 | Admin API (message log, resend, webhooks, dashboard, usage, health, audit), SSE, usage aggregation, Prometheus, asynqmon | ✅ done |
 | 5 | Next.js admin panel | ⏳ |
 | 6 | Flutter app | ⏳ |
 | 7 | SDKs, docs, docker, CI | ⏳ |
@@ -42,7 +42,8 @@ make migrate                                              # goose up
 HABARCHY_ADMIN_EMAIL=you@example.com HABARCHY_ADMIN_PASSWORD='min 8 chars' go run ./cmd/api -create-admin
 make run                                                  # API on :8080  (/healthz, /readyz)
 make test                                                 # unit tests; set HABARCHY_TEST_DATABASE_URL + HABARCHY_TEST_REDIS_URL for integration tests
-make run-worker                                           # delivers queued messages, posts webhooks
+make run-worker                                           # delivers queued messages, posts webhooks (metrics on :9090)
+make run-scheduler                                        # partitions, usage_daily aggregation, cleanup
 make lint
 ```
 
@@ -62,6 +63,11 @@ See [docs/architecture.md](docs/architecture.md) for the component and data-mode
 | OTP (public) | `POST /api/v1/otp/send`, `POST /api/v1/otp/verify` |
 | Contacts & devices (public) | `GET/POST /api/v1/contacts`, `GET/PUT/DELETE /contacts/{id}`, `GET/POST /api/v1/devices`, `DELETE /devices/{token}` |
 | Providers (admin) | `GET/POST /projects/{id}/providers`, `GET/PUT/DELETE /providers/{pid}`, `POST /providers/{pid}/test` |
+| Message log (admin) | `GET /projects/{id}/messages?status=&channel=&from=&to=&search=&batch_id=&contact_id=&cursor=`, `GET /messages/{mid}` (timeline + raw provider response + webhooks), `POST /messages/{mid}/resend`, `POST /messages/{mid}/cancel`, `GET /batches`, `GET /batches/{bid}` |
+| Webhook log (admin) | `GET /projects/{id}/webhooks?event=&failed=`, `GET /webhooks/{did}`, `POST /webhooks/{did}/resend` |
+| Insights (admin) | `GET /projects/{id}/dashboard?days=`, `GET /usage?from=&to=&group_by=&format=csv`, `GET /health`, `GET /audit-logs`, `GET /contacts`, `GET /devices` |
+| Live + ops (admin) | `GET /api/admin/stream` (SSE, `?project_id=`, token via header / `?access_token=` / cookie), `GET /api/admin/users`, `POST /users`, `GET /overview`, `/admin/queues` (asynqmon), `GET /metrics` (Prometheus) |
+| Usage (public) | `GET /api/v1/usage?from=&to=&group_by=channel\|day` |
 | Callbacks | `POST|GET /callbacks/sms/{provider_id}` (HTTP delivery reports) |
 
 ## Quick examples

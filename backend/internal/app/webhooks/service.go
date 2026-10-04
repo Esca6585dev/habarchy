@@ -24,6 +24,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
 	"github.com/Esca6585dev/habarchy/backend/internal/ports"
 	"github.com/Esca6585dev/habarchy/backend/pkg/crypto"
+	"github.com/Esca6585dev/habarchy/backend/pkg/metrics"
 )
 
 // Headers sent with every webhook.
@@ -212,8 +213,10 @@ func (s *Service) Deliver(ctx context.Context, deliveryID uuid.UUID) error {
 		return err
 	}
 	if success {
+		metrics.WebhookDeliveries.WithLabelValues("ok").Inc()
 		return nil
 	}
+	metrics.WebhookDeliveries.WithLabelValues("error").Inc()
 	if next == nil {
 		log.Ctx(ctx).Warn().Str("delivery", d.ID.String()).Str("url", d.Url).Msg("webhook given up after max attempts")
 		return nil

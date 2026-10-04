@@ -25,9 +25,11 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/events"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/stats"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/webhooks"
 	"github.com/Esca6585dev/habarchy/backend/internal/config"
 	"github.com/Esca6585dev/habarchy/backend/internal/queue"
@@ -158,11 +160,15 @@ func newFlowEnv(t *testing.T) *flowEnv {
 	messageSvc := messages.New(base.db, rdb, q, contactSvc, base.templates, messages.Limits{IdempotencyTTL: time.Hour, BatchMaxRecipients: 1000})
 	otpSvc := otp.New(rdb, messageSvc, otp.Limits{Length: 6, TTL: 5 * time.Minute, MaxAttempts: 3, PerAddressHour: 3, PerIPHour: 100})
 	deliverySvc := delivery.New(base.db, rdb, providerSvc, webhookSvc, contactSvc, zerolog.Nop(), 3)
+	publisher := events.NewPublisher(rdb.Raw())
+	messageSvc.Events, deliverySvc.Events = publisher, publisher
+	statsSvc := stats.New(base.db, q)
 
 	app := httpx.NewServer(cfg, zerolog.Nop(), httpx.Deps{})
-	(&admin.Handlers{Auth: base.auth, Projects: base.projects, Templates: base.templates, Providers: providerSvc}).Register(app)
+	(&admin.Handlers{Auth: base.auth, Projects: base.projects, Templates: base.templates, Providers: providerSvc,
+		Messages: messageSvc, Webhooks: webhookSvc, Stats: statsSvc, DB: base.db, Redis: rdb.Raw()}).Register(app)
 	(&public.Handlers{Projects: base.projects, Templates: base.templates, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc,
-		Providers: providerSvc, Delivery: deliverySvc, SignatureTolerance: cfg.Security.SignatureTolerance}).Register(app)
+		Providers: providerSvc, Delivery: deliverySvc, Stats: statsSvc, SignatureTolerance: cfg.Security.SignatureTolerance}).Register(app)
 	base.app = app
 
 	srv := asynq.NewServer(queue.RedisOpt(rdb.Options()), asynq.Config{

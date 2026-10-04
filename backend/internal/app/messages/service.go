@@ -19,6 +19,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres/sqlcgen"
 	rds "github.com/Esca6585dev/habarchy/backend/internal/adapters/redis"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/events"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/templates"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
 	"github.com/Esca6585dev/habarchy/backend/internal/ports"
@@ -44,6 +45,8 @@ type Service struct {
 	templates *templates.Service
 	limits    Limits
 	now       func() time.Time
+	// Events publishes live "queued" updates (optional).
+	Events *events.Publisher
 }
 
 // New creates the service.
@@ -575,10 +578,15 @@ func (s *Service) persistAndEnqueue(ctx context.Context, caller Caller, batchID 
 		return nil, err
 	}
 	// Enqueue after commit so the worker always finds the rows.
-	for _, m := range out {
+	for i := range out {
+		m := &out[i]
 		if err := s.queue.EnqueueSend(ctx, m.ID, domain.Channel(m.Channel), domain.Priority(m.Priority), m.ScheduledAt); err != nil {
 			_ = s.db.Queries.MarkMessageFailed(ctx, sqlcgen.MarkMessageFailedParams{ID: m.ID, ErrorCode: "enqueue_failed", ErrorMessage: err.Error()})
 			return nil, err
+		}
+		if s.Events != nil {
+			id := m.ID
+			s.Events.Publish(ctx, events.Event{Type: "message.queued", ProjectID: m.ProjectID, MessageID: &id, Channel: string(m.Channel), Status: "queued", To: m.ToAddress})
 		}
 	}
 	return out, nil

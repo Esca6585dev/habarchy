@@ -20,11 +20,13 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres/sqlcgen"
 	rds "github.com/Esca6585dev/habarchy/backend/internal/adapters/redis"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/events"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/webhooks"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
 	"github.com/Esca6585dev/habarchy/backend/internal/ports"
 	"github.com/Esca6585dev/habarchy/backend/internal/queue"
+	"github.com/Esca6585dev/habarchy/backend/pkg/metrics"
 )
 
 // Service executes deliveries.
@@ -36,6 +38,8 @@ type Service struct {
 	contacts  *contacts.Service
 	log       zerolog.Logger
 	maxRetry  int
+	// Events publishes live status updates for the dashboard (optional).
+	Events *events.Publisher
 }
 
 // New creates the service. maxRetry is the number of asynq retries after
@@ -143,6 +147,10 @@ func (s *Service) attempt(ctx context.Context, msg *sqlcgen.Message, prov *sqlcg
 
 	sendCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
+	started := time.Now()
+	defer func() {
+		metrics.ProviderDuration.WithLabelValues(string(prov.Type)).Observe(time.Since(started).Seconds())
+	}()
 	var res *ports.SendResult
 	var err error
 	switch domain.Channel(msg.Channel) {
@@ -167,6 +175,7 @@ func (s *Service) attempt(ctx context.Context, msg *sqlcgen.Message, prov *sqlcg
 		return nil, &ports.ProviderError{Code: "unsupported_channel", Message: string(msg.Channel)}
 	}
 	if err != nil {
+		metrics.ProviderCalls.WithLabelValues(string(prov.Type), "error").Inc()
 		var pe *ports.ProviderError
 		if errors.As(err, &pe) {
 			return nil, pe
@@ -176,6 +185,7 @@ func (s *Service) attempt(ctx context.Context, msg *sqlcgen.Message, prov *sqlcg
 		}
 		return nil, &ports.ProviderError{Code: "provider_error", Message: err.Error(), Retryable: true}
 	}
+	metrics.ProviderCalls.WithLabelValues(string(prov.Type), "ok").Inc()
 	return res, nil
 }
 
@@ -192,6 +202,7 @@ func (s *Service) succeed(ctx context.Context, msg *sqlcgen.Message, prov *sqlcg
 	s.event(ctx, msg.ID, sqlcgen.EventTypeSent, providerID(prov), map[string]any{"provider": prov.Name, "provider_message_id": res.ProviderMessageID, "raw": res.Raw})
 	msg.Status, msg.ProviderMessageID = sqlcgen.MessageStatusSent, res.ProviderMessageID
 	msg.ErrorCode, msg.ErrorMessage = "", ""
+	s.live(ctx, msg, prov.Name)
 	s.emit(ctx, msg, domain.WebhookMessageSent)
 	// Sandbox and channels without receipts are final at "sent"; push and
 	// telegram have no DLR concept, so count them delivered.
@@ -208,6 +219,11 @@ func (s *Service) fail(ctx context.Context, msg *sqlcgen.Message, prov *sqlcgen.
 	}
 	s.event(ctx, msg.ID, sqlcgen.EventTypeFailed, providerID(prov), map[string]any{"error_code": code, "error": message, "raw": raw})
 	msg.Status, msg.ErrorCode, msg.ErrorMessage = sqlcgen.MessageStatusFailed, code, message
+	provName := ""
+	if prov != nil {
+		provName = prov.Name
+	}
+	s.live(ctx, msg, provName)
 	s.emit(ctx, msg, domain.WebhookMessageFailed)
 	s.afterTerminal(ctx, msg)
 	return nil
@@ -227,6 +243,7 @@ func (s *Service) MarkDelivered(ctx context.Context, id uuid.UUID, raw map[strin
 		return err
 	}
 	s.event(ctx, id, sqlcgen.EventTypeDelivered, msg.ProviderID, raw)
+	s.live(ctx, &msg, "")
 	s.emit(ctx, &msg, domain.WebhookMessageDelivered)
 	s.afterTerminal(ctx, &msg)
 	return nil
@@ -292,6 +309,19 @@ func (s *Service) afterTerminal(ctx context.Context, msg *sqlcgen.Message) {
 	bid := done.ID
 	_ = s.webhooks.Emit(ctx, done.ProjectID, domain.WebhookBatchCompleted, nil, &bid, map[string]any{
 		"batch_id": done.ID, "total": done.Total, "sent": done.Sent, "delivered": done.Delivered, "failed": done.Failed, "completed_at": done.CompletedAt,
+	})
+}
+
+// live publishes the status change to dashboards and bumps metrics.
+func (s *Service) live(ctx context.Context, msg *sqlcgen.Message, provider string) {
+	metrics.MessagesTotal.WithLabelValues(string(msg.Channel), string(msg.Status)).Inc()
+	if s.Events == nil {
+		return
+	}
+	id := msg.ID
+	s.Events.Publish(ctx, events.Event{
+		Type: "message." + string(msg.Status), ProjectID: msg.ProjectID, MessageID: &id, Channel: string(msg.Channel),
+		Status: string(msg.Status), To: msg.ToAddress, Provider: provider, ErrorCode: msg.ErrorCode,
 	})
 }
 

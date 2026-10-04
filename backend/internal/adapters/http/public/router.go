@@ -16,6 +16,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/stats"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/templates"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
 )
@@ -30,6 +31,7 @@ type Handlers struct {
 	Contacts           *contacts.Service
 	Providers          *providers.Service
 	Delivery           *delivery.Service
+	Stats              *stats.Service
 	SignatureTolerance time.Duration
 	// APIRatePerSec limits requests per API key (token bucket); 0 = off.
 	APIRatePerSec float64
@@ -87,6 +89,9 @@ func (h *Handlers) Register(app fiber.Router) {
 		d.Get("/", h.listDevices)
 		d.Post("/", h.registerDevice)
 		d.Delete("/:token", h.removeDevice)
+	}
+	if h.Stats != nil {
+		r.Get("/usage", middleware.RequireScope(domain.ScopeUsage), h.usage)
 	}
 	if h.Delivery != nil && h.Providers != nil {
 		app.Post("/callbacks/sms/:provider_id", h.smsCallback)
@@ -172,4 +177,32 @@ func (h *Handlers) previewTemplate(c *fiber.Ctx) error {
 		return err
 	}
 	return httpx.OK(c, p)
+}
+
+// usage serves GET /usage?from=&to=&group_by=channel|day for API clients.
+func (h *Handlers) usage(c *fiber.Ctx) error {
+	from, to := time.Now().UTC().AddDate(0, 0, -30), time.Now().UTC()
+	details := map[string]any{}
+	if s := c.Query("from"); s != "" {
+		t, err := time.Parse("2006-01-02", s)
+		if err != nil {
+			details["from"] = "YYYY-MM-DD"
+		}
+		from = t
+	}
+	if s := c.Query("to"); s != "" {
+		t, err := time.Parse("2006-01-02", s)
+		if err != nil {
+			details["to"] = "YYYY-MM-DD"
+		}
+		to = t
+	}
+	if len(details) > 0 {
+		return domain.ErrValidation.WithDetails(details)
+	}
+	rows, err := h.Stats.Usage(c.UserContext(), caller(c).Project.ID, from, to, c.Query("group_by"))
+	if err != nil {
+		return err
+	}
+	return httpx.JSON(c, fiber.StatusOK, rows, fiber.Map{"from": from.Format("2006-01-02"), "to": to.Format("2006-01-02"), "group_by": c.Query("group_by")})
 }

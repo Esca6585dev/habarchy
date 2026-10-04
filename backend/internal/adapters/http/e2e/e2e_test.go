@@ -103,7 +103,7 @@ func (e *env) do(method, path string, body any, headers map[string]string) resp 
 	}
 	raw, _ := io.ReadAll(res.Body)
 	out := resp{Status: res.StatusCode, Raw: raw}
-	if len(raw) > 0 {
+	if len(raw) > 0 && strings.HasPrefix(res.Header.Get("Content-Type"), "application/json") {
 		if err := json.Unmarshal(raw, &out); err != nil {
 			e.t.Fatalf("%s %s: bad json %q", method, path, raw)
 		}
