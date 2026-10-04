@@ -612,6 +612,7 @@ type Contact struct {
 	Name           string
 	Whatsapp       string
 	SlackID        string
+	DeletedAt      *time.Time
 }
 
 type ContactGroup struct {

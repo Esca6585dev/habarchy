@@ -226,7 +226,16 @@
     "importedToast": "Imported {n} contacts",
     "importErrors": "Skipped rows",
     "googleNotConfigured": "Google import is not configured on this server (HABARCHY_GOOGLE_CLIENT_ID).",
-    "chooseFile": "Choose file"
+    "chooseFile": "Choose file",
+    "trash": "Trash",
+    "restore": "Restore",
+    "purge": "Delete permanently",
+    "purgeAll": "Empty trash",
+    "deletedAt": "Deleted",
+    "emptyTrash": "Trash is empty",
+    "purgedToast": "{n} contacts permanently deleted",
+    "restoredToast": "Contact restored",
+    "softDeleteHint": "Deleted contacts are kept here (hidden everywhere) and can be restored. They are only removed for good when you purge them."
   },
   "messages": {
     "title": "Messages",

@@ -505,4 +505,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get googleNotConfigured =>
       'Google import is not configured on this server';
+
+  @override
+  String get trash => 'Trash';
+
+  @override
+  String get restore => 'Restore';
+
+  @override
+  String get purge => 'Delete permanently';
+
+  @override
+  String get purgeAll => 'Empty trash';
+
+  @override
+  String get emptyTrash => 'Trash is empty';
+
+  @override
+  String get softDeleteHint =>
+      'Deleted contacts are kept here and can be restored. They are only removed for good when you purge them.';
+
+  @override
+  String get restored => 'Restored';
+
+  @override
+  String purgedAll(int n) {
+    return '$n permanently deleted';
+  }
 }

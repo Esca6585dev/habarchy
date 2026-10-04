@@ -2,7 +2,7 @@
 import { Suspense, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Upload } from "lucide-react";
+import { Pencil, Plus, RotateCcw, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { api, unwrap, ApiError } from "@/lib/api/client";
 import type { AdminDevice, Contact } from "@/lib/api/types";
@@ -59,7 +59,29 @@ function Contacts() {
   });
   const del = useMutation({
     mutationFn: async (id: string) => { await api.DELETE("/api/admin/projects/{project_id}/contacts/{contact_id}", { params: { path: { project_id: projectId!, contact_id: id } } }); },
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["contacts", projectId] }),
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: ["contacts", projectId] }); void qc.invalidateQueries({ queryKey: ["contacts-trash", projectId] }); },
+  });
+  const trash = useQuery({
+    queryKey: ["contacts-trash", projectId, offset],
+    enabled: !!projectId && editable,
+    queryFn: async () => {
+      const res = await api.GET("/api/admin/projects/{project_id}/contacts/trash", { params: { path: { project_id: projectId! }, query: { limit, offset } } });
+      return { rows: unwrap<Contact[]>(res), total: Number((res.data as { meta?: { total?: number } })?.meta?.total ?? 0) };
+    },
+  });
+  const invalidateBoth = () => { void qc.invalidateQueries({ queryKey: ["contacts", projectId] }); void qc.invalidateQueries({ queryKey: ["contacts-trash", projectId] }); };
+  const restore = useMutation({
+    mutationFn: async (id: string) => unwrap<Contact>(await api.POST("/api/admin/projects/{project_id}/contacts/{contact_id}/restore", { params: { path: { project_id: projectId!, contact_id: id } } })),
+    onSuccess: () => { toast.success(t("restoredToast")); invalidateBoth(); },
+    onError: (e: Error) => toast.error(e instanceof ApiError ? `${e.message} ${e.details ? JSON.stringify(e.details) : ""}` : e.message),
+  });
+  const purge = useMutation({
+    mutationFn: async (id: string) => { await api.DELETE("/api/admin/projects/{project_id}/contacts/{contact_id}/purge", { params: { path: { project_id: projectId!, contact_id: id } } }); },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["contacts-trash", projectId] }),
+  });
+  const purgeAll = useMutation({
+    mutationFn: async () => { const r = await api.DELETE("/api/admin/projects/{project_id}/contacts/trash", { params: { path: { project_id: projectId! } } }); return Number((r.data as { data?: { purged?: number } })?.data?.purged ?? 0); },
+    onSuccess: (n) => { toast.success(t("purgedToast", { n })); void qc.invalidateQueries({ queryKey: ["contacts-trash", projectId] }); },
   });
   const devices = useQuery({
     queryKey: ["devices", projectId],
@@ -72,7 +94,7 @@ function Contacts() {
       <PageHeader title={t("title")} actions={editable ? <><Button size="sm" variant="outline" onClick={() => setImporting(true)} data-testid="import-contacts"><Upload /> {t("import")}</Button><Button size="sm" onClick={() => setForm(emptyContact)} data-testid="new-contact"><Plus /> {t("new")}</Button></> : null} />
       {editable ? <ImportDialog open={importing} onOpenChange={setImporting} /> : null}
       <Tabs defaultValue="contacts">
-        <TabsList><TabsTrigger value="contacts">{t("contacts")} {contacts.data ? `(${contacts.data.total})` : ""}</TabsTrigger><TabsTrigger value="devices">{t("devices")} {devices.data ? `(${devices.data.length})` : ""}</TabsTrigger></TabsList>
+        <TabsList><TabsTrigger value="contacts">{t("contacts")} {contacts.data ? `(${contacts.data.total})` : ""}</TabsTrigger><TabsTrigger value="devices">{t("devices")} {devices.data ? `(${devices.data.length})` : ""}</TabsTrigger>{editable ? <TabsTrigger value="trash">{t("trash")} {trash.data?.total ? `(${trash.data.total})` : ""}</TabsTrigger> : null}</TabsList>
         <TabsContent value="contacts">
           <form className="mb-3 max-w-sm" onSubmit={(e) => { e.preventDefault(); setOffset(0); setApplied(search.trim()); }}>
             <Input placeholder={`${tc("search")}…`} value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -132,6 +154,35 @@ function Contacts() {
             </div>
           )}
         </TabsContent>
+        {editable ? (
+          <TabsContent value="trash">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">{t("softDeleteHint")}</p>
+              {trash.data?.rows.length ? <ConfirmButton size="sm" variant="destructive" title={t("purgeAll")} onConfirm={() => purgeAll.mutate()}><Trash2 /> {t("purgeAll")}</ConfirmButton> : null}
+            </div>
+            {trash.isLoading ? <Skeleton className="h-48" /> : !trash.data?.rows.length ? <EmptyState hint={t("emptyTrash")} /> : (
+              <div className="rounded-lg border">
+                <Table>
+                  <TableHeader><TableRow><TableHead>{t("name")}</TableHead><TableHead>{t("phone")}</TableHead><TableHead>{t("email")}</TableHead><TableHead>{t("deletedAt")}</TableHead><TableHead /></TableRow></TableHeader>
+                  <TableBody>
+                    {trash.data.rows.map((c) => (
+                      <TableRow key={c.id} className="text-muted-foreground">
+                        <TableCell className="font-medium">{c.name || "—"}</TableCell>
+                        <TableCell className="font-mono text-xs">{c.phone || "—"}</TableCell>
+                        <TableCell className="text-xs">{c.email || "—"}</TableCell>
+                        <TableCell className="tabular text-xs">{formatDate(c.deleted_at)}</TableCell>
+                        <TableCell className="space-x-1 text-right whitespace-nowrap">
+                          <Button size="sm" variant="ghost" onClick={() => restore.mutate(c.id!)}><RotateCcw /> {t("restore")}</Button>
+                          <ConfirmButton size="sm" variant="ghost" title={t("purge")} description={tc("confirmDelete", { name: c.name || c.phone || c.email || "" })} onConfirm={() => purge.mutate(c.id!)}>{t("purge")}</ConfirmButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+        ) : null}
       </Tabs>
 
       <Dialog open={!!form} onOpenChange={(o) => !o && setForm(null)}>

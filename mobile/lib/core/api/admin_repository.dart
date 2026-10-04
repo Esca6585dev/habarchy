@@ -92,6 +92,21 @@ class AdminRepository {
 
   Future<void> deleteContact(String projectId, String id) => _api.request<void>('DELETE', '/api/admin/projects/$projectId/contacts/$id');
 
+  Future<({List<Contact> rows, int total})> deletedContacts(String projectId, {int limit = 100, int offset = 0}) async {
+    final (data, meta) = await _api.requestWithMeta<List<dynamic>>('/api/admin/projects/$projectId/contacts/trash', query: {'limit': limit, 'offset': offset});
+    return (rows: data.map((e) => Contact.fromJson(e as Map<String, dynamic>)).toList(), total: (meta['total'] as num?)?.toInt() ?? 0);
+  }
+
+  Future<Contact> restoreContact(String projectId, String id) async =>
+      Contact.fromJson(await _api.request<Map<String, dynamic>>('POST', '/api/admin/projects/$projectId/contacts/$id/restore'));
+
+  Future<void> purgeContact(String projectId, String id) => _api.request<void>('DELETE', '/api/admin/projects/$projectId/contacts/$id/purge');
+
+  Future<int> purgeAllContacts(String projectId) async {
+    final data = await _api.request<Map<String, dynamic>>('DELETE', '/api/admin/projects/$projectId/contacts/trash');
+    return (data['purged'] as num?)?.toInt() ?? 0;
+  }
+
   // ---- groups ----
   Future<List<Group>> groups(String projectId) async =>
       (await _api.request<List<dynamic>>('GET', '/api/admin/projects/$projectId/groups')).map((e) => Group.fromJson(e as Map<String, dynamic>)).toList();

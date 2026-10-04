@@ -181,7 +181,9 @@ func (s *Service) Update(ctx context.Context, projectID, id uuid.UUID, in Input)
 	return &c, nil
 }
 
-// Delete removes a contact; devices keep existing with contact_id = NULL.
+// Delete soft-deletes a contact: the row is kept (deleted_at set) and hidden
+// from every normal query, so the project keeps it as a record and can
+// restore it. Devices keep existing. Use Purge for permanent removal.
 func (s *Service) Delete(ctx context.Context, projectID, id uuid.UUID) error {
 	n, err := s.db.Queries.DeleteContact(ctx, sqlcgen.DeleteContactParams{ID: id, ProjectID: projectID})
 	if err != nil {
@@ -191,6 +193,52 @@ func (s *Service) Delete(ctx context.Context, projectID, id uuid.UUID) error {
 		return domain.ErrNotFound.WithMessage("contact not found")
 	}
 	return nil
+}
+
+// Restore brings a soft-deleted contact back.
+func (s *Service) Restore(ctx context.Context, projectID, id uuid.UUID) (*sqlcgen.Contact, error) {
+	c, err := s.db.Queries.RestoreContact(ctx, sqlcgen.RestoreContactParams{ID: id, ProjectID: projectID})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrNotFound.WithMessage("contact not in trash")
+		}
+		if postgres.IsUniqueViolation(err) {
+			return nil, domain.ErrConflict.WithMessage("another active contact now uses this external_id")
+		}
+		return nil, err
+	}
+	return &c, nil
+}
+
+// ListDeleted returns the project's trashed contacts and the total.
+func (s *Service) ListDeleted(ctx context.Context, projectID uuid.UUID, search string, limit, offset int32) ([]sqlcgen.Contact, int64, error) {
+	params := sqlcgen.ListDeletedContactsParams{ProjectID: projectID, RowLimit: limit, RowOffset: offset}
+	if search = strings.TrimSpace(search); search != "" {
+		params.Search = &search
+	}
+	rows, err := s.db.Queries.ListDeletedContacts(ctx, params)
+	if err != nil {
+		return nil, 0, err
+	}
+	total, err := s.db.Queries.CountDeletedContacts(ctx, projectID)
+	return rows, total, err
+}
+
+// Purge permanently deletes one trashed contact.
+func (s *Service) Purge(ctx context.Context, projectID, id uuid.UUID) error {
+	n, err := s.db.Queries.PurgeContact(ctx, sqlcgen.PurgeContactParams{ID: id, ProjectID: projectID})
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return domain.ErrNotFound.WithMessage("contact not in trash")
+	}
+	return nil
+}
+
+// PurgeAll permanently deletes every trashed contact of a project.
+func (s *Service) PurgeAll(ctx context.Context, projectID uuid.UUID) (int64, error) {
+	return s.db.Queries.PurgeDeletedContacts(ctx, projectID)
 }
 
 // DeviceInput registers or refreshes an FCM token.

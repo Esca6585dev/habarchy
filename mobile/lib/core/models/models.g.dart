@@ -432,6 +432,9 @@ _Contact _$ContactFromJson(Map<String, dynamic> json) => _Contact(
   createdAt: json['created_at'] == null
       ? null
       : DateTime.parse(json['created_at'] as String),
+  deletedAt: json['deleted_at'] == null
+      ? null
+      : DateTime.parse(json['deleted_at'] as String),
 );
 
 Map<String, dynamic> _$ContactToJson(_Contact instance) => <String, dynamic>{
@@ -446,6 +449,7 @@ Map<String, dynamic> _$ContactToJson(_Contact instance) => <String, dynamic>{
   'locale': instance.locale,
   'tags': instance.tags,
   'created_at': instance.createdAt?.toIso8601String(),
+  'deleted_at': instance.deletedAt?.toIso8601String(),
 };
 
 _Group _$GroupFromJson(Map<String, dynamic> json) => _Group(

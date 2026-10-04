@@ -6,6 +6,8 @@ import '../../core/auth/auth_controller.dart';
 import '../../core/models/models.dart';
 import '../../l10n/app_localizations.dart';
 import '../common/widgets.dart';
+import 'package:go_router/go_router.dart';
+
 import '../groups/groups_screen.dart';
 import 'contact_form.dart';
 import 'import_sheet.dart';
@@ -37,6 +39,12 @@ class ContactsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(t.contacts),
         actions: [
+          if (editable)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: t.trash,
+              onPressed: () => context.push('/contacts/trash'),
+            ),
           if (editable)
             IconButton(
               key: const Key('import-contacts'),

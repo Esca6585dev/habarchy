@@ -13,8 +13,8 @@ import (
 )
 
 const adminListContacts = `-- name: AdminListContacts :many
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts
-WHERE project_id = $1
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id, deleted_at FROM contacts
+WHERE project_id = $1 AND deleted_at IS NULL
   AND ($2::text IS NULL
        OR phone ILIKE '%' || $2::text || '%'
        OR email ILIKE '%' || $2::text || '%'
@@ -59,6 +59,7 @@ func (q *Queries) AdminListContacts(ctx context.Context, arg AdminListContactsPa
 			&i.Name,
 			&i.Whatsapp,
 			&i.SlackID,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -178,7 +179,7 @@ func (q *Queries) CountAuditLogs(ctx context.Context, projectID *uuid.UUID) (int
 }
 
 const countContacts = `-- name: CountContacts :one
-SELECT count(*) FROM contacts WHERE project_id = $1
+SELECT count(*) FROM contacts WHERE project_id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) CountContacts(ctx context.Context, projectID uuid.UUID) (int64, error) {

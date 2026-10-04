@@ -207,5 +207,20 @@
       }
     }
   },
-  "googleNotConfigured": "Google import is not configured on this server"
+  "googleNotConfigured": "Google import is not configured on this server",
+  "trash": "Trash",
+  "restore": "Restore",
+  "purge": "Delete permanently",
+  "purgeAll": "Empty trash",
+  "emptyTrash": "Trash is empty",
+  "softDeleteHint": "Deleted contacts are kept here and can be restored. They are only removed for good when you purge them.",
+  "restored": "Restored",
+  "purgedAll": "{n} permanently deleted",
+  "@purgedAll": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }

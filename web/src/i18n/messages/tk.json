@@ -226,7 +226,16 @@
     "importedToast": "{n} kontakt import edildi",
     "importErrors": "Geçilen setirler",
     "googleNotConfigured": "Bu serwerde Google import sazlanmadyk (HABARCHY_GOOGLE_CLIENT_ID).",
-    "chooseFile": "Faýl saýla"
+    "chooseFile": "Faýl saýla",
+    "trash": "Sebet",
+    "restore": "Dikelt",
+    "purge": "Hemişelik poz",
+    "purgeAll": "Sebedi boşat",
+    "deletedAt": "Pozulan",
+    "emptyTrash": "Sebet boş",
+    "purgedToast": "{n} kontakt hemişelik pozuldy",
+    "restoredToast": "Kontakt dikeldildi",
+    "softDeleteHint": "Pozulan kontaktlar şu ýerde saklanýar (hemme ýerden gizlenýär) we dikeldip bolýar. Diňe hemişelik pozanyňyzda doly aýrylýar."
   },
   "messages": {
     "title": "Habarlar",

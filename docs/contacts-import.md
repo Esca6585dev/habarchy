@@ -39,3 +39,23 @@ Sign-In and Security → **App-Specific Passwords** → generate one (two-factor
 on). In Habarchy: Contacts → Import → **Apple / iCloud**, enter the Apple ID e-mail and that
 password. Habarchy discovers the address books (`contacts.icloud.com` → `pNN-contacts.icloud.com`)
 and imports every card. The password is sent once over HTTPS and not stored.
+
+
+## Deleting contacts (soft delete)
+
+Deleting a contact does **not** erase it: the row is kept with a `deleted_at`
+timestamp and hidden from every normal query (lists, search, group members,
+broadcasts, API lookups), so the project keeps it as a record and can bring it
+back. Nothing removes it automatically.
+
+- **Trash** — `GET /api/admin/projects/{id}/contacts/trash` lists soft-deleted
+  contacts (admin panel: Contacts → Trash tab; app: Contacts → trash icon).
+- **Restore** — `POST …/contacts/{cid}/restore` brings one back (also back into
+  its groups). It fails with 409 if another active contact now uses the same
+  `external_id`.
+- **Purge** — `DELETE …/contacts/{cid}/purge` removes one permanently;
+  `DELETE …/contacts/trash` empties the trash. Only an admin/developer can purge.
+
+Re-importing the same `external_id` or phone while the original is in the trash
+creates a fresh active contact; the trashed one stays untouched. Soft-deleted
+contacts never receive messages and never count toward a group.

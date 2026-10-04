@@ -5571,7 +5571,7 @@ as bool,
 /// @nodoc
 mixin _$Contact {
 
- String get id;@JsonKey(name: 'external_id') String get externalId; String get name; String get phone; String get email; String get whatsapp;@JsonKey(name: 'telegram_chat_id') String get telegramChatId;@JsonKey(name: 'slack_id') String get slackId; String get locale; List<String> get tags;@JsonKey(name: 'created_at') DateTime? get createdAt;
+ String get id;@JsonKey(name: 'external_id') String get externalId; String get name; String get phone; String get email; String get whatsapp;@JsonKey(name: 'telegram_chat_id') String get telegramChatId;@JsonKey(name: 'slack_id') String get slackId; String get locale; List<String> get tags;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'deleted_at') DateTime? get deletedAt;
 /// Create a copy of Contact
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -5585,20 +5585,20 @@ $ContactCopyWith<Contact> get copyWith => _$ContactCopyWithImpl<Contact>(this as
 @override
 bool operator ==(Object other) {
   final _this = this as Contact;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Contact&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.externalId, _this.externalId) || other.externalId == _this.externalId)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.phone, _this.phone) || other.phone == _this.phone)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.whatsapp, _this.whatsapp) || other.whatsapp == _this.whatsapp)&&(identical(other.telegramChatId, _this.telegramChatId) || other.telegramChatId == _this.telegramChatId)&&(identical(other.slackId, _this.slackId) || other.slackId == _this.slackId)&&(identical(other.locale, _this.locale) || other.locale == _this.locale)&&const DeepCollectionEquality().equals(other.tags, _this.tags)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Contact&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.externalId, _this.externalId) || other.externalId == _this.externalId)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.phone, _this.phone) || other.phone == _this.phone)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.whatsapp, _this.whatsapp) || other.whatsapp == _this.whatsapp)&&(identical(other.telegramChatId, _this.telegramChatId) || other.telegramChatId == _this.telegramChatId)&&(identical(other.slackId, _this.slackId) || other.slackId == _this.slackId)&&(identical(other.locale, _this.locale) || other.locale == _this.locale)&&const DeepCollectionEquality().equals(other.tags, _this.tags)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Contact;
-  return Object.hash(runtimeType,_this.id,_this.externalId,_this.name,_this.phone,_this.email,_this.whatsapp,_this.telegramChatId,_this.slackId,_this.locale,const DeepCollectionEquality().hash(_this.tags),_this.createdAt);
+  return Object.hash(runtimeType,_this.id,_this.externalId,_this.name,_this.phone,_this.email,_this.whatsapp,_this.telegramChatId,_this.slackId,_this.locale,const DeepCollectionEquality().hash(_this.tags),_this.createdAt,_this.deletedAt);
 }
 
 @override
 String toString() {
   final _this = this as Contact;
-  return 'Contact(id: ${_this.id}, externalId: ${_this.externalId}, name: ${_this.name}, phone: ${_this.phone}, email: ${_this.email}, whatsapp: ${_this.whatsapp}, telegramChatId: ${_this.telegramChatId}, slackId: ${_this.slackId}, locale: ${_this.locale}, tags: ${_this.tags}, createdAt: ${_this.createdAt})';
+  return 'Contact(id: ${_this.id}, externalId: ${_this.externalId}, name: ${_this.name}, phone: ${_this.phone}, email: ${_this.email}, whatsapp: ${_this.whatsapp}, telegramChatId: ${_this.telegramChatId}, slackId: ${_this.slackId}, locale: ${_this.locale}, tags: ${_this.tags}, createdAt: ${_this.createdAt}, deletedAt: ${_this.deletedAt})';
 }
 
 
@@ -5609,7 +5609,7 @@ abstract mixin class $ContactCopyWith<$Res>  {
   factory $ContactCopyWith(Contact value, $Res Function(Contact) _then) = _$ContactCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'external_id') String externalId, String name, String phone, String email, String whatsapp,@JsonKey(name: 'telegram_chat_id') String telegramChatId,@JsonKey(name: 'slack_id') String slackId, String locale, List<String> tags,@JsonKey(name: 'created_at') DateTime? createdAt
+ String id,@JsonKey(name: 'external_id') String externalId, String name, String phone, String email, String whatsapp,@JsonKey(name: 'telegram_chat_id') String telegramChatId,@JsonKey(name: 'slack_id') String slackId, String locale, List<String> tags,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'deleted_at') DateTime? deletedAt
 });
 
 
@@ -5626,7 +5626,7 @@ class _$ContactCopyWithImpl<$Res>
 
 /// Create a copy of Contact
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? externalId = null,Object? name = null,Object? phone = null,Object? email = null,Object? whatsapp = null,Object? telegramChatId = null,Object? slackId = null,Object? locale = null,Object? tags = null,Object? createdAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? externalId = null,Object? name = null,Object? phone = null,Object? email = null,Object? whatsapp = null,Object? telegramChatId = null,Object? slackId = null,Object? locale = null,Object? tags = null,Object? createdAt = freezed,Object? deletedAt = freezed,}) {
   return _then(Contact(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,externalId: null == externalId ? _self.externalId : externalId // ignore: cast_nullable_to_non_nullable
@@ -5639,6 +5639,7 @@ as String,slackId: null == slackId ? _self.slackId : slackId // ignore: cast_nul
 as String,locale: null == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
 as String,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }
@@ -5724,10 +5725,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'external_id')  String externalId,  String name,  String phone,  String email,  String whatsapp, @JsonKey(name: 'telegram_chat_id')  String telegramChatId, @JsonKey(name: 'slack_id')  String slackId,  String locale,  List<String> tags, @JsonKey(name: 'created_at')  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'external_id')  String externalId,  String name,  String phone,  String email,  String whatsapp, @JsonKey(name: 'telegram_chat_id')  String telegramChatId, @JsonKey(name: 'slack_id')  String slackId,  String locale,  List<String> tags, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'deleted_at')  DateTime? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Contact() when $default != null:
-return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_that.whatsapp,_that.telegramChatId,_that.slackId,_that.locale,_that.tags,_that.createdAt);case _:
+return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_that.whatsapp,_that.telegramChatId,_that.slackId,_that.locale,_that.tags,_that.createdAt,_that.deletedAt);case _:
   return orElse();
 
 }
@@ -5745,10 +5746,10 @@ return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'external_id')  String externalId,  String name,  String phone,  String email,  String whatsapp, @JsonKey(name: 'telegram_chat_id')  String telegramChatId, @JsonKey(name: 'slack_id')  String slackId,  String locale,  List<String> tags, @JsonKey(name: 'created_at')  DateTime? createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'external_id')  String externalId,  String name,  String phone,  String email,  String whatsapp, @JsonKey(name: 'telegram_chat_id')  String telegramChatId, @JsonKey(name: 'slack_id')  String slackId,  String locale,  List<String> tags, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'deleted_at')  DateTime? deletedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Contact():
-return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_that.whatsapp,_that.telegramChatId,_that.slackId,_that.locale,_that.tags,_that.createdAt);case _:
+return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_that.whatsapp,_that.telegramChatId,_that.slackId,_that.locale,_that.tags,_that.createdAt,_that.deletedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -5765,10 +5766,10 @@ return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'external_id')  String externalId,  String name,  String phone,  String email,  String whatsapp, @JsonKey(name: 'telegram_chat_id')  String telegramChatId, @JsonKey(name: 'slack_id')  String slackId,  String locale,  List<String> tags, @JsonKey(name: 'created_at')  DateTime? createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'external_id')  String externalId,  String name,  String phone,  String email,  String whatsapp, @JsonKey(name: 'telegram_chat_id')  String telegramChatId, @JsonKey(name: 'slack_id')  String slackId,  String locale,  List<String> tags, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'deleted_at')  DateTime? deletedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Contact() when $default != null:
-return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_that.whatsapp,_that.telegramChatId,_that.slackId,_that.locale,_that.tags,_that.createdAt);case _:
+return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_that.whatsapp,_that.telegramChatId,_that.slackId,_that.locale,_that.tags,_that.createdAt,_that.deletedAt);case _:
   return null;
 
 }
@@ -5780,7 +5781,7 @@ return $default(_that.id,_that.externalId,_that.name,_that.phone,_that.email,_th
 @JsonSerializable()
 
 class _Contact implements Contact {
-  const _Contact({required this.id, @JsonKey(name: 'external_id') this.externalId = '', this.name = '', this.phone = '', this.email = '', this.whatsapp = '', @JsonKey(name: 'telegram_chat_id') this.telegramChatId = '', @JsonKey(name: 'slack_id') this.slackId = '', this.locale = 'tk',  List<String> tags = const <String>[], @JsonKey(name: 'created_at') this.createdAt}): _tags = tags;
+  const _Contact({required this.id, @JsonKey(name: 'external_id') this.externalId = '', this.name = '', this.phone = '', this.email = '', this.whatsapp = '', @JsonKey(name: 'telegram_chat_id') this.telegramChatId = '', @JsonKey(name: 'slack_id') this.slackId = '', this.locale = 'tk',  List<String> tags = const <String>[], @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'deleted_at') this.deletedAt}): _tags = tags;
   factory _Contact.fromJson(Map<String, dynamic> json) => _$ContactFromJson(json);
 
 @override final  String id;
@@ -5800,6 +5801,7 @@ class _Contact implements Contact {
 }
 
 @override@JsonKey(name: 'created_at') final  DateTime? createdAt;
+@override@JsonKey(name: 'deleted_at') final  DateTime? deletedAt;
 
 /// Create a copy of Contact
 /// with the given fields replaced by the non-null parameter values.
@@ -5814,18 +5816,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Contact&&(identical(other.id, id) || other.id == id)&&(identical(other.externalId, externalId) || other.externalId == externalId)&&(identical(other.name, name) || other.name == name)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.whatsapp, whatsapp) || other.whatsapp == whatsapp)&&(identical(other.telegramChatId, telegramChatId) || other.telegramChatId == telegramChatId)&&(identical(other.slackId, slackId) || other.slackId == slackId)&&(identical(other.locale, locale) || other.locale == locale)&&const DeepCollectionEquality().equals(other.tags, _tags)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Contact&&(identical(other.id, id) || other.id == id)&&(identical(other.externalId, externalId) || other.externalId == externalId)&&(identical(other.name, name) || other.name == name)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.whatsapp, whatsapp) || other.whatsapp == whatsapp)&&(identical(other.telegramChatId, telegramChatId) || other.telegramChatId == telegramChatId)&&(identical(other.slackId, slackId) || other.slackId == slackId)&&(identical(other.locale, locale) || other.locale == locale)&&const DeepCollectionEquality().equals(other.tags, _tags)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,externalId,name,phone,email,whatsapp,telegramChatId,slackId,locale,const DeepCollectionEquality().hash(_tags),createdAt);
+    return Object.hash(runtimeType,id,externalId,name,phone,email,whatsapp,telegramChatId,slackId,locale,const DeepCollectionEquality().hash(_tags),createdAt,deletedAt);
 }
 
 @override
 String toString() {
-    return 'Contact(id: $id, externalId: $externalId, name: $name, phone: $phone, email: $email, whatsapp: $whatsapp, telegramChatId: $telegramChatId, slackId: $slackId, locale: $locale, tags: $tags, createdAt: $createdAt)';
+    return 'Contact(id: $id, externalId: $externalId, name: $name, phone: $phone, email: $email, whatsapp: $whatsapp, telegramChatId: $telegramChatId, slackId: $slackId, locale: $locale, tags: $tags, createdAt: $createdAt, deletedAt: $deletedAt)';
 }
 
 
@@ -5836,7 +5838,7 @@ abstract mixin class _$ContactCopyWith<$Res> implements $ContactCopyWith<$Res> {
   factory _$ContactCopyWith(_Contact value, $Res Function(_Contact) _then) = __$ContactCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'external_id') String externalId, String name, String phone, String email, String whatsapp,@JsonKey(name: 'telegram_chat_id') String telegramChatId,@JsonKey(name: 'slack_id') String slackId, String locale, List<String> tags,@JsonKey(name: 'created_at') DateTime? createdAt
+ String id,@JsonKey(name: 'external_id') String externalId, String name, String phone, String email, String whatsapp,@JsonKey(name: 'telegram_chat_id') String telegramChatId,@JsonKey(name: 'slack_id') String slackId, String locale, List<String> tags,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'deleted_at') DateTime? deletedAt
 });
 
 
@@ -5853,7 +5855,7 @@ class __$ContactCopyWithImpl<$Res>
 
 /// Create a copy of Contact
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? externalId = null,Object? name = null,Object? phone = null,Object? email = null,Object? whatsapp = null,Object? telegramChatId = null,Object? slackId = null,Object? locale = null,Object? tags = null,Object? createdAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? externalId = null,Object? name = null,Object? phone = null,Object? email = null,Object? whatsapp = null,Object? telegramChatId = null,Object? slackId = null,Object? locale = null,Object? tags = null,Object? createdAt = freezed,Object? deletedAt = freezed,}) {
   return _then(_Contact(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,externalId: null == externalId ? _self.externalId : externalId // ignore: cast_nullable_to_non_nullable
@@ -5866,6 +5868,7 @@ as String,slackId: null == slackId ? _self.slackId : slackId // ignore: cast_nul
 as String,locale: null == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
 as String,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }

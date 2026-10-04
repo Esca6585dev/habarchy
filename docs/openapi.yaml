@@ -1355,6 +1355,45 @@ paths:
       responses:
         "302": { description: Redirect to return_to with imported/created/skipped or import_error }
         "200": { description: HTML result page when return_to is empty }
+  /api/admin/projects/{project_id}/contacts/trash:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-contacts]
+      summary: List trashed (soft-deleted) contacts
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Offset" }
+      responses:
+        "200": { $ref: "#/components/responses/ContactList" }
+    delete:
+      tags: [admin-contacts]
+      summary: Permanently delete every contact in the trash
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: "`{purged}`"
+          content: { application/json: { schema: { allOf: [ { $ref: "#/components/schemas/Envelope" }, { type: object, properties: { data: { type: object, properties: { purged: { type: integer } } } } } ] } } }
+  /api/admin/projects/{project_id}/contacts/{contact_id}/restore:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { name: contact_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    post:
+      tags: [admin-contacts]
+      summary: Restore a contact from the trash
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Contact" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/admin/projects/{project_id}/contacts/{contact_id}/purge:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { name: contact_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    delete:
+      tags: [admin-contacts]
+      summary: Permanently delete one trashed contact
+      security: [{ BearerAuth: [] }]
+      responses:
+        "204": { description: Purged }
+        "404": { $ref: "#/components/responses/Error" }
   /api/admin/projects/{project_id}/contacts/{contact_id}:
     parameters: [{ $ref: "#/components/parameters/ProjectID" }, { name: contact_id, in: path, required: true, schema: { type: string, format: uuid } }]
     get:
@@ -1385,10 +1424,10 @@ paths:
         "200": { $ref: "#/components/responses/Contact" }
     delete:
       tags: [admin-contacts]
-      summary: Delete a contact
+      summary: Soft-delete a contact (kept in the trash, hidden everywhere, restorable)
       security: [{ BearerAuth: [] }]
       responses:
-        "204": { description: Deleted }
+        "204": { description: Soft-deleted }
   /api/admin/projects/{project_id}/messages/send:
     parameters: [{ $ref: "#/components/parameters/ProjectID" }]
     post:
@@ -2022,6 +2061,7 @@ components:
         whatsapp: { type: string }
         telegram_chat_id: { type: string }
         slack_id: { type: string }
+        deleted_at: { type: [string, "null"], format: date-time, description: set when the contact is in the trash (soft-deleted) }
         locale: { type: string }
         tags: { type: array, items: { type: string } }
         attributes: { type: object, additionalProperties: true }

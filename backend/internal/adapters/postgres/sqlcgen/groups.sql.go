@@ -15,7 +15,7 @@ import (
 const addGroupMembers = `-- name: AddGroupMembers :execrows
 INSERT INTO contact_group_members (group_id, contact_id)
 SELECT $1, c.id FROM contacts c
-WHERE c.project_id = $2 AND c.id = ANY($3::uuid[])
+WHERE c.project_id = $2 AND c.id = ANY($3::uuid[]) AND c.deleted_at IS NULL
 ON CONFLICT DO NOTHING
 `
 
@@ -34,7 +34,9 @@ func (q *Queries) AddGroupMembers(ctx context.Context, arg AddGroupMembersParams
 }
 
 const countGroupMembers = `-- name: CountGroupMembers :one
-SELECT count(*)::bigint FROM contact_group_members WHERE group_id = $1
+SELECT count(*)::bigint FROM contact_group_members m
+JOIN contacts c ON c.id = m.contact_id
+WHERE m.group_id = $1 AND c.deleted_at IS NULL
 `
 
 func (q *Queries) CountGroupMembers(ctx context.Context, groupID uuid.UUID) (int64, error) {
@@ -119,7 +121,8 @@ func (q *Queries) GetGroup(ctx context.Context, arg GetGroupParams) (ContactGrou
 const listGroupContactIDs = `-- name: ListGroupContactIDs :many
 SELECT m.contact_id FROM contact_group_members m
 JOIN contact_groups g ON g.id = m.group_id
-WHERE m.group_id = ANY($1::uuid[]) AND g.project_id = $2
+JOIN contacts c ON c.id = m.contact_id
+WHERE m.group_id = ANY($1::uuid[]) AND g.project_id = $2 AND c.deleted_at IS NULL
 `
 
 type ListGroupContactIDsParams struct {
@@ -148,9 +151,9 @@ func (q *Queries) ListGroupContactIDs(ctx context.Context, arg ListGroupContactI
 }
 
 const listGroupMembers = `-- name: ListGroupMembers :many
-SELECT c.id, c.project_id, c.external_id, c.phone, c.email, c.telegram_chat_id, c.locale, c.tags, c.attributes, c.created_at, c.updated_at, c.name, c.whatsapp, c.slack_id FROM contacts c
+SELECT c.id, c.project_id, c.external_id, c.phone, c.email, c.telegram_chat_id, c.locale, c.tags, c.attributes, c.created_at, c.updated_at, c.name, c.whatsapp, c.slack_id, c.deleted_at FROM contacts c
 JOIN contact_group_members m ON m.contact_id = c.id
-WHERE m.group_id = $1
+WHERE m.group_id = $1 AND c.deleted_at IS NULL
 ORDER BY lower(c.name), c.created_at
 LIMIT $3 OFFSET $2
 `
@@ -185,6 +188,7 @@ func (q *Queries) ListGroupMembers(ctx context.Context, arg ListGroupMembersPara
 			&i.Name,
 			&i.Whatsapp,
 			&i.SlackID,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}

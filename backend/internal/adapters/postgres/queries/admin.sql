@@ -87,7 +87,7 @@ WHERE (sqlc.narg('project_id')::uuid IS NULL OR project_id = sqlc.narg('project_
 
 -- name: AdminListContacts :many
 SELECT * FROM contacts
-WHERE project_id = @project_id
+WHERE project_id = @project_id AND deleted_at IS NULL
   AND (sqlc.narg('search')::text IS NULL
        OR phone ILIKE '%' || sqlc.narg('search')::text || '%'
        OR email ILIKE '%' || sqlc.narg('search')::text || '%'
@@ -96,7 +96,7 @@ WHERE project_id = @project_id
 ORDER BY created_at DESC LIMIT @row_limit OFFSET @row_offset;
 
 -- name: CountContacts :one
-SELECT count(*) FROM contacts WHERE project_id = @project_id;
+SELECT count(*) FROM contacts WHERE project_id = @project_id AND deleted_at IS NULL;
 
 -- name: CountDevices :one
 SELECT count(*) FILTER (WHERE is_active)::bigint AS active, count(*)::bigint AS total FROM devices WHERE project_id = @project_id;

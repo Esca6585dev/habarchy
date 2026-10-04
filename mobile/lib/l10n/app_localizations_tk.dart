@@ -503,4 +503,31 @@ class AppLocalizationsTk extends AppLocalizations {
 
   @override
   String get googleNotConfigured => 'Bu serwerde Google import sazlanmadyk';
+
+  @override
+  String get trash => 'Sebet';
+
+  @override
+  String get restore => 'Dikelt';
+
+  @override
+  String get purge => 'Hemişelik poz';
+
+  @override
+  String get purgeAll => 'Sebedi boşat';
+
+  @override
+  String get emptyTrash => 'Sebet boş';
+
+  @override
+  String get softDeleteHint =>
+      'Pozulan kontaktlar şu ýerde saklanýar we dikeldip bolýar. Diňe hemişelik pozanyňyzda doly aýrylýar.';
+
+  @override
+  String get restored => 'Dikeldildi';
+
+  @override
+  String purgedAll(int n) {
+    return '$n hemişelik pozuldy';
+  }
 }

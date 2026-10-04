@@ -12,10 +12,21 @@ import (
 	"github.com/google/uuid"
 )
 
+const countDeletedContacts = `-- name: CountDeletedContacts :one
+SELECT count(*) FROM contacts WHERE project_id = $1 AND deleted_at IS NOT NULL
+`
+
+func (q *Queries) CountDeletedContacts(ctx context.Context, projectID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countDeletedContacts, projectID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createContact = `-- name: CreateContact :one
 INSERT INTO contacts (project_id, external_id, name, phone, email, whatsapp, telegram_chat_id, slack_id, locale, tags, attributes)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-RETURNING id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id
+RETURNING id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id, deleted_at
 `
 
 type CreateContactParams struct {
@@ -62,12 +73,13 @@ func (q *Queries) CreateContact(ctx context.Context, arg CreateContactParams) (C
 		&i.Name,
 		&i.Whatsapp,
 		&i.SlackID,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const deleteContact = `-- name: DeleteContact :execrows
-DELETE FROM contacts WHERE id = $1 AND project_id = $2
+UPDATE contacts SET deleted_at = now(), updated_at = now() WHERE id = $1 AND project_id = $2 AND deleted_at IS NULL
 `
 
 type DeleteContactParams struct {
@@ -75,6 +87,7 @@ type DeleteContactParams struct {
 	ProjectID uuid.UUID
 }
 
+// Soft delete: keep the row, hide it everywhere.
 func (q *Queries) DeleteContact(ctx context.Context, arg DeleteContactParams) (int64, error) {
 	result, err := q.db.Exec(ctx, deleteContact, arg.ID, arg.ProjectID)
 	if err != nil {
@@ -113,7 +126,7 @@ func (q *Queries) DisableDeviceByToken(ctx context.Context, fcmToken string) (in
 }
 
 const getContact = `-- name: GetContact :one
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts WHERE id = $1 AND project_id = $2
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id, deleted_at FROM contacts WHERE id = $1 AND project_id = $2 AND deleted_at IS NULL
 `
 
 type GetContactParams struct {
@@ -139,12 +152,46 @@ func (q *Queries) GetContact(ctx context.Context, arg GetContactParams) (Contact
 		&i.Name,
 		&i.Whatsapp,
 		&i.SlackID,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getContactAny = `-- name: GetContactAny :one
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id, deleted_at FROM contacts WHERE id = $1 AND project_id = $2
+`
+
+type GetContactAnyParams struct {
+	ID        uuid.UUID
+	ProjectID uuid.UUID
+}
+
+// Fetches a contact regardless of soft-delete state (for restore / purge).
+func (q *Queries) GetContactAny(ctx context.Context, arg GetContactAnyParams) (Contact, error) {
+	row := q.db.QueryRow(ctx, getContactAny, arg.ID, arg.ProjectID)
+	var i Contact
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.ExternalID,
+		&i.Phone,
+		&i.Email,
+		&i.TelegramChatID,
+		&i.Locale,
+		&i.Tags,
+		&i.Attributes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.Whatsapp,
+		&i.SlackID,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getContactByEmail = `-- name: GetContactByEmail :one
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts WHERE project_id = $1 AND email = lower($2) LIMIT 1
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id, deleted_at FROM contacts WHERE project_id = $1 AND email = lower($2) AND deleted_at IS NULL LIMIT 1
 `
 
 type GetContactByEmailParams struct {
@@ -170,12 +217,13 @@ func (q *Queries) GetContactByEmail(ctx context.Context, arg GetContactByEmailPa
 		&i.Name,
 		&i.Whatsapp,
 		&i.SlackID,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getContactByExternalID = `-- name: GetContactByExternalID :one
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts WHERE project_id = $1 AND external_id = $2
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id, deleted_at FROM contacts WHERE project_id = $1 AND external_id = $2 AND deleted_at IS NULL
 `
 
 type GetContactByExternalIDParams struct {
@@ -201,12 +249,13 @@ func (q *Queries) GetContactByExternalID(ctx context.Context, arg GetContactByEx
 		&i.Name,
 		&i.Whatsapp,
 		&i.SlackID,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getContactByPhone = `-- name: GetContactByPhone :one
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts WHERE project_id = $1 AND phone = $2 LIMIT 1
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id, deleted_at FROM contacts WHERE project_id = $1 AND phone = $2 AND deleted_at IS NULL LIMIT 1
 `
 
 type GetContactByPhoneParams struct {
@@ -232,6 +281,7 @@ func (q *Queries) GetContactByPhone(ctx context.Context, arg GetContactByPhonePa
 		&i.Name,
 		&i.Whatsapp,
 		&i.SlackID,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -292,8 +342,8 @@ func (q *Queries) ListActiveDevicesForContact(ctx context.Context, contactID *uu
 }
 
 const listContacts = `-- name: ListContacts :many
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts
-WHERE project_id = $1
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id, deleted_at FROM contacts
+WHERE project_id = $1 AND deleted_at IS NULL
   AND ($2::text IS NULL OR $2::text = ANY (tags))
   AND ($3::text IS NULL
        OR phone ILIKE '%' || $3::text || '%'
@@ -342,6 +392,66 @@ func (q *Queries) ListContacts(ctx context.Context, arg ListContactsParams) ([]C
 			&i.Name,
 			&i.Whatsapp,
 			&i.SlackID,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDeletedContacts = `-- name: ListDeletedContacts :many
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id, deleted_at FROM contacts WHERE project_id = $1 AND deleted_at IS NOT NULL
+  AND ($2::text IS NULL
+       OR phone ILIKE '%' || $2::text || '%'
+       OR email ILIKE '%' || $2::text || '%'
+       OR external_id ILIKE '%' || $2::text || '%'
+       OR name ILIKE '%' || $2::text || '%')
+ORDER BY deleted_at DESC
+LIMIT $4 OFFSET $3
+`
+
+type ListDeletedContactsParams struct {
+	ProjectID uuid.UUID
+	Search    *string
+	RowOffset int32
+	RowLimit  int32
+}
+
+func (q *Queries) ListDeletedContacts(ctx context.Context, arg ListDeletedContactsParams) ([]Contact, error) {
+	rows, err := q.db.Query(ctx, listDeletedContacts,
+		arg.ProjectID,
+		arg.Search,
+		arg.RowOffset,
+		arg.RowLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Contact{}
+	for rows.Next() {
+		var i Contact
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProjectID,
+			&i.ExternalID,
+			&i.Phone,
+			&i.Email,
+			&i.TelegramChatID,
+			&i.Locale,
+			&i.Tags,
+			&i.Attributes,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+			&i.Whatsapp,
+			&i.SlackID,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -393,6 +503,69 @@ func (q *Queries) ListDevices(ctx context.Context, arg ListDevicesParams) ([]Dev
 	return items, nil
 }
 
+const purgeContact = `-- name: PurgeContact :execrows
+DELETE FROM contacts WHERE id = $1 AND project_id = $2 AND deleted_at IS NOT NULL
+`
+
+type PurgeContactParams struct {
+	ID        uuid.UUID
+	ProjectID uuid.UUID
+}
+
+// Permanent delete; only a row already in the trash can be purged.
+func (q *Queries) PurgeContact(ctx context.Context, arg PurgeContactParams) (int64, error) {
+	result, err := q.db.Exec(ctx, purgeContact, arg.ID, arg.ProjectID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const purgeDeletedContacts = `-- name: PurgeDeletedContacts :execrows
+DELETE FROM contacts WHERE project_id = $1 AND deleted_at IS NOT NULL
+`
+
+func (q *Queries) PurgeDeletedContacts(ctx context.Context, projectID uuid.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, purgeDeletedContacts, projectID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const restoreContact = `-- name: RestoreContact :one
+UPDATE contacts SET deleted_at = NULL, updated_at = now() WHERE id = $1 AND project_id = $2 AND deleted_at IS NOT NULL
+RETURNING id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id, deleted_at
+`
+
+type RestoreContactParams struct {
+	ID        uuid.UUID
+	ProjectID uuid.UUID
+}
+
+func (q *Queries) RestoreContact(ctx context.Context, arg RestoreContactParams) (Contact, error) {
+	row := q.db.QueryRow(ctx, restoreContact, arg.ID, arg.ProjectID)
+	var i Contact
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.ExternalID,
+		&i.Phone,
+		&i.Email,
+		&i.TelegramChatID,
+		&i.Locale,
+		&i.Tags,
+		&i.Attributes,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.Whatsapp,
+		&i.SlackID,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const updateContact = `-- name: UpdateContact :one
 UPDATE contacts SET
     external_id      = $1,
@@ -406,8 +579,8 @@ UPDATE contacts SET
     tags             = $9,
     attributes       = $10,
     updated_at       = now()
-WHERE id = $11 AND project_id = $12
-RETURNING id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id
+WHERE id = $11 AND project_id = $12 AND deleted_at IS NULL
+RETURNING id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id, deleted_at
 `
 
 type UpdateContactParams struct {
@@ -456,6 +629,7 @@ func (q *Queries) UpdateContact(ctx context.Context, arg UpdateContactParams) (C
 		&i.Name,
 		&i.Whatsapp,
 		&i.SlackID,
+		&i.DeletedAt,
 	)
 	return i, err
 }

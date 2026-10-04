@@ -32,11 +32,12 @@ type ContactResponse struct {
 	Attributes     json.RawMessage `json:"attributes"`
 	CreatedAt      time.Time       `json:"created_at"`
 	UpdatedAt      time.Time       `json:"updated_at"`
+	DeletedAt      *time.Time      `json:"deleted_at,omitempty"`
 }
 
 func toContact(c *sqlcgen.Contact) ContactResponse {
 	return ContactResponse{ID: c.ID, ExternalID: c.ExternalID, Name: c.Name, Phone: c.Phone, Email: c.Email, WhatsApp: c.Whatsapp,
-		TelegramChatID: c.TelegramChatID, SlackID: c.SlackID, Locale: c.Locale, Tags: c.Tags, Attributes: c.Attributes, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
+		TelegramChatID: c.TelegramChatID, SlackID: c.SlackID, Locale: c.Locale, Tags: c.Tags, Attributes: c.Attributes, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt, DeletedAt: c.DeletedAt}
 }
 
 type contactRequest struct {
@@ -119,6 +120,55 @@ func (h *Handlers) deleteContact(c *fiber.Ctx) error {
 		return err
 	}
 	return httpx.NoContent(c)
+}
+
+// listDeletedContacts returns the project's trash (soft-deleted contacts).
+func (h *Handlers) listDeletedContacts(c *fiber.Ctx) error {
+	pid := membership(c).Project.ID
+	page := httpx.ParsePage(c, 50, 200)
+	rows, total, err := h.Contacts.ListDeleted(c.UserContext(), pid, c.Query("search"), page.Limit, page.Offset)
+	if err != nil {
+		return err
+	}
+	out := make([]ContactResponse, 0, len(rows))
+	for i := range rows {
+		out = append(out, toContact(&rows[i]))
+	}
+	return httpx.JSON(c, fiber.StatusOK, out, fiber.Map{"total": total, "limit": page.Limit, "offset": page.Offset})
+}
+
+// restoreContact brings a contact back from the trash.
+func (h *Handlers) restoreContact(c *fiber.Ctx) error {
+	id, err := httpx.ParamUUID(c, "contact_id")
+	if err != nil {
+		return err
+	}
+	ct, err := h.Contacts.Restore(c.UserContext(), membership(c).Project.ID, id)
+	if err != nil {
+		return err
+	}
+	return httpx.OK(c, toContact(ct))
+}
+
+// purgeContact permanently deletes one trashed contact.
+func (h *Handlers) purgeContact(c *fiber.Ctx) error {
+	id, err := httpx.ParamUUID(c, "contact_id")
+	if err != nil {
+		return err
+	}
+	if err := h.Contacts.Purge(c.UserContext(), membership(c).Project.ID, id); err != nil {
+		return err
+	}
+	return httpx.NoContent(c)
+}
+
+// purgeAllContacts empties the project's contact trash.
+func (h *Handlers) purgeAllContacts(c *fiber.Ctx) error {
+	n, err := h.Contacts.PurgeAll(c.UserContext(), membership(c).Project.ID)
+	if err != nil {
+		return err
+	}
+	return httpx.OK(c, fiber.Map{"purged": n})
 }
 
 // ---- groups (admin) ----

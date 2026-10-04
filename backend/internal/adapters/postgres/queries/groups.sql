@@ -23,7 +23,7 @@ DELETE FROM contact_groups WHERE id = @id AND project_id = @project_id;
 -- name: AddGroupMembers :execrows
 INSERT INTO contact_group_members (group_id, contact_id)
 SELECT @group_id, c.id FROM contacts c
-WHERE c.project_id = @project_id AND c.id = ANY(@contact_ids::uuid[])
+WHERE c.project_id = @project_id AND c.id = ANY(@contact_ids::uuid[]) AND c.deleted_at IS NULL
 ON CONFLICT DO NOTHING;
 
 -- name: RemoveGroupMember :execrows
@@ -32,17 +32,20 @@ DELETE FROM contact_group_members WHERE group_id = @group_id AND contact_id = @c
 -- name: ListGroupMembers :many
 SELECT c.* FROM contacts c
 JOIN contact_group_members m ON m.contact_id = c.id
-WHERE m.group_id = @group_id
+WHERE m.group_id = @group_id AND c.deleted_at IS NULL
 ORDER BY lower(c.name), c.created_at
 LIMIT @row_limit OFFSET @row_offset;
 
 -- name: CountGroupMembers :one
-SELECT count(*)::bigint FROM contact_group_members WHERE group_id = @group_id;
+SELECT count(*)::bigint FROM contact_group_members m
+JOIN contacts c ON c.id = m.contact_id
+WHERE m.group_id = @group_id AND c.deleted_at IS NULL;
 
 -- name: ListGroupContactIDs :many
 SELECT m.contact_id FROM contact_group_members m
 JOIN contact_groups g ON g.id = m.group_id
-WHERE m.group_id = ANY(@group_ids::uuid[]) AND g.project_id = @project_id;
+JOIN contacts c ON c.id = m.contact_id
+WHERE m.group_id = ANY(@group_ids::uuid[]) AND g.project_id = @project_id AND c.deleted_at IS NULL;
 
 -- name: ListGroupsForContact :many
 SELECT g.* FROM contact_groups g

@@ -138,9 +138,13 @@ func (h *Handlers) Register(app fiber.Router) {
 				ct.Get("/import/google/url", h.googleImportURL)
 			}
 			ct.Post("/", h.createContact)
+			ct.Get("/trash", h.requireRole(domain.RoleViewer), h.listDeletedContacts)
+			ct.Delete("/trash", h.purgeAllContacts)
 			ct.Get("/:contact_id", h.requireRole(domain.RoleViewer), h.getContact)
 			ct.Put("/:contact_id", h.updateContact)
 			ct.Delete("/:contact_id", h.deleteContact)
+			ct.Post("/:contact_id/restore", h.restoreContact)
+			ct.Delete("/:contact_id/purge", h.purgeContact)
 		}
 		if h.Groups != nil {
 			g := p.Group("/groups", h.requireRole(domain.RoleViewer))

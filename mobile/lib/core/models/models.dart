@@ -267,6 +267,7 @@ abstract class Contact with _$Contact {
     @Default('tk') String locale,
     @Default(<String>[]) List<String> tags,
     @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'deleted_at') DateTime? deletedAt,
   }) = _Contact;
   factory Contact.fromJson(Map<String, dynamic> json) => _$ContactFromJson(json);
 }

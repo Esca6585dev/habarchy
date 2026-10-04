@@ -1047,6 +1047,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Google import is not configured on this server'**
   String get googleNotConfigured;
+
+  /// No description provided for @trash.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash'**
+  String get trash;
+
+  /// No description provided for @restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore;
+
+  /// No description provided for @purge.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently'**
+  String get purge;
+
+  /// No description provided for @purgeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty trash'**
+  String get purgeAll;
+
+  /// No description provided for @emptyTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash is empty'**
+  String get emptyTrash;
+
+  /// No description provided for @softDeleteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted contacts are kept here and can be restored. They are only removed for good when you purge them.'**
+  String get softDeleteHint;
+
+  /// No description provided for @restored.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored'**
+  String get restored;
+
+  /// No description provided for @purgedAll.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} permanently deleted'**
+  String purgedAll(int n);
 }
 
 class _AppLocalizationsDelegate

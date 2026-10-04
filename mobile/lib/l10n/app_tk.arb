@@ -157,5 +157,13 @@
   "noGroup": "Toparsyz",
   "importNow": "Import et",
   "importResult": "{total} setir: {created} döredildi, {updated} täzelendi, {skipped} geçildi",
-  "googleNotConfigured": "Bu serwerde Google import sazlanmadyk"
+  "googleNotConfigured": "Bu serwerde Google import sazlanmadyk",
+  "trash": "Sebet",
+  "restore": "Dikelt",
+  "purge": "Hemişelik poz",
+  "purgeAll": "Sebedi boşat",
+  "emptyTrash": "Sebet boş",
+  "softDeleteHint": "Pozulan kontaktlar şu ýerde saklanýar we dikeldip bolýar. Diňe hemişelik pozanyňyzda doly aýrylýar.",
+  "restored": "Dikeldildi",
+  "purgedAll": "{n} hemişelik pozuldy"
 }

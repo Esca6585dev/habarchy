@@ -140,6 +140,7 @@ See [docs/architecture.md](docs/architecture.md) for the component and data-mode
 | Messages (public) | `POST /api/v1/messages` (202), `POST /messages/batch`, `GET /messages?status=&channel=&from=&to=&cursor=&limit=`, `GET /messages/{id}` (+timeline), `POST /messages/{id}/cancel`, `GET /batches/{id}` |
 | OTP (public) | `POST /api/v1/otp/send`, `POST /api/v1/otp/verify` |
 | Contacts & devices (public) | `GET/POST /api/v1/contacts`, `GET/PUT/DELETE /contacts/{id}`, `GET/POST /api/v1/devices`, `DELETE /devices/{token}` |
+| Contacts trash | admin `GET /projects/{id}/contacts/trash`, `POST /contacts/{cid}/restore`, `DELETE /contacts/{cid}/purge`, `DELETE /contacts/trash` (soft delete, restore, purge) |
 | Contact import | `POST /api/v1/contacts/import` (file), admin `POST /projects/{id}/contacts/import`, `…/import/carddav`, `GET …/import/google/url` — see [docs/contacts-import.md](docs/contacts-import.md) |
 | Groups (public) | `GET/POST /api/v1/groups`, `GET/PUT/DELETE /groups/{id}`, `GET/POST /groups/{id}/members`, `DELETE /groups/{id}/members/{contact_id}`; `group_ids` in `POST /messages/batch` |
 | Groups & compose (admin) | `/projects/{id}/groups…` (same shape), `POST/GET/PUT/DELETE /projects/{id}/contacts…`, `POST /projects/{id}/messages/send` `{channel, group_ids, contact_ids, to, template|body, is_test}` |

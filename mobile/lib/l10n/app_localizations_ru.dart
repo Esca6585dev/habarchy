@@ -506,4 +506,31 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get googleNotConfigured =>
       'Импорт из Google не настроен на этом сервере';
+
+  @override
+  String get trash => 'Корзина';
+
+  @override
+  String get restore => 'Восстановить';
+
+  @override
+  String get purge => 'Удалить навсегда';
+
+  @override
+  String get purgeAll => 'Очистить корзину';
+
+  @override
+  String get emptyTrash => 'Корзина пуста';
+
+  @override
+  String get softDeleteHint =>
+      'Удалённые контакты хранятся здесь и могут быть восстановлены. Окончательно удаляются только при очистке.';
+
+  @override
+  String get restored => 'Восстановлено';
+
+  @override
+  String purgedAll(int n) {
+    return '$n удалено навсегда';
+  }
 }
