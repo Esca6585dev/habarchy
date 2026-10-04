@@ -86,7 +86,7 @@ func (s *Service) Send(ctx context.Context, caller messages.Caller, in SendInput
 	if in.Channel == "" {
 		in.Channel = domain.ChannelSMS
 	}
-	if in.Channel != domain.ChannelSMS && in.Channel != domain.ChannelEmail && in.Channel != domain.ChannelTelegram {
+	if in.Channel != domain.ChannelSMS && in.Channel != domain.ChannelEmail && in.Channel != domain.ChannelTelegram && in.Channel != domain.ChannelWhatsApp {
 		return nil, domain.ErrValidation.WithDetails(map[string]any{"channel": "sms, email or telegram"})
 	}
 	to, err := normalize(in.Channel, in.To)

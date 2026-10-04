@@ -32,6 +32,7 @@ tags:
   - name: admin-messages
   - name: admin-webhooks
   - name: admin-insights
+  - name: admin-contacts
   - name: admin-system
   - name: health
 
@@ -250,6 +251,74 @@ paths:
       responses:
         "204": { description: Deleted }
 
+  /api/v1/groups:
+    get:
+      tags: [public-contacts]
+      summary: List contact groups
+      security: [{ ApiKey: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/GroupList" }
+    post:
+      tags: [public-contacts]
+      summary: Create a group
+      security: [{ ApiKey: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/GroupRequest" } } } }
+      responses:
+        "201": { $ref: "#/components/responses/Group" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/groups/{group_id}:
+    parameters: [ { name: group_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      tags: [public-contacts]
+      summary: Get a group
+      security: [{ ApiKey: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Group" }
+    put:
+      tags: [public-contacts]
+      summary: Rename a group
+      security: [{ ApiKey: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/GroupRequest" } } } }
+      responses:
+        "200": { $ref: "#/components/responses/Group" }
+    delete:
+      tags: [public-contacts]
+      summary: Delete a group (contacts stay)
+      security: [{ ApiKey: [] }]
+      responses:
+        "204": { description: Deleted }
+  /api/v1/groups/{group_id}/members:
+    parameters: [ { name: group_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      tags: [public-contacts]
+      summary: List members
+      security: [{ ApiKey: [] }]
+      parameters: [{ $ref: "#/components/parameters/Limit" }, { $ref: "#/components/parameters/Offset" }]
+      responses:
+        "200": { $ref: "#/components/responses/ContactList" }
+    post:
+      tags: [public-contacts]
+      summary: Add members (existing contacts or new ones inline)
+      security: [{ ApiKey: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/GroupMembersRequest" } } } }
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/GroupMembersResult" } }
+  /api/v1/groups/{group_id}/members/{contact_id}:
+    parameters: [ { name: group_id, in: path, required: true, schema: { type: string, format: uuid } }, { name: contact_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    delete:
+      tags: [public-contacts]
+      summary: Remove a member
+      security: [{ ApiKey: [] }]
+      responses:
+        "204": { description: Removed }
   /api/v1/contacts:
     get:
       tags: [public-contacts]
@@ -1158,7 +1227,7 @@ paths:
   /api/admin/projects/{project_id}/contacts:
     parameters: [{ $ref: "#/components/parameters/ProjectID" }]
     get:
-      tags: [admin-insights]
+      tags: [admin-contacts]
       summary: Contacts
       security: [{ BearerAuth: [] }]
       parameters:
@@ -1167,6 +1236,129 @@ paths:
         - { $ref: "#/components/parameters/Offset" }
       responses:
         "200": { $ref: "#/components/responses/ContactList" }
+    post:
+      tags: [admin-contacts]
+      summary: Create or upsert (by external_id) a contact
+      security: [{ BearerAuth: [] }]
+      requestBody: { $ref: "#/components/requestBodies/Contact" }
+      responses:
+        "201": { $ref: "#/components/responses/Contact" }
+        "200": { $ref: "#/components/responses/Contact" }
+  /api/admin/projects/{project_id}/contacts/{contact_id}:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { name: contact_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      tags: [admin-contacts]
+      summary: Contact with its groups
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200":
+          description: Contact + groups
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          contact: { $ref: "#/components/schemas/Contact" }
+                          groups: { type: array, items: { $ref: "#/components/schemas/Group" } }
+    put:
+      tags: [admin-contacts]
+      summary: Update a contact
+      security: [{ BearerAuth: [] }]
+      requestBody: { $ref: "#/components/requestBodies/Contact" }
+      responses:
+        "200": { $ref: "#/components/responses/Contact" }
+    delete:
+      tags: [admin-contacts]
+      summary: Delete a contact
+      security: [{ BearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+  /api/admin/projects/{project_id}/messages/send:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    post:
+      tags: [admin-messages]
+      summary: Compose and send to groups, contacts and/or raw addresses (developer role)
+      security: [{ BearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/AdminSendRequest" } } } }
+      responses:
+        "202":
+          description: Batch created; `meta.accepted` / `meta.rejected`
+          content: { application/json: { schema: { $ref: "#/components/schemas/BatchEnvelope" } } }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/admin/projects/{project_id}/groups:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }]
+    get:
+      tags: [admin-contacts]
+      summary: List contact groups
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/GroupList" }
+    post:
+      tags: [admin-contacts]
+      summary: Create a group
+      security: [{ BearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/GroupRequest" } } } }
+      responses:
+        "201": { $ref: "#/components/responses/Group" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/admin/projects/{project_id}/groups/{group_id}:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { name: group_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      tags: [admin-contacts]
+      summary: Get a group
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Group" }
+    put:
+      tags: [admin-contacts]
+      summary: Rename a group
+      security: [{ BearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/GroupRequest" } } } }
+      responses:
+        "200": { $ref: "#/components/responses/Group" }
+    delete:
+      tags: [admin-contacts]
+      summary: Delete a group (contacts stay)
+      security: [{ BearerAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+  /api/admin/projects/{project_id}/groups/{group_id}/members:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { name: group_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    get:
+      tags: [admin-contacts]
+      summary: List members
+      security: [{ BearerAuth: [] }]
+      parameters: [{ $ref: "#/components/parameters/Limit" }, { $ref: "#/components/parameters/Offset" }]
+      responses:
+        "200": { $ref: "#/components/responses/ContactList" }
+    post:
+      tags: [admin-contacts]
+      summary: Add members (existing contacts or new ones inline)
+      security: [{ BearerAuth: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/GroupMembersRequest" } } } }
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Envelope"
+                  - type: object
+                    properties: { data: { $ref: "#/components/schemas/GroupMembersResult" } }
+  /api/admin/projects/{project_id}/groups/{group_id}/members/{contact_id}:
+    parameters: [{ $ref: "#/components/parameters/ProjectID" }, { name: group_id, in: path, required: true, schema: { type: string, format: uuid } }, { name: contact_id, in: path, required: true, schema: { type: string, format: uuid } }]
+    delete:
+      tags: [admin-contacts]
+      summary: Remove a member
+      security: [{ BearerAuth: [] }]
+      responses:
+        "204": { description: Removed }
   /api/admin/projects/{project_id}/devices:
     parameters: [{ $ref: "#/components/parameters/ProjectID" }]
     get:
@@ -1343,6 +1535,24 @@ components:
               - $ref: "#/components/schemas/Envelope"
               - type: object
                 properties: { data: { $ref: "#/components/schemas/Contact" } }
+    Group:
+      description: Group
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { $ref: "#/components/schemas/Group" } }
+    GroupList:
+      description: Groups
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/Envelope"
+              - type: object
+                properties: { data: { type: array, items: { $ref: "#/components/schemas/Group" } } }
     ContactList:
       description: Contacts
       content:
@@ -1386,13 +1596,13 @@ components:
         message: { type: string }
         details: { type: object, additionalProperties: true }
 
-    Channel: { type: string, enum: [sms, email, push, telegram] }
+    Channel: { type: string, enum: [sms, email, push, telegram, whatsapp, slack] }
     ChannelOrAuto: { type: string, enum: [sms, email, push, telegram, auto] }
     MessageStatus: { type: string, enum: [queued, processing, sent, delivered, failed, cancelled] }
     Priority: { type: string, enum: [high, normal, low] }
     Locale: { type: string, enum: [tk, ru, en] }
     Role: { type: string, enum: [owner, admin, developer, viewer] }
-    ProviderType: { type: string, enum: [http_sms, smpp, android_sms, smtp, fcm, telegram_bot] }
+    ProviderType: { type: string, enum: [http_sms, smpp, android_sms, smtp, fcm, telegram_bot, whatsapp_cloud, slack] }
     Scope: { type: string, enum: ["messages:send", "messages:read", otp, templates, contacts, devices, usage] }
 
     Recipient:
@@ -1425,9 +1635,11 @@ components:
           description: Returned in webhooks. Special keys - `data` (push data payload), `parse_mode` (telegram), `reply_to`, `text`, `attachments` (email).
     SendBatchRequest:
       type: object
-      required: [recipients]
+      description: "`recipients` and/or `group_ids` are required"
       properties:
         channel: { $ref: "#/components/schemas/Channel" }
+        group_ids: { type: array, items: { type: string, format: uuid }, description: send to every member of these contact groups }
+        data: { type: object, additionalProperties: true, description: shared template data (a recipient's own data overlays it) }
         template: { type: string }
         subject: { type: string }
         title: { type: string }
@@ -1617,20 +1829,67 @@ components:
       type: object
       properties:
         external_id: { type: string }
+        name: { type: string }
         phone: { type: string }
         email: { type: string }
+        whatsapp: { type: string, description: "E.164; empty = phone" }
         telegram_chat_id: { type: string }
+        slack_id: { type: string, description: Slack user (U…) or channel (C…) id }
         locale: { $ref: "#/components/schemas/Locale" }
         tags: { type: array, items: { type: string } }
         attributes: { type: object, additionalProperties: true }
+    Group:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        member_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    GroupRequest:
+      type: object
+      required: [name]
+      properties: { name: { type: string }, description: { type: string } }
+    GroupMembersRequest:
+      type: object
+      description: existing contacts by id / external_id, or new contacts created inline (matched by external_id, phone or email first)
+      properties:
+        contact_ids: { type: array, items: { type: string, format: uuid } }
+        external_ids: { type: array, items: { type: string } }
+        contacts: { type: array, items: { $ref: "#/components/schemas/ContactRequest" } }
+    GroupMembersResult:
+      type: object
+      properties: { added: { type: integer }, created_contacts: { type: integer }, not_found: { type: array, items: { type: string } } }
+    AdminSendRequest:
+      type: object
+      description: Compose from the admin panel / app. `group_ids`, `contact_ids` and/or `to` are required.
+      properties:
+        channel: { $ref: "#/components/schemas/Channel" }
+        template: { type: string }
+        data: { type: object, additionalProperties: true }
+        subject: { type: string }
+        title: { type: string }
+        body: { type: string }
+        locale: { $ref: "#/components/schemas/Locale" }
+        scheduled_at: { type: string, format: date-time }
+        priority: { $ref: "#/components/schemas/Priority" }
+        metadata: { type: object, additionalProperties: true }
+        group_ids: { type: array, items: { type: string, format: uuid } }
+        contact_ids: { type: array, items: { type: string, format: uuid } }
+        to: { type: array, items: { type: string }, description: raw addresses (phones, e-mails, chat ids) }
+        is_test: { type: boolean, description: route through the sandbox, nothing is really sent }
     Contact:
       type: object
       properties:
         id: { type: string, format: uuid }
         external_id: { type: string }
+        name: { type: string }
         phone: { type: string }
         email: { type: string }
+        whatsapp: { type: string }
         telegram_chat_id: { type: string }
+        slack_id: { type: string }
         locale: { type: string }
         tags: { type: array, items: { type: string } }
         attributes: { type: object, additionalProperties: true }

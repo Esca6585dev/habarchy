@@ -12,6 +12,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/middleware"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/groups"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
@@ -29,6 +30,7 @@ type Handlers struct {
 	Messages           *messages.Service
 	OTP                *otp.Service
 	Contacts           *contacts.Service
+	Groups             *groups.Service
 	Providers          *providers.Service
 	Delivery           *delivery.Service
 	Stats              *stats.Service
@@ -84,6 +86,18 @@ func (h *Handlers) Register(app fiber.Router) {
 		ct.Get("/:contact_id", h.getContact)
 		ct.Put("/:contact_id", h.updateContact)
 		ct.Delete("/:contact_id", h.deleteContact)
+
+		if h.Groups != nil {
+			g := r.Group("/groups", middleware.RequireScope(domain.ScopeContacts))
+			g.Get("/", h.listGroups)
+			g.Post("/", h.createGroup)
+			g.Get("/:group_id", h.getGroup)
+			g.Put("/:group_id", h.updateGroup)
+			g.Delete("/:group_id", h.deleteGroup)
+			g.Get("/:group_id/members", h.listGroupMembers)
+			g.Post("/:group_id/members", h.addGroupMembers)
+			g.Delete("/:group_id/members/:contact_id", h.removeGroupMember)
+		}
 
 		d := r.Group("/devices", middleware.RequireScope(domain.ScopeDevices))
 		d.Get("/", h.listDevices)

@@ -32,6 +32,8 @@
   --chart-email: oklch(0.6 0.13 250);
   --chart-push: oklch(0.65 0.16 60);
   --chart-telegram: oklch(0.6 0.12 220);
+  --chart-whatsapp: oklch(0.65 0.17 150);
+  --chart-slack: oklch(0.55 0.18 330);
   --sidebar: oklch(0.97 0.005 210);
   --radius: 0.5rem;
 }
@@ -90,6 +92,8 @@
   --color-chart-email: var(--chart-email);
   --color-chart-push: var(--chart-push);
   --color-chart-telegram: var(--chart-telegram);
+  --color-chart-whatsapp: var(--chart-whatsapp);
+  --color-chart-slack: var(--chart-slack);
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);

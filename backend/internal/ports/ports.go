@@ -92,6 +92,19 @@ type TelegramButton struct {
 	Data string
 }
 
+// ChatMessage is the payload for chat-style providers (WhatsApp, Slack).
+type ChatMessage struct {
+	To      string // phone (WhatsApp) or channel / user id (Slack)
+	Text    string
+	Subject string         // optional heading (Slack bold line)
+	Extra   map[string]any // provider specific, from message metadata
+}
+
+// ChatProvider sends chat messages.
+type ChatProvider interface {
+	Send(ctx context.Context, msg ChatMessage) (*SendResult, error)
+}
+
 // SMSProvider sends SMS.
 type SMSProvider interface {
 	Send(ctx context.Context, msg SMSMessage) (*SendResult, error)

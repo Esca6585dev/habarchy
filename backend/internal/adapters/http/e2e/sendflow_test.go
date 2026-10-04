@@ -26,6 +26,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/events"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/groups"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
@@ -154,6 +155,7 @@ func newFlowEnv(t *testing.T) *flowEnv {
 	t.Cleanup(gateway.Close)
 
 	contactSvc := contacts.New(base.db)
+	groupSvc := groups.New(base.db, contactSvc)
 	providerSvc := providers.New(base.db, cipher)
 	webhookSvc := webhooks.New(base.db, cipher, q, 8, nil)
 	webhookSvc.AllowPrivate = true
@@ -165,9 +167,9 @@ func newFlowEnv(t *testing.T) *flowEnv {
 	statsSvc := stats.New(base.db, q)
 
 	app := httpx.NewServer(cfg, zerolog.Nop(), httpx.Deps{})
-	(&admin.Handlers{Auth: base.auth, Projects: base.projects, Templates: base.templates, Providers: providerSvc,
+	(&admin.Handlers{Auth: base.auth, Projects: base.projects, Templates: base.templates, Providers: providerSvc, Contacts: contactSvc, Groups: groupSvc,
 		Messages: messageSvc, Webhooks: webhookSvc, Stats: statsSvc, DB: base.db, Redis: rdb.Raw()}).Register(app)
-	(&public.Handlers{Projects: base.projects, Templates: base.templates, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc,
+	(&public.Handlers{Projects: base.projects, Templates: base.templates, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc, Groups: groupSvc,
 		Providers: providerSvc, Delivery: deliverySvc, Stats: statsSvc, SignatureTolerance: cfg.Security.SignatureTolerance}).Register(app)
 	base.app = app
 

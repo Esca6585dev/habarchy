@@ -36,6 +36,8 @@ const channelColor: Record<string, string> = {
   email: "bg-chart-email/15 text-chart-email",
   push: "bg-chart-push/20 text-chart-push",
   telegram: "bg-chart-telegram/15 text-chart-telegram",
+  whatsapp: "bg-chart-whatsapp/15 text-chart-whatsapp",
+  slack: "bg-chart-slack/15 text-chart-slack",
 };
 
 export function ChannelBadge({ channel }: { channel?: string | null }) {

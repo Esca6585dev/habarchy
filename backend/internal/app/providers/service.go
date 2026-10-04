@@ -20,9 +20,11 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/email/smtp"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/push/fcm"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/sandbox"
+	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/slack"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/sms/androidgw"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/sms/httpgeneric"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/telegram"
+	"github.com/Esca6585dev/habarchy/backend/internal/adapters/providers/whatsapp"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/audit"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
 	"github.com/Esca6585dev/habarchy/backend/internal/ports"
@@ -72,7 +74,7 @@ func (s *Service) Create(ctx context.Context, projectID uuid.UUID, in Input) (*s
 		return nil, domain.ErrValidation.WithDetails(map[string]any{"name": "required"})
 	}
 	if !in.Type.Valid() {
-		return nil, domain.ErrValidation.WithDetails(map[string]any{"type": "http_sms, smpp, android_sms, smtp, fcm or telegram_bot"})
+		return nil, domain.ErrValidation.WithDetails(map[string]any{"type": "http_sms, smpp, android_sms, smtp, fcm, telegram_bot, whatsapp_cloud or slack"})
 	}
 	if in.Type == domain.ProviderAndroidSMS {
 		var err error
@@ -370,6 +372,18 @@ func (s *Service) build(ctx context.Context, p *sqlcgen.Provider, creds json.Raw
 			return nil, errors.New("smpp providers are only available in the worker")
 		}
 		return s.SMPPFactory(ctx, p.ID, creds)
+	case domain.ProviderWhatsAppCloud:
+		var cfg whatsapp.Config
+		if err := json.Unmarshal(creds, &cfg); err != nil {
+			return nil, err
+		}
+		return whatsapp.New(cfg, nil)
+	case domain.ProviderSlack:
+		var cfg slack.Config
+		if err := json.Unmarshal(creds, &cfg); err != nil {
+			return nil, err
+		}
+		return slack.New(cfg, nil)
 	case domain.ProviderAndroidSMS:
 		if s.GatewayFactory == nil {
 			return nil, errors.New("android_sms providers are only available in the worker")
@@ -394,6 +408,8 @@ func Sandbox(ch domain.Channel) any {
 		return sandbox.Push{}
 	case domain.ChannelTelegram:
 		return sandbox.Telegram{}
+	case domain.ChannelWhatsApp, domain.ChannelSlack:
+		return sandbox.Chat{}
 	}
 	return sandbox.Provider{}
 }
@@ -430,6 +446,16 @@ func ValidateCredentials(ctx context.Context, t domain.ProviderType, creds json.
 		err = ValidateSMPP(creds)
 	case domain.ProviderAndroidSMS:
 		_, err = androidgw.ParseConfig(creds)
+	case domain.ProviderWhatsAppCloud:
+		var cfg whatsapp.Config
+		if err = json.Unmarshal(creds, &cfg); err == nil {
+			_, err = whatsapp.New(cfg, http.DefaultClient)
+		}
+	case domain.ProviderSlack:
+		var cfg slack.Config
+		if err = json.Unmarshal(creds, &cfg); err == nil {
+			_, err = slack.New(cfg, http.DefaultClient)
+		}
 	default:
 		err = fmt.Errorf("unknown provider type %q", t)
 	}

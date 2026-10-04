@@ -10,6 +10,8 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/middleware"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/groups"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
@@ -26,6 +28,8 @@ type Handlers struct {
 	Projects  *projects.Service
 	Templates *templates.Service
 	Providers *providers.Service
+	Contacts  *contacts.Service
+	Groups    *groups.Service
 	Messages  *messages.Service
 	Webhooks  *webhooks.Service
 	Stats     *stats.Service
@@ -97,6 +101,7 @@ func (h *Handlers) Register(app fiber.Router) {
 
 	if h.Messages != nil && h.DB != nil {
 		m := p.Group("/messages", h.requireRole(domain.RoleViewer))
+		m.Post("/send", h.requireRole(domain.RoleDeveloper), h.sendMessages)
 		m.Get("/", h.listMessages)
 		m.Get("/:message_id", h.getMessage)
 		m.Post("/:message_id/resend", h.requireRole(domain.RoleDeveloper), h.resendMessage)
@@ -118,6 +123,24 @@ func (h *Handlers) Register(app fiber.Router) {
 		v.Get("/health", h.health)
 		v.Get("/contacts", h.listContacts)
 		v.Get("/devices", h.listDevices)
+		if h.Contacts != nil {
+			ct := p.Group("/contacts", h.requireRole(domain.RoleDeveloper))
+			ct.Post("/", h.createContact)
+			ct.Get("/:contact_id", h.requireRole(domain.RoleViewer), h.getContact)
+			ct.Put("/:contact_id", h.updateContact)
+			ct.Delete("/:contact_id", h.deleteContact)
+		}
+		if h.Groups != nil {
+			g := p.Group("/groups", h.requireRole(domain.RoleViewer))
+			g.Get("/", h.listGroups)
+			g.Post("/", h.requireRole(domain.RoleDeveloper), h.createGroup)
+			g.Get("/:group_id", h.getGroup)
+			g.Put("/:group_id", h.requireRole(domain.RoleDeveloper), h.updateGroup)
+			g.Delete("/:group_id", h.requireRole(domain.RoleDeveloper), h.deleteGroup)
+			g.Get("/:group_id/members", h.listGroupMembers)
+			g.Post("/:group_id/members", h.requireRole(domain.RoleDeveloper), h.addGroupMembers)
+			g.Delete("/:group_id/members/:contact_id", h.requireRole(domain.RoleDeveloper), h.removeGroupMember)
+		}
 		p.Get("/audit-logs", h.requireRole(domain.RoleAdmin), h.auditLogs)
 	}
 

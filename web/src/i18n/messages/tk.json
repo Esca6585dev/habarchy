@@ -19,7 +19,9 @@
     "profile": "Profil",
     "logout": "Çykmak",
     "docs": "API resminamalary",
-    "queues": "Nobatlar"
+    "queues": "Nobatlar",
+    "groups": "Toparlar",
+    "compose": "Habar iber"
   },
   "common": {
     "save": "Ýatda sakla",
@@ -195,7 +197,14 @@
     "platform": "Platforma",
     "token": "Token",
     "lastSeen": "Soňky görlen",
-    "active": "Işjeň"
+    "active": "Işjeň",
+    "name": "Ady",
+    "whatsapp": "WhatsApp",
+    "slack": "Slack ID",
+    "new": "Täze kontakt",
+    "edit": "Kontakty üýtget",
+    "groups": "Toparlar",
+    "noGroups": "Hiç bir toparda däl"
   },
   "messages": {
     "title": "Habarlar",
@@ -312,6 +321,44 @@
     "email": "E-mail",
     "push": "Push",
     "telegram": "Telegram",
-    "auto": "Awto"
+    "auto": "Awto",
+    "whatsapp": "WhatsApp",
+    "slack": "Slack"
+  },
+  "groups": {
+    "title": "Toparlar",
+    "new": "Täze topar",
+    "name": "Ady",
+    "description": "Düşündiriş",
+    "members": "Agzalar",
+    "memberCount": "{n} agza",
+    "addMembers": "Agza goş",
+    "addHint": "Bar bolan kontaktlary saýlaň ýa-da täzelerini ýazyň (ady + telefon / e-mail / WhatsApp / Telegram / Slack).",
+    "pickContacts": "Bar bolan kontaktlar",
+    "newContacts": "Täze kontaktlar, her setirde biri: Ady, +99365…, mail@…",
+    "added": "{n} goşuldy, {created} täze kontakt",
+    "sendTo": "Topara iber",
+    "remove": "Aýyr",
+    "empty": "Heniz topar ýok. «Işdeşler», «Müşderiler»… dörediň we agza goşuň.",
+    "deleteHint": "Agzalar kontakt bolup galýar."
+  },
+  "compose": {
+    "title": "Habar iber",
+    "channel": "Kanal",
+    "targets": "Alyjylar",
+    "groups": "Toparlar",
+    "addresses": "Salgylar (her setirde biri)",
+    "addressesHint": "Kanala görä telefon belgileri, e-mail-ler, chat id-ler.",
+    "template": "Şablon",
+    "freeText": "Erkin tekst",
+    "subject": "Tema / sözbaşy",
+    "body": "Habar",
+    "data": "Şablon maglumatlary (JSON)",
+    "sandbox": "Synag tertibi (sandbox, hakykatda iberilmeýär)",
+    "send": "Iber",
+    "sent": "{accepted} nobata goýuldy, {rejected} ret edildi",
+    "viewBatch": "Habar logyny aç",
+    "pickTarget": "Iň azyndan bir topar ýa-da salgy saýlaň",
+    "whatsappHint": "Erkin tekst 24 sagatlyk penjirede işleýär; daşynda tassyklanan şablon gerek (metadata.wa_template)."
   }
 }

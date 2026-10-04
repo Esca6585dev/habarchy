@@ -91,7 +91,8 @@ WHERE project_id = @project_id
   AND (sqlc.narg('search')::text IS NULL
        OR phone ILIKE '%' || sqlc.narg('search')::text || '%'
        OR email ILIKE '%' || sqlc.narg('search')::text || '%'
-       OR external_id ILIKE '%' || sqlc.narg('search')::text || '%')
+       OR external_id ILIKE '%' || sqlc.narg('search')::text || '%'
+       OR name ILIKE '%' || sqlc.narg('search')::text || '%')
 ORDER BY created_at DESC LIMIT @row_limit OFFSET @row_offset;
 
 -- name: CountContacts :one

@@ -12,6 +12,8 @@ const (
 	ChannelEmail    Channel = "email"
 	ChannelPush     Channel = "push"
 	ChannelTelegram Channel = "telegram"
+	ChannelWhatsApp Channel = "whatsapp"
+	ChannelSlack    Channel = "slack"
 	// ChannelAuto is only valid on the public API: Habarchy picks the best
 	// channel for the contact. It is never stored on a message.
 	ChannelAuto Channel = "auto"
@@ -27,7 +29,7 @@ var DefaultAutoOrder = []Channel{ChannelPush, ChannelSMS, ChannelEmail}
 // Valid reports whether c is a deliverable channel (auto is excluded).
 func (c Channel) Valid() bool {
 	switch c {
-	case ChannelSMS, ChannelEmail, ChannelPush, ChannelTelegram:
+	case ChannelSMS, ChannelEmail, ChannelPush, ChannelTelegram, ChannelWhatsApp, ChannelSlack:
 		return true
 	}
 	return false
@@ -114,6 +116,10 @@ const (
 	// ProviderAndroidSMS is a phone running the Habarchy Gateway app: the
 	// worker queues SMS in its outbox and the phone sends them over its SIM.
 	ProviderAndroidSMS ProviderType = "android_sms"
+	// ProviderWhatsAppCloud is the Meta WhatsApp Business Cloud API.
+	ProviderWhatsAppCloud ProviderType = "whatsapp_cloud"
+	// ProviderSlack posts to Slack via a bot token or an incoming webhook.
+	ProviderSlack ProviderType = "slack"
 )
 
 // Channel returns the channel a provider type serves.
@@ -127,6 +133,10 @@ func (t ProviderType) Channel() Channel {
 		return ChannelPush
 	case ProviderTelegramBot:
 		return ChannelTelegram
+	case ProviderWhatsAppCloud:
+		return ChannelWhatsApp
+	case ProviderSlack:
+		return ChannelSlack
 	}
 	return ""
 }

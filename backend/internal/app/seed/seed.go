@@ -21,6 +21,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/templates"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
+	"github.com/Esca6585dev/habarchy/backend/pkg/ids"
 )
 
 // Options control what the seeder creates.
@@ -96,6 +97,12 @@ func (s *Seeder) Run(ctx context.Context, opt Options) (*Result, error) {
 			return nil, fmt.Errorf("template %s/%s/%s: %w", t.Key, t.Channel, t.Locale, err)
 		}
 		res.TemplatesCreated++
+	}
+
+	for _, g := range []string{"Işdeşler", "Müşderiler"} {
+		if _, err := s.DB.Queries.CreateGroup(ctx, sqlcgen.CreateGroupParams{ID: ids.New(), ProjectID: project.ID, Name: g}); err != nil && !postgres.IsUniqueViolation(err) {
+			return nil, err
+		}
 	}
 
 	stamp := time.Now().UTC().Format("2006-01-02 15:04")

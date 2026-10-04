@@ -23,7 +23,7 @@ import (
 // NewMux registers every task type.
 func NewMux(d *delivery.Service, w *webhooks.Service) *asynq.ServeMux {
 	mux := asynq.NewServeMux()
-	for _, t := range []string{queue.TaskSendSMS, queue.TaskSendEmail, queue.TaskSendPush, queue.TaskSendTelegram} {
+	for _, t := range []string{queue.TaskSendSMS, queue.TaskSendEmail, queue.TaskSendPush, queue.TaskSendTelegram, queue.TaskSendWhatsApp, queue.TaskSendSlack} {
 		mux.HandleFunc(t, d.HandleTask)
 	}
 	mux.HandleFunc(queue.TaskWebhook, func(ctx context.Context, t *asynq.Task) error {

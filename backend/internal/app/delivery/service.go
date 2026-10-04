@@ -160,6 +160,8 @@ func (s *Service) attempt(ctx context.Context, msg *sqlcgen.Message, prov *sqlcg
 		res, err = adapter.(ports.EmailProvider).Send(sendCtx, emailFrom(msg))
 	case domain.ChannelTelegram:
 		res, err = adapter.(ports.TelegramProvider).Send(sendCtx, ports.TelegramMessage{ChatID: msg.ToAddress, Text: msg.RenderedBody, ParseMode: metaString(msg, "parse_mode")})
+	case domain.ChannelWhatsApp, domain.ChannelSlack:
+		res, err = adapter.(ports.ChatProvider).Send(sendCtx, ports.ChatMessage{To: msg.ToAddress, Text: msg.RenderedBody, Subject: msg.RenderedSubject, Extra: metaMap(msg)})
 	case domain.ChannelPush:
 		var pr *ports.PushResult
 		pr, err = adapter.(ports.PushProvider).Send(sendCtx, ports.PushMessage{
@@ -206,7 +208,7 @@ func (s *Service) succeed(ctx context.Context, msg *sqlcgen.Message, prov *sqlcg
 	s.emit(ctx, msg, domain.WebhookMessageSent)
 	// Sandbox and channels without receipts are final at "sent"; push and
 	// telegram have no DLR concept, so count them delivered.
-	if msg.IsTest || msg.Channel == sqlcgen.ChannelPush || msg.Channel == sqlcgen.ChannelTelegram {
+	if msg.IsTest || msg.Channel == sqlcgen.ChannelPush || msg.Channel == sqlcgen.ChannelTelegram || msg.Channel == sqlcgen.ChannelSlack {
 		return s.MarkDelivered(ctx, msg.ID, map[string]any{"implicit": true})
 	}
 	s.afterTerminal(ctx, msg)
@@ -397,6 +399,13 @@ func metaString(msg *sqlcgen.Message, key string) string {
 		return v
 	}
 	return ""
+}
+
+// metaMap returns the whole metadata object (provider-specific options).
+func metaMap(msg *sqlcgen.Message) map[string]any {
+	var m map[string]any
+	_ = json.Unmarshal(msg.Metadata, &m)
+	return m
 }
 
 func metaStringMap(msg *sqlcgen.Message, key string) map[string]string {

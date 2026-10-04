@@ -20,6 +20,8 @@ const (
 	ChannelEmail    Channel = "email"
 	ChannelPush     Channel = "push"
 	ChannelTelegram Channel = "telegram"
+	ChannelWhatsapp Channel = "whatsapp"
+	ChannelSlack    Channel = "slack"
 )
 
 func (e *Channel) Scan(src interface{}) error {
@@ -62,7 +64,9 @@ func (e Channel) Valid() bool {
 	case ChannelSms,
 		ChannelEmail,
 		ChannelPush,
-		ChannelTelegram:
+		ChannelTelegram,
+		ChannelWhatsapp,
+		ChannelSlack:
 		return true
 	}
 	return false
@@ -74,6 +78,8 @@ func AllChannelValues() []Channel {
 		ChannelEmail,
 		ChannelPush,
 		ChannelTelegram,
+		ChannelWhatsapp,
+		ChannelSlack,
 	}
 }
 
@@ -473,12 +479,14 @@ func AllProjectStatusValues() []ProjectStatus {
 type ProviderType string
 
 const (
-	ProviderTypeHttpSms     ProviderType = "http_sms"
-	ProviderTypeSmpp        ProviderType = "smpp"
-	ProviderTypeSmtp        ProviderType = "smtp"
-	ProviderTypeFcm         ProviderType = "fcm"
-	ProviderTypeTelegramBot ProviderType = "telegram_bot"
-	ProviderTypeAndroidSms  ProviderType = "android_sms"
+	ProviderTypeHttpSms       ProviderType = "http_sms"
+	ProviderTypeSmpp          ProviderType = "smpp"
+	ProviderTypeSmtp          ProviderType = "smtp"
+	ProviderTypeFcm           ProviderType = "fcm"
+	ProviderTypeTelegramBot   ProviderType = "telegram_bot"
+	ProviderTypeAndroidSms    ProviderType = "android_sms"
+	ProviderTypeWhatsappCloud ProviderType = "whatsapp_cloud"
+	ProviderTypeSlack         ProviderType = "slack"
 )
 
 func (e *ProviderType) Scan(src interface{}) error {
@@ -523,7 +531,9 @@ func (e ProviderType) Valid() bool {
 		ProviderTypeSmtp,
 		ProviderTypeFcm,
 		ProviderTypeTelegramBot,
-		ProviderTypeAndroidSms:
+		ProviderTypeAndroidSms,
+		ProviderTypeWhatsappCloud,
+		ProviderTypeSlack:
 		return true
 	}
 	return false
@@ -537,6 +547,8 @@ func AllProviderTypeValues() []ProviderType {
 		ProviderTypeFcm,
 		ProviderTypeTelegramBot,
 		ProviderTypeAndroidSms,
+		ProviderTypeWhatsappCloud,
+		ProviderTypeSlack,
 	}
 }
 
@@ -597,6 +609,24 @@ type Contact struct {
 	Attributes     json.RawMessage
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+	Name           string
+	Whatsapp       string
+	SlackID        string
+}
+
+type ContactGroup struct {
+	ID          uuid.UUID
+	ProjectID   uuid.UUID
+	Name        string
+	Description string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+type ContactGroupMember struct {
+	GroupID   uuid.UUID
+	ContactID uuid.UUID
+	AddedAt   time.Time
 }
 
 type Device struct {

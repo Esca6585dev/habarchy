@@ -71,7 +71,11 @@ type batchRequest struct {
 	Recipients     []struct {
 		To   RecipientRef   `json:"to"`
 		Data map[string]any `json:"data"`
-	} `json:"recipients" validate:"required,min=1"`
+	} `json:"recipients"`
+	// GroupIDs sends to every member of these contact groups.
+	GroupIDs []uuid.UUID `json:"group_ids"`
+	// Data is shared template data for every recipient (own data overlays it).
+	Data map[string]any `json:"data"`
 }
 
 // MessageResponse is the public shape of a message.
@@ -171,9 +175,12 @@ type otpVerifyRequest struct {
 
 type contactRequest struct {
 	ExternalID     string         `json:"external_id" validate:"max=128"`
+	Name           string         `json:"name" validate:"max=200"`
 	Phone          string         `json:"phone" validate:"max=32"`
 	Email          string         `json:"email" validate:"max=254"`
+	WhatsApp       string         `json:"whatsapp" validate:"max=32"`
 	TelegramChatID string         `json:"telegram_chat_id" validate:"max=64"`
+	SlackID        string         `json:"slack_id" validate:"max=64"`
 	Locale         domain.Locale  `json:"locale"`
 	Tags           []string       `json:"tags" validate:"max=50,dive,max=64"`
 	Attributes     map[string]any `json:"attributes"`
@@ -183,9 +190,12 @@ type contactRequest struct {
 type ContactResponse struct {
 	ID             uuid.UUID       `json:"id"`
 	ExternalID     string          `json:"external_id"`
+	Name           string          `json:"name"`
 	Phone          string          `json:"phone"`
 	Email          string          `json:"email"`
+	WhatsApp       string          `json:"whatsapp"`
 	TelegramChatID string          `json:"telegram_chat_id"`
+	SlackID        string          `json:"slack_id"`
 	Locale         string          `json:"locale"`
 	Tags           []string        `json:"tags"`
 	Attributes     json.RawMessage `json:"attributes"`
@@ -195,8 +205,8 @@ type ContactResponse struct {
 
 // ToContact converts a row.
 func ToContact(c *sqlcgen.Contact) ContactResponse {
-	return ContactResponse{ID: c.ID, ExternalID: c.ExternalID, Phone: c.Phone, Email: c.Email, TelegramChatID: c.TelegramChatID,
-		Locale: c.Locale, Tags: c.Tags, Attributes: c.Attributes, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
+	return ContactResponse{ID: c.ID, ExternalID: c.ExternalID, Name: c.Name, Phone: c.Phone, Email: c.Email, WhatsApp: c.Whatsapp,
+		TelegramChatID: c.TelegramChatID, SlackID: c.SlackID, Locale: c.Locale, Tags: c.Tags, Attributes: c.Attributes, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
 }
 
 type deviceRequest struct {

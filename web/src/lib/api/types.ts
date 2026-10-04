@@ -31,3 +31,6 @@ export interface Envelope<T> {
 }
 
 export type GatewayPairing = components["schemas"]["GatewayPairing"];
+export type Group = Schemas["Group"];
+export type AdminSendRequest = Schemas["AdminSendRequest"];
+export type GroupMembersResult = Schemas["GroupMembersResult"];

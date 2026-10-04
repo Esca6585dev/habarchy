@@ -3,8 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
-  Activity, BookOpen, Contact, FileText, Gauge, KeyRound, LayoutDashboard, ListOrdered, MessageSquare, Plug, Settings, ShieldCheck, Webhook,
-} from "lucide-react";
+  Activity, BookOpen, Contact, FileText, Gauge, KeyRound, LayoutDashboard, ListOrdered, MessageSquare, Plug, Settings, ShieldCheck, Webhook, Send, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProjectSwitcher } from "./project-switcher";
 import { useProject } from "@/components/project-context";
@@ -19,6 +18,8 @@ export function Sidebar({ className, onNavigate }: { className?: string; onNavig
     { href: "/templates", label: t("templates"), icon: FileText },
     { href: "/providers", label: t("providers"), icon: Plug, min: "admin" as const },
     { href: "/api-keys", label: t("apiKeys"), icon: KeyRound, min: "developer" as const },
+    { href: "/compose", label: t("compose"), icon: Send, min: "developer" as const },
+    { href: "/groups", label: t("groups"), icon: Users },
     { href: "/contacts", label: t("contacts"), icon: Contact },
     { href: "/webhooks", label: t("webhooks"), icon: Webhook },
     { href: "/usage", label: t("usage"), icon: Gauge },

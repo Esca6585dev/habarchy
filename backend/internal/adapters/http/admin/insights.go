@@ -128,7 +128,11 @@ func (h *Handlers) listContacts(c *fiber.Ctx) error {
 		return err
 	}
 	total, _ := h.DB.Queries.CountContacts(c.UserContext(), membership(c).Project.ID)
-	return httpx.JSON(c, fiber.StatusOK, rows, fiber.Map{"total": total, "limit": page.Limit, "offset": page.Offset})
+	out := make([]ContactResponse, 0, len(rows))
+	for i := range rows {
+		out = append(out, toContact(&rows[i]))
+	}
+	return httpx.JSON(c, fiber.StatusOK, out, fiber.Map{"total": total, "limit": page.Limit, "offset": page.Offset})
 }
 
 func (h *Handlers) listDevices(c *fiber.Ctx) error {

@@ -13,12 +13,13 @@ import (
 )
 
 const adminListContacts = `-- name: AdminListContacts :many
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at FROM contacts
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts
 WHERE project_id = $1
   AND ($2::text IS NULL
        OR phone ILIKE '%' || $2::text || '%'
        OR email ILIKE '%' || $2::text || '%'
-       OR external_id ILIKE '%' || $2::text || '%')
+       OR external_id ILIKE '%' || $2::text || '%'
+       OR name ILIKE '%' || $2::text || '%')
 ORDER BY created_at DESC LIMIT $4 OFFSET $3
 `
 
@@ -55,6 +56,9 @@ func (q *Queries) AdminListContacts(ctx context.Context, arg AdminListContactsPa
 			&i.Attributes,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Name,
+			&i.Whatsapp,
+			&i.SlackID,
 		); err != nil {
 			return nil, err
 		}

@@ -64,3 +64,11 @@ type Telegram struct{ Provider }
 func (t Telegram) Send(_ context.Context, m ports.TelegramMessage) (*ports.SendResult, error) {
 	return t.result(m.ChatID, m.Text)
 }
+
+// Chat satisfies ports.ChatProvider (WhatsApp, Slack).
+type Chat struct{ Provider }
+
+// Send (chat).
+func (c Chat) Send(_ context.Context, m ports.ChatMessage) (*ports.SendResult, error) {
+	return c.result(m.To, m.Text)
+}

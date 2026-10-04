@@ -1,6 +1,6 @@
 -- name: CreateContact :one
-INSERT INTO contacts (project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes)
-VALUES (@project_id, @external_id, @phone, @email, @telegram_chat_id, @locale, @tags, @attributes)
+INSERT INTO contacts (project_id, external_id, name, phone, email, whatsapp, telegram_chat_id, slack_id, locale, tags, attributes)
+VALUES (@project_id, @external_id, @name, @phone, @email, @whatsapp, @telegram_chat_id, @slack_id, @locale, @tags, @attributes)
 RETURNING *;
 
 -- name: GetContact :one
@@ -22,16 +22,20 @@ WHERE project_id = @project_id
   AND (sqlc.narg('search')::text IS NULL
        OR phone ILIKE '%' || sqlc.narg('search')::text || '%'
        OR email ILIKE '%' || sqlc.narg('search')::text || '%'
-       OR external_id ILIKE '%' || sqlc.narg('search')::text || '%')
+       OR external_id ILIKE '%' || sqlc.narg('search')::text || '%'
+       OR name ILIKE '%' || sqlc.narg('search')::text || '%')
 ORDER BY created_at DESC
 LIMIT @row_limit OFFSET @row_offset;
 
 -- name: UpdateContact :one
 UPDATE contacts SET
     external_id      = @external_id,
+    name             = @name,
     phone            = @phone,
     email            = @email,
+    whatsapp         = @whatsapp,
     telegram_chat_id = @telegram_chat_id,
+    slack_id         = @slack_id,
     locale           = @locale,
     tags             = @tags,
     attributes       = @attributes,

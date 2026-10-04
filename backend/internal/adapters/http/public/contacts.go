@@ -16,8 +16,8 @@ func otpInput(req otpSendRequest, ip string) otp.SendInput {
 }
 
 func contactInput(req contactRequest) contacts.Input {
-	return contacts.Input{ExternalID: req.ExternalID, Phone: req.Phone, Email: req.Email, TelegramChatID: req.TelegramChatID,
-		Locale: req.Locale, Tags: req.Tags, Attributes: req.Attributes}
+	return contacts.Input{ExternalID: req.ExternalID, Name: req.Name, Phone: req.Phone, Email: req.Email, WhatsApp: req.WhatsApp,
+		TelegramChatID: req.TelegramChatID, SlackID: req.SlackID, Locale: req.Locale, Tags: req.Tags, Attributes: req.Attributes}
 }
 
 func (h *Handlers) listContacts(c *fiber.Ctx) error {

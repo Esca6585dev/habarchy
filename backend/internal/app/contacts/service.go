@@ -28,9 +28,12 @@ func New(db *postgres.DB) *Service { return &Service{db: db} }
 // Input is the payload for Create and Update.
 type Input struct {
 	ExternalID     string
+	Name           string
 	Phone          string
 	Email          string
+	WhatsApp       string // E.164; empty = same as Phone
 	TelegramChatID string
+	SlackID        string
 	Locale         domain.Locale
 	Tags           []string
 	Attributes     map[string]any
@@ -52,6 +55,15 @@ func (in *Input) normalize() error {
 		}
 	}
 	in.TelegramChatID = strings.TrimSpace(in.TelegramChatID)
+	in.Name = strings.TrimSpace(in.Name)
+	in.SlackID = strings.TrimSpace(in.SlackID)
+	if in.WhatsApp = strings.TrimSpace(in.WhatsApp); in.WhatsApp != "" {
+		p, err := phone.Normalize(in.WhatsApp, "")
+		if err != nil {
+			details["whatsapp"] = "invalid phone number"
+		}
+		in.WhatsApp = p
+	}
 	if in.Locale == "" {
 		in.Locale = domain.DefaultLocale
 	}
@@ -64,8 +76,8 @@ func (in *Input) normalize() error {
 	if in.Attributes == nil {
 		in.Attributes = map[string]any{}
 	}
-	if in.Phone == "" && in.Email == "" && in.TelegramChatID == "" && in.ExternalID == "" {
-		details["contact"] = "at least one of external_id, phone, email, telegram_chat_id is required"
+	if in.Phone == "" && in.Email == "" && in.TelegramChatID == "" && in.ExternalID == "" && in.WhatsApp == "" && in.SlackID == "" {
+		details["contact"] = "at least one of external_id, phone, email, whatsapp, telegram_chat_id, slack_id is required"
 	}
 	if len(details) > 0 {
 		return domain.ErrValidation.WithDetails(details)
@@ -80,8 +92,8 @@ func (s *Service) Create(ctx context.Context, projectID uuid.UUID, in Input) (*s
 	}
 	attrs, _ := json.Marshal(in.Attributes)
 	c, err := s.db.Queries.CreateContact(ctx, sqlcgen.CreateContactParams{
-		ProjectID: projectID, ExternalID: in.ExternalID, Phone: in.Phone, Email: in.Email, TelegramChatID: in.TelegramChatID,
-		Locale: string(in.Locale), Tags: in.Tags, Attributes: attrs,
+		ProjectID: projectID, ExternalID: in.ExternalID, Name: in.Name, Phone: in.Phone, Email: in.Email, Whatsapp: in.WhatsApp,
+		TelegramChatID: in.TelegramChatID, SlackID: in.SlackID, Locale: string(in.Locale), Tags: in.Tags, Attributes: attrs,
 	})
 	if err != nil {
 		if postgres.IsUniqueViolation(err) {
@@ -154,8 +166,8 @@ func (s *Service) Update(ctx context.Context, projectID, id uuid.UUID, in Input)
 		}
 	}
 	c, err := s.db.Queries.UpdateContact(ctx, sqlcgen.UpdateContactParams{
-		ID: id, ProjectID: projectID, ExternalID: in.ExternalID, Phone: in.Phone, Email: in.Email, TelegramChatID: in.TelegramChatID,
-		Locale: string(in.Locale), Tags: in.Tags, Attributes: attrs,
+		ID: id, ProjectID: projectID, ExternalID: in.ExternalID, Name: in.Name, Phone: in.Phone, Email: in.Email, Whatsapp: in.WhatsApp,
+		TelegramChatID: in.TelegramChatID, SlackID: in.SlackID, Locale: string(in.Locale), Tags: in.Tags, Attributes: attrs,
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

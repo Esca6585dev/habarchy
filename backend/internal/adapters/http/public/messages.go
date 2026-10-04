@@ -42,7 +42,10 @@ func (h *Handlers) sendBatch(c *fiber.Ctx) error {
 	}
 	in := messages.BatchInput{
 		Channel: req.Channel, Template: req.Template, Subject: req.Subject, Title: req.Title, Body: req.Body, Locale: req.Locale,
-		ScheduledAt: req.ScheduledAt, Priority: req.Priority, IdempotencyKey: req.IdempotencyKey, Metadata: req.Metadata,
+		ScheduledAt: req.ScheduledAt, Priority: req.Priority, IdempotencyKey: req.IdempotencyKey, Metadata: req.Metadata, GroupIDs: req.GroupIDs, Data: req.Data,
+	}
+	if len(req.Recipients) == 0 && len(req.GroupIDs) == 0 {
+		return domain.ErrValidation.WithDetails(map[string]any{"recipients": "recipients or group_ids required"})
 	}
 	for _, r := range req.Recipients {
 		in.Recipients = append(in.Recipients, messages.BatchRecipient{Recipient: r.To.toDomain(), Data: r.Data})

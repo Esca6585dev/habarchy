@@ -19,7 +19,9 @@
     "profile": "Profile",
     "logout": "Sign out",
     "docs": "API docs",
-    "queues": "Queues"
+    "queues": "Queues",
+    "groups": "Groups",
+    "compose": "Send message"
   },
   "common": {
     "save": "Save",
@@ -195,7 +197,14 @@
     "platform": "Platform",
     "token": "Token",
     "lastSeen": "Last seen",
-    "active": "Active"
+    "active": "Active",
+    "name": "Name",
+    "whatsapp": "WhatsApp",
+    "slack": "Slack ID",
+    "new": "New contact",
+    "edit": "Edit contact",
+    "groups": "Groups",
+    "noGroups": "Not in any group"
   },
   "messages": {
     "title": "Messages",
@@ -312,6 +321,44 @@
     "email": "Email",
     "push": "Push",
     "telegram": "Telegram",
-    "auto": "Auto"
+    "auto": "Auto",
+    "whatsapp": "WhatsApp",
+    "slack": "Slack"
+  },
+  "groups": {
+    "title": "Groups",
+    "new": "New group",
+    "name": "Name",
+    "description": "Description",
+    "members": "Members",
+    "memberCount": "{n} members",
+    "addMembers": "Add members",
+    "addHint": "Pick existing contacts or type new ones (name + phone / e-mail / WhatsApp / Telegram / Slack).",
+    "pickContacts": "Existing contacts",
+    "newContacts": "New contacts, one per line: Name, +99365…, mail@…",
+    "added": "{n} added, {created} new contacts",
+    "sendTo": "Send to group",
+    "remove": "Remove",
+    "empty": "No groups yet. Create “Colleagues”, “Customers”… and add members.",
+    "deleteHint": "Members stay as contacts."
+  },
+  "compose": {
+    "title": "Send message",
+    "channel": "Channel",
+    "targets": "Recipients",
+    "groups": "Groups",
+    "addresses": "Addresses (one per line)",
+    "addressesHint": "Phone numbers, e-mails, chat ids — depending on the channel.",
+    "template": "Template",
+    "freeText": "Free text",
+    "subject": "Subject / title",
+    "body": "Message",
+    "data": "Template data (JSON)",
+    "sandbox": "Test mode (sandbox, nothing is really sent)",
+    "send": "Send",
+    "sent": "{accepted} queued, {rejected} rejected",
+    "viewBatch": "Open message log",
+    "pickTarget": "Choose at least one group or address",
+    "whatsappHint": "Free text works inside the 24 h window; outside it use an approved template via metadata.wa_template."
   }
 }

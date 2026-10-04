@@ -25,6 +25,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/app/delivery"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/events"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/gateway"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/groups"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
@@ -156,6 +157,7 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 	messageSvc.Events, deliverySvc.Events = publisher, publisher
 	statsSvc := stats.New(db, q)
 	gatewaySvc := gateway.New(db, deliverySvc, webhookSvc)
+	groupSvc := groups.New(db, contactSvc)
 
 	app := httpadapter.NewServer(cfg, log, httpadapter.Deps{DB: db, Redis: rdb})
 	httpadapter.RegisterDocs(app)
@@ -166,11 +168,12 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 	queueUI := asynqmon.New(asynqmon.Options{RootPath: "/admin/queues", RedisConnOpt: queue.RedisOpt(rdb.Options())})
 	(&admin.Handlers{
 		Auth: authSvc, Projects: projectSvc, Templates: templateSvc, Providers: providerSvc, Messages: messageSvc,
+		Contacts: contactSvc, Groups: groupSvc,
 		Webhooks: webhookSvc, Stats: statsSvc, DB: db, Redis: rdb.Raw(), QueueUI: queueUI, PublicURL: cfg.HTTP.PublicURL,
 	}).Register(app)
 	(&gatewayhttp.Handlers{Gateway: gatewaySvc}).Register(app)
 	(&public.Handlers{
-		Projects: projectSvc, Templates: templateSvc, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc,
+		Projects: projectSvc, Templates: templateSvc, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc, Groups: groupSvc,
 		Providers: providerSvc, Delivery: deliverySvc, Stats: statsSvc, SignatureTolerance: cfg.Security.SignatureTolerance,
 		APIRatePerSec: cfg.Limits.APIRatePerSec, Limiter: rdb,
 	}).Register(app)

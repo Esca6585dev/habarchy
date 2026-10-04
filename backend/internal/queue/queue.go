@@ -19,6 +19,8 @@ const (
 	QueueEmail    = "email"
 	QueuePush     = "push"
 	QueueTelegram = "telegram"
+	QueueWhatsApp = "whatsapp"
+	QueueSlack    = "slack"
 	QueueWebhooks = "webhooks"
 )
 
@@ -28,6 +30,8 @@ const (
 	TaskSendEmail    = "send:email"
 	TaskSendPush     = "send:push"
 	TaskSendTelegram = "send:telegram"
+	TaskSendWhatsApp = "send:whatsapp"
+	TaskSendSlack    = "send:slack"
 	TaskWebhook      = "webhook:deliver"
 )
 
@@ -38,6 +42,8 @@ func Weights() map[string]int {
 		QueuePush:     6,
 		QueueSMS:      6,
 		QueueTelegram: 4,
+		QueueWhatsApp: 4,
+		QueueSlack:    3,
 		QueueEmail:    3,
 		QueueWebhooks: 2,
 	}
@@ -54,6 +60,10 @@ func ForChannel(ch domain.Channel) (queueName, taskType string, err error) {
 		return QueuePush, TaskSendPush, nil
 	case domain.ChannelTelegram:
 		return QueueTelegram, TaskSendTelegram, nil
+	case domain.ChannelWhatsApp:
+		return QueueWhatsApp, TaskSendWhatsApp, nil
+	case domain.ChannelSlack:
+		return QueueSlack, TaskSendSlack, nil
 	}
 	return "", "", fmt.Errorf("queue: no queue for channel %q", ch)
 }

@@ -150,6 +150,11 @@ type BatchInput struct {
 	Metadata       map[string]any
 	Title          string
 	Recipients     []BatchRecipient
+	// GroupIDs expands to every member of the contact groups (deduplicated
+	// with Recipients that reference the same contact).
+	GroupIDs []uuid.UUID
+	// Data is shared template data; a recipient's own Data overlays it.
+	Data map[string]any
 }
 
 // BatchRecipient is one entry of a batch.
@@ -176,6 +181,29 @@ type BatchRejection struct {
 // SendBatch creates one batch and up to BatchMaxRecipients messages.
 // Invalid recipients are reported, not fatal, unless all are invalid.
 func (s *Service) SendBatch(ctx context.Context, caller Caller, in BatchInput) (*BatchResult, error) {
+	if len(in.GroupIDs) > 0 {
+		ids, err := s.db.Queries.ListGroupContactIDs(ctx, sqlcgen.ListGroupContactIDsParams{GroupIds: in.GroupIDs, ProjectID: caller.Project.ID})
+		if err != nil {
+			return nil, err
+		}
+		seen := map[uuid.UUID]bool{}
+		for _, r := range in.Recipients {
+			if r.ContactID != nil {
+				seen[*r.ContactID] = true
+			}
+		}
+		for _, id := range ids {
+			if seen[id] {
+				continue
+			}
+			seen[id] = true
+			cid := id
+			in.Recipients = append(in.Recipients, BatchRecipient{Recipient: Recipient{ContactID: &cid}})
+		}
+		if len(in.Recipients) == 0 {
+			return nil, domain.ErrInvalidRecipient.WithMessage("the selected groups have no members")
+		}
+	}
 	if len(in.Recipients) == 0 {
 		return nil, domain.ErrValidation.WithDetails(map[string]any{"recipients": "required"})
 	}
@@ -201,7 +229,7 @@ func (s *Service) SendBatch(ctx context.Context, caller Caller, in BatchInput) (
 	var rejected []BatchRejection
 	for i, r := range in.Recipients {
 		one := base
-		one.To, one.Data = r.Recipient, mergeData(nil, r.Data)
+		one.To, one.Data = r.Recipient, overlay(in.Data, r.Data)
 		p, err := s.prepare(ctx, caller, one)
 		if err != nil {
 			rejected = append(rejected, BatchRejection{Index: i, To: describe(r.Recipient), Reason: reason(err)})
@@ -446,6 +474,17 @@ func (s *Service) addressesFor(ctx context.Context, c *sqlcgen.Contact, ch domai
 		if c.TelegramChatID != "" {
 			return []string{c.TelegramChatID}, nil
 		}
+	case domain.ChannelWhatsApp:
+		if c.Whatsapp != "" {
+			return []string{c.Whatsapp}, nil
+		}
+		if c.Phone != "" {
+			return []string{c.Phone}, nil
+		}
+	case domain.ChannelSlack:
+		if c.SlackID != "" {
+			return []string{c.SlackID}, nil
+		}
 	case domain.ChannelPush:
 		return s.contacts.ActiveTokens(ctx, c.ID)
 	}
@@ -455,12 +494,17 @@ func (s *Service) addressesFor(ctx context.Context, c *sqlcgen.Contact, ch domai
 func normalizeAddress(ch domain.Channel, raw string) (string, error) {
 	raw = strings.TrimSpace(raw)
 	switch ch {
-	case domain.ChannelSMS:
+	case domain.ChannelSMS, domain.ChannelWhatsApp:
 		p, err := phone.Normalize(raw, "")
 		if err != nil {
 			return "", domain.ErrInvalidRecipient.WithMessage("invalid phone number")
 		}
 		return p, nil
+	case domain.ChannelSlack:
+		if raw == "" || strings.ContainsAny(raw, " \n") {
+			return "", domain.ErrInvalidRecipient.WithMessage("invalid slack channel or user id")
+		}
+		return raw, nil
 	case domain.ChannelEmail:
 		raw = strings.ToLower(raw)
 		if _, err := mail.ParseAddress(raw); err != nil || strings.ContainsAny(raw, " <>") {
@@ -481,6 +525,21 @@ func normalizeAddress(ch domain.Channel, raw string) (string, error) {
 	return "", domain.ErrValidation.WithDetails(map[string]any{"channel": "unknown"})
 }
 
+// overlay returns shared data with per-recipient data on top.
+func overlay(shared, own map[string]any) map[string]any {
+	if len(shared) == 0 {
+		return mergeData(nil, own)
+	}
+	out := make(map[string]any, len(shared)+len(own))
+	for k, v := range shared {
+		out[k] = v
+	}
+	for k, v := range own {
+		out[k] = v
+	}
+	return out
+}
+
 // mergeData exposes contact attributes to templates under the data map,
 // with explicit data winning. Contact fields are available as
 // {{.contact.phone}} etc.
@@ -492,7 +551,10 @@ func mergeData(c *sqlcgen.Contact, data map[string]any) map[string]any {
 		for k, v := range attrs {
 			out[k] = v
 		}
-		out["contact"] = map[string]any{"id": c.ID.String(), "external_id": c.ExternalID, "phone": c.Phone, "email": c.Email, "locale": c.Locale}
+		out["contact"] = map[string]any{"id": c.ID.String(), "external_id": c.ExternalID, "name": c.Name, "phone": c.Phone, "email": c.Email, "locale": c.Locale}
+		if _, ok := out["name"]; !ok && c.Name != "" {
+			out["name"] = c.Name
+		}
 	}
 	for k, v := range data {
 		out[k] = v

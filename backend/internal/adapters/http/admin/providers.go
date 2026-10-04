@@ -161,6 +161,8 @@ func (h *Handlers) testSendProvider(c *fiber.Ctx) error {
 		res, err = adapter.(ports.EmailProvider).Send(c.UserContext(), ports.EmailMessage{To: req.To, Subject: subject, Text: text})
 	case domain.ChannelTelegram:
 		res, err = adapter.(ports.TelegramProvider).Send(c.UserContext(), ports.TelegramMessage{ChatID: req.To, Text: text})
+	case domain.ChannelWhatsApp, domain.ChannelSlack:
+		res, err = adapter.(ports.ChatProvider).Send(c.UserContext(), ports.ChatMessage{To: req.To, Text: text, Subject: subject})
 	case domain.ChannelPush:
 		var pr *ports.PushResult
 		pr, err = adapter.(ports.PushProvider).Send(c.UserContext(), ports.PushMessage{Tokens: []string{req.To}, Title: subject, Body: text})

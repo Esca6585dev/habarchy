@@ -588,6 +588,224 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List contact groups */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: components["responses"]["GroupList"];
+            };
+        };
+        put?: never;
+        /** Create a group */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GroupRequest"];
+                };
+            };
+            responses: {
+                201: components["responses"]["Group"];
+                409: components["responses"]["Error"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        /** Get a group */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    group_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: components["responses"]["Group"];
+            };
+        };
+        /** Rename a group */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    group_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GroupRequest"];
+                };
+            };
+            responses: {
+                200: components["responses"]["Group"];
+            };
+        };
+        post?: never;
+        /** Delete a group (contacts stay) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    group_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        /** List members */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: components["parameters"]["Limit"];
+                    offset?: components["parameters"]["Offset"];
+                };
+                header?: never;
+                path: {
+                    group_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: components["responses"]["ContactList"];
+            };
+        };
+        put?: never;
+        /** Add members (existing contacts or new ones inline) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    group_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GroupMembersRequest"];
+                };
+            };
+            responses: {
+                /** @description Result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Envelope"] & {
+                            data?: components["schemas"]["GroupMembersResult"];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}/members/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a member */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    group_id: string;
+                    contact_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Removed */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/contacts": {
         parameters: {
             query?: never;
@@ -3092,8 +3310,384 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /** Create or upsert (by external_id) a contact */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                };
+                cookie?: never;
+            };
+            requestBody: components["requestBodies"]["Contact"];
+            responses: {
+                200: components["responses"]["Contact"];
+                201: components["responses"]["Contact"];
+            };
+        };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/projects/{project_id}/contacts/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectID"];
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        /** Contact with its groups */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                    contact_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Contact + groups */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Envelope"] & {
+                            data?: {
+                                contact?: components["schemas"]["Contact"];
+                                groups?: components["schemas"]["Group"][];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        /** Update a contact */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                    contact_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: components["requestBodies"]["Contact"];
+            responses: {
+                200: components["responses"]["Contact"];
+            };
+        };
+        post?: never;
+        /** Delete a contact */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                    contact_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/projects/{project_id}/messages/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Compose and send to groups, contacts and/or raw addresses (developer role) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AdminSendRequest"];
+                };
+            };
+            responses: {
+                /** @description Batch created; `meta.accepted` / `meta.rejected` */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BatchEnvelope"];
+                    };
+                };
+                400: components["responses"]["Error"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/projects/{project_id}/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectID"];
+            };
+            cookie?: never;
+        };
+        /** List contact groups */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: components["responses"]["GroupList"];
+            };
+        };
+        put?: never;
+        /** Create a group */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GroupRequest"];
+                };
+            };
+            responses: {
+                201: components["responses"]["Group"];
+                409: components["responses"]["Error"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/projects/{project_id}/groups/{group_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectID"];
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        /** Get a group */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                    group_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: components["responses"]["Group"];
+            };
+        };
+        /** Rename a group */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                    group_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GroupRequest"];
+                };
+            };
+            responses: {
+                200: components["responses"]["Group"];
+            };
+        };
+        post?: never;
+        /** Delete a group (contacts stay) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                    group_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/projects/{project_id}/groups/{group_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectID"];
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        /** List members */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: components["parameters"]["Limit"];
+                    offset?: components["parameters"]["Offset"];
+                };
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                    group_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                200: components["responses"]["ContactList"];
+            };
+        };
+        put?: never;
+        /** Add members (existing contacts or new ones inline) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                    group_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GroupMembersRequest"];
+                };
+            };
+            responses: {
+                /** @description Result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Envelope"] & {
+                            data?: components["schemas"]["GroupMembersResult"];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/projects/{project_id}/groups/{group_id}/members/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: components["parameters"]["ProjectID"];
+                group_id: string;
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a member */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    project_id: components["parameters"]["ProjectID"];
+                    group_id: string;
+                    contact_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Removed */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -3167,7 +3761,7 @@ export interface components {
             };
         };
         /** @enum {string} */
-        Channel: "sms" | "email" | "push" | "telegram";
+        Channel: "sms" | "email" | "push" | "telegram" | "whatsapp" | "slack";
         /** @enum {string} */
         ChannelOrAuto: "sms" | "email" | "push" | "telegram" | "auto";
         /** @enum {string} */
@@ -3179,7 +3773,7 @@ export interface components {
         /** @enum {string} */
         Role: "owner" | "admin" | "developer" | "viewer";
         /** @enum {string} */
-        ProviderType: "http_sms" | "smpp" | "android_sms" | "smtp" | "fcm" | "telegram_bot";
+        ProviderType: "http_sms" | "smpp" | "android_sms" | "smtp" | "fcm" | "telegram_bot" | "whatsapp_cloud" | "slack";
         /** @enum {string} */
         Scope: "messages:send" | "messages:read" | "otp" | "templates" | "contacts" | "devices" | "usage";
         /** @description A raw address (E.164 phone, email, FCM token, chat id) or a contact reference. */
@@ -3212,8 +3806,15 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** @description `recipients` and/or `group_ids` are required */
         SendBatchRequest: {
             channel?: components["schemas"]["Channel"];
+            /** @description send to every member of these contact groups */
+            group_ids?: string[];
+            /** @description shared template data (a recipient's own data overlays it) */
+            data?: {
+                [key: string]: unknown;
+            };
             template?: string;
             subject?: string;
             title?: string;
@@ -3226,7 +3827,7 @@ export interface components {
             metadata?: {
                 [key: string]: unknown;
             };
-            recipients: {
+            recipients?: {
                 to: components["schemas"]["Recipient"];
                 data?: {
                     [key: string]: unknown;
@@ -3410,22 +4011,80 @@ export interface components {
         };
         ContactRequest: {
             external_id?: string;
+            name?: string;
             phone?: string;
             email?: string;
+            /** @description E.164; empty = phone */
+            whatsapp?: string;
             telegram_chat_id?: string;
+            /** @description Slack user (U…) or channel (C…) id */
+            slack_id?: string;
             locale?: components["schemas"]["Locale"];
             tags?: string[];
             attributes?: {
                 [key: string]: unknown;
             };
         };
+        Group: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            description?: string;
+            member_count?: number;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+        };
+        GroupRequest: {
+            name: string;
+            description?: string;
+        };
+        /** @description existing contacts by id / external_id, or new contacts created inline (matched by external_id, phone or email first) */
+        GroupMembersRequest: {
+            contact_ids?: string[];
+            external_ids?: string[];
+            contacts?: components["schemas"]["ContactRequest"][];
+        };
+        GroupMembersResult: {
+            added?: number;
+            created_contacts?: number;
+            not_found?: string[];
+        };
+        /** @description Compose from the admin panel / app. `group_ids`, `contact_ids` and/or `to` are required. */
+        AdminSendRequest: {
+            channel?: components["schemas"]["Channel"];
+            template?: string;
+            data?: {
+                [key: string]: unknown;
+            };
+            subject?: string;
+            title?: string;
+            body?: string;
+            locale?: components["schemas"]["Locale"];
+            /** Format: date-time */
+            scheduled_at?: string;
+            priority?: components["schemas"]["Priority"];
+            metadata?: {
+                [key: string]: unknown;
+            };
+            group_ids?: string[];
+            contact_ids?: string[];
+            /** @description raw addresses (phones */
+            to?: string[];
+            /** @description route through the sandbox */
+            is_test?: boolean;
+        };
         Contact: {
             /** Format: uuid */
             id?: string;
             external_id?: string;
+            name?: string;
             phone?: string;
             email?: string;
+            whatsapp?: string;
             telegram_chat_id?: string;
+            slack_id?: string;
             locale?: string;
             tags?: string[];
             attributes?: {
@@ -3914,6 +4573,28 @@ export interface components {
             content: {
                 "application/json": components["schemas"]["Envelope"] & {
                     data?: components["schemas"]["Contact"];
+                };
+            };
+        };
+        /** @description Group */
+        Group: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Envelope"] & {
+                    data?: components["schemas"]["Group"];
+                };
+            };
+        };
+        /** @description Groups */
+        GroupList: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Envelope"] & {
+                    data?: components["schemas"]["Group"][];
                 };
             };
         };

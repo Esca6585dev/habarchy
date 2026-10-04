@@ -13,17 +13,20 @@ import (
 )
 
 const createContact = `-- name: CreateContact :one
-INSERT INTO contacts (project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at
+INSERT INTO contacts (project_id, external_id, name, phone, email, whatsapp, telegram_chat_id, slack_id, locale, tags, attributes)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+RETURNING id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id
 `
 
 type CreateContactParams struct {
 	ProjectID      uuid.UUID
 	ExternalID     string
+	Name           string
 	Phone          string
 	Email          string
+	Whatsapp       string
 	TelegramChatID string
+	SlackID        string
 	Locale         string
 	Tags           []string
 	Attributes     json.RawMessage
@@ -33,9 +36,12 @@ func (q *Queries) CreateContact(ctx context.Context, arg CreateContactParams) (C
 	row := q.db.QueryRow(ctx, createContact,
 		arg.ProjectID,
 		arg.ExternalID,
+		arg.Name,
 		arg.Phone,
 		arg.Email,
+		arg.Whatsapp,
 		arg.TelegramChatID,
+		arg.SlackID,
 		arg.Locale,
 		arg.Tags,
 		arg.Attributes,
@@ -53,6 +59,9 @@ func (q *Queries) CreateContact(ctx context.Context, arg CreateContactParams) (C
 		&i.Attributes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
+		&i.Whatsapp,
+		&i.SlackID,
 	)
 	return i, err
 }
@@ -104,7 +113,7 @@ func (q *Queries) DisableDeviceByToken(ctx context.Context, fcmToken string) (in
 }
 
 const getContact = `-- name: GetContact :one
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at FROM contacts WHERE id = $1 AND project_id = $2
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts WHERE id = $1 AND project_id = $2
 `
 
 type GetContactParams struct {
@@ -127,12 +136,15 @@ func (q *Queries) GetContact(ctx context.Context, arg GetContactParams) (Contact
 		&i.Attributes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
+		&i.Whatsapp,
+		&i.SlackID,
 	)
 	return i, err
 }
 
 const getContactByEmail = `-- name: GetContactByEmail :one
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at FROM contacts WHERE project_id = $1 AND email = lower($2) LIMIT 1
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts WHERE project_id = $1 AND email = lower($2) LIMIT 1
 `
 
 type GetContactByEmailParams struct {
@@ -155,12 +167,15 @@ func (q *Queries) GetContactByEmail(ctx context.Context, arg GetContactByEmailPa
 		&i.Attributes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
+		&i.Whatsapp,
+		&i.SlackID,
 	)
 	return i, err
 }
 
 const getContactByExternalID = `-- name: GetContactByExternalID :one
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at FROM contacts WHERE project_id = $1 AND external_id = $2
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts WHERE project_id = $1 AND external_id = $2
 `
 
 type GetContactByExternalIDParams struct {
@@ -183,12 +198,15 @@ func (q *Queries) GetContactByExternalID(ctx context.Context, arg GetContactByEx
 		&i.Attributes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
+		&i.Whatsapp,
+		&i.SlackID,
 	)
 	return i, err
 }
 
 const getContactByPhone = `-- name: GetContactByPhone :one
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at FROM contacts WHERE project_id = $1 AND phone = $2 LIMIT 1
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts WHERE project_id = $1 AND phone = $2 LIMIT 1
 `
 
 type GetContactByPhoneParams struct {
@@ -211,6 +229,9 @@ func (q *Queries) GetContactByPhone(ctx context.Context, arg GetContactByPhonePa
 		&i.Attributes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
+		&i.Whatsapp,
+		&i.SlackID,
 	)
 	return i, err
 }
@@ -271,13 +292,14 @@ func (q *Queries) ListActiveDevicesForContact(ctx context.Context, contactID *uu
 }
 
 const listContacts = `-- name: ListContacts :many
-SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at FROM contacts
+SELECT id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id FROM contacts
 WHERE project_id = $1
   AND ($2::text IS NULL OR $2::text = ANY (tags))
   AND ($3::text IS NULL
        OR phone ILIKE '%' || $3::text || '%'
        OR email ILIKE '%' || $3::text || '%'
-       OR external_id ILIKE '%' || $3::text || '%')
+       OR external_id ILIKE '%' || $3::text || '%'
+       OR name ILIKE '%' || $3::text || '%')
 ORDER BY created_at DESC
 LIMIT $5 OFFSET $4
 `
@@ -317,6 +339,9 @@ func (q *Queries) ListContacts(ctx context.Context, arg ListContactsParams) ([]C
 			&i.Attributes,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Name,
+			&i.Whatsapp,
+			&i.SlackID,
 		); err != nil {
 			return nil, err
 		}
@@ -371,22 +396,28 @@ func (q *Queries) ListDevices(ctx context.Context, arg ListDevicesParams) ([]Dev
 const updateContact = `-- name: UpdateContact :one
 UPDATE contacts SET
     external_id      = $1,
-    phone            = $2,
-    email            = $3,
-    telegram_chat_id = $4,
-    locale           = $5,
-    tags             = $6,
-    attributes       = $7,
+    name             = $2,
+    phone            = $3,
+    email            = $4,
+    whatsapp         = $5,
+    telegram_chat_id = $6,
+    slack_id         = $7,
+    locale           = $8,
+    tags             = $9,
+    attributes       = $10,
     updated_at       = now()
-WHERE id = $8 AND project_id = $9
-RETURNING id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at
+WHERE id = $11 AND project_id = $12
+RETURNING id, project_id, external_id, phone, email, telegram_chat_id, locale, tags, attributes, created_at, updated_at, name, whatsapp, slack_id
 `
 
 type UpdateContactParams struct {
 	ExternalID     string
+	Name           string
 	Phone          string
 	Email          string
+	Whatsapp       string
 	TelegramChatID string
+	SlackID        string
 	Locale         string
 	Tags           []string
 	Attributes     json.RawMessage
@@ -397,9 +428,12 @@ type UpdateContactParams struct {
 func (q *Queries) UpdateContact(ctx context.Context, arg UpdateContactParams) (Contact, error) {
 	row := q.db.QueryRow(ctx, updateContact,
 		arg.ExternalID,
+		arg.Name,
 		arg.Phone,
 		arg.Email,
+		arg.Whatsapp,
 		arg.TelegramChatID,
+		arg.SlackID,
 		arg.Locale,
 		arg.Tags,
 		arg.Attributes,
@@ -419,6 +453,9 @@ func (q *Queries) UpdateContact(ctx context.Context, arg UpdateContactParams) (C
 		&i.Attributes,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Name,
+		&i.Whatsapp,
+		&i.SlackID,
 	)
 	return i, err
 }
