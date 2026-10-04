@@ -72,10 +72,12 @@ Future<bool> showImportSheet(BuildContext context, WidgetRef ref, String project
             title: Text(t.importFile),
             subtitle: Text(t.importFileHint, style: Theme.of(ctx).textTheme.bodySmall),
             onTap: () async {
-              final picked = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['xlsx', 'xlsm', 'csv', 'tsv', 'txt', 'vcf', 'docx'], withData: true);
-              final f = picked?.files.single;
-              if (f == null || f.bytes == null || !ctx.mounted) return;
-              await run(ctx, () => repo.importFile(projectId, filename: f.name, bytes: f.bytes!, groupId: selectedGroup));
+              final picked = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['xlsx', 'xlsm', 'csv', 'tsv', 'txt', 'vcf', 'docx']);
+              if (picked.isEmpty) return;
+              final f = picked.first;
+              final bytes = await f.readAsBytes();
+              if (!ctx.mounted) return;
+              await run(ctx, () => repo.importFile(projectId, filename: f.name, bytes: bytes, groupId: selectedGroup));
             },
           ),
           ListTile(
