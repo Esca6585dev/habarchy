@@ -55,3 +55,7 @@ gateway/.dart_tool/
 web/test-results/
 web/playwright-report/
 web/tsconfig.tsbuildinfo
+
+# Python bytecode cache
+__pycache__/
+*.pyc
