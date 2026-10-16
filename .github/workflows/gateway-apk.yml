@@ -1,0 +1,151 @@
+name: apk
+
+# Builds installable Android APKs for the Gateway (SMS sender) and the
+# mobile admin app. Runs on pushes to main that touch either app, on
+# version tags (v*), and on demand. Each run uploads the APKs as workflow
+# artifacts; a v* tag also publishes them on a GitHub Release.
+#
+# Signing: android/key.properties drives release signing (see
+# gateway/android/app/build.gradle.kts). When the signing secrets below are
+# present the APK is signed with your upload key; otherwise the build falls
+# back to the debug key, which is fine for testing and sideloading.
+#   ANDROID_KEYSTORE_BASE64  - base64 of your .jks keystore
+#   ANDROID_KEY_ALIAS        - key alias
+#   ANDROID_KEY_PASSWORD     - key password
+#   ANDROID_STORE_PASSWORD   - keystore password
+
+on:
+  push:
+    # Tags are intentionally NOT path-filtered: a v* tag must always build
+    # and release, even when its commit only touched the backend.
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths: ["gateway/**", "mobile/**", ".github/workflows/gateway-apk.yml"]
+  workflow_dispatch:
+    inputs:
+      app:
+        description: Which app to build
+        type: choice
+        default: both
+        options: [both, gateway, mobile]
+
+permissions:
+  contents: write # upload artifacts, and create a Release on v* tags
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [gateway, mobile]
+    env:
+      # Exposed at job level so a step `if:` can test it (secrets are not
+      # allowed directly in `if`). Empty on forks / when not configured.
+      KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Skip an app the manual run did not ask for.
+      - name: Should this app build?
+        id: want
+        run: |
+          want='${{ github.event.inputs.app }}'
+          if [ -z "$want" ] || [ "$want" = both ] || [ "$want" = '${{ matrix.app }}' ]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-java@v4
+        if: steps.want.outputs.build == 'true'
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        if: steps.want.outputs.build == 'true'
+        with:
+          channel: stable
+          flutter-version: 3.47.6
+          cache: true
+
+      - name: Dependencies
+        if: steps.want.outputs.build == 'true'
+        working-directory: ${{ matrix.app }}
+        run: flutter pub get
+
+      - name: Code generation (mobile only)
+        if: steps.want.outputs.build == 'true' && matrix.app == 'mobile'
+        working-directory: mobile
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          flutter gen-l10n
+
+      - name: Set up release signing
+        id: signing
+        if: steps.want.outputs.build == 'true' && env.KEYSTORE != ''
+        working-directory: ${{ matrix.app }}/android
+        env:
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          echo "$KEYSTORE" | base64 -d > app/upload-keystore.jks
+          cat > key.properties <<EOF
+          storeFile=upload-keystore.jks
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          storePassword=$STORE_PASSWORD
+          EOF
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build release APK
+        if: steps.want.outputs.build == 'true'
+        working-directory: ${{ matrix.app }}
+        run: flutter build apk --release
+
+      - name: Name the APK
+        id: name
+        if: steps.want.outputs.build == 'true'
+        working-directory: ${{ matrix.app }}
+        env:
+          SIGNED: ${{ steps.signing.outputs.signed }}
+        run: |
+          ver=$(grep '^version:' pubspec.yaml | head -1 | awk '{print $2}')
+          sha=$(git rev-parse --short HEAD)
+          if [ "$SIGNED" = "true" ]; then label=signed; else label=debugsigned; fi
+          out="habarchy-${{ matrix.app }}-${ver}-${sha}-${label}.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "../$out"
+          echo "file=$out" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.want.outputs.build == 'true'
+        with:
+          name: habarchy-${{ matrix.app }}-apk
+          path: ${{ steps.name.outputs.file }}
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Attaching:"; ls -R dist
+          gh release create "${{ github.ref_name }}" dist/*.apk \
+            --repo "${{ github.repository }}" \
+            --title "${{ github.ref_name }}" \
+            --generate-notes \
+            --verify-tag || \
+          gh release upload "${{ github.ref_name }}" dist/*.apk \
+            --repo "${{ github.repository }}" --clobber

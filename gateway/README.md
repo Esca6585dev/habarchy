@@ -72,6 +72,23 @@ Tips:
 Release signing is the same as the admin app (`android/key.properties`, git-ignored). The app
 has no Firebase or third-party dependencies.
 
+## 2a. Prebuilt APK (GitHub Actions)
+
+The `apk` workflow (`.github/workflows/gateway-apk.yml`) builds both this app and the mobile
+admin app automatically — no local Android SDK needed:
+
+- **Every push to `main`** (and pull requests touching `gateway/**` or `mobile/**`): the APKs are
+  uploaded as **workflow artifacts**. Download them from the run's page on GitHub →
+  *Actions* → the run → *Artifacts* (`habarchy-gateway-apk`, `habarchy-mobile-apk`).
+- **On demand:** *Actions* → *apk* → *Run workflow* (pick `gateway`, `mobile` or `both`).
+- **Version tag `v*`** (e.g. `git tag v0.1.0 && git push --tags`): the same APKs are also attached
+  to a **GitHub Release**, so anyone can download and sideload them from the Releases page.
+
+Signing: with no secrets set the APK is **debug-signed** — installable for testing/sideloading.
+For a stable upload key, add repository secrets `ANDROID_KEYSTORE_BASE64` (base64 of your `.jks`),
+`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `ANDROID_STORE_PASSWORD`; the workflow then signs with
+your key. The APK filename ends in `-signed` or `-debugsigned` so you can tell which is which.
+
 ## 3. Protocol (for other implementations)
 
 All requests carry `X-Gateway-Key: <key>`.
