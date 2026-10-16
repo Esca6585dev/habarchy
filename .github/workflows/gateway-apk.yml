@@ -39,7 +39,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [gateway, mobile]
+        include:
+          # gateway has no product flavors; mobile defines dev/prod, so it
+          # must build a specific flavor and emits a flavored APK name.
+          - app: gateway
+            flavor: ""
+            apk: app-release.apk
+          - app: mobile
+            flavor: prod
+            apk: app-prod-release.apk
     env:
       # Exposed at job level so a step `if:` can test it (secrets are not
       # allowed directly in `if`). Empty on forks / when not configured.
@@ -104,7 +112,10 @@ jobs:
       - name: Build release APK
         if: steps.want.outputs.build == 'true'
         working-directory: ${{ matrix.app }}
-        run: flutter build apk --release
+        run: |
+          args="--release"
+          if [ -n "${{ matrix.flavor }}" ]; then args="$args --flavor ${{ matrix.flavor }}"; fi
+          flutter build apk $args
 
       - name: Name the APK
         id: name
@@ -117,7 +128,7 @@ jobs:
           sha=$(git rev-parse --short HEAD)
           if [ "$SIGNED" = "true" ]; then label=signed; else label=debugsigned; fi
           out="habarchy-${{ matrix.app }}-${ver}-${sha}-${label}.apk"
-          cp build/app/outputs/flutter-apk/app-release.apk "../$out"
+          cp "build/app/outputs/flutter-apk/${{ matrix.apk }}" "../$out"
           echo "file=$out" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4

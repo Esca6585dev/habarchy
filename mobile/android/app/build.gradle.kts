@@ -30,6 +30,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // resValue() in defaultConfig/flavors needs this feature explicitly
+    // enabled on recent Android Gradle Plugin versions.
+    buildFeatures {
+        resValues = true
+    }
+
     defaultConfig {
         applicationId = "tm.habarchy.admin"
         minSdk = maxOf(23, flutter.minSdkVersion) // flutter_secure_storage / firebase_messaging
