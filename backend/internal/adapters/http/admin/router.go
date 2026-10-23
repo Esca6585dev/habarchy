@@ -91,6 +91,9 @@ func (h *Handlers) Register(app fiber.Router) {
 		plat.Get("/messages", h.platformMessages)
 	}
 
+	// Contact-import format guide + downloadable sample (not project-scoped).
+	r.Get("/contacts/import/template", h.importTemplate)
+
 	r.Get("/me", h.me)
 	r.Put("/me/profile", h.updateProfile)
 	r.Put("/me/password", h.changePassword)

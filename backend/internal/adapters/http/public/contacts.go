@@ -1,14 +1,47 @@
 package public
 
 import (
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 
 	httpx "github.com/Esca6585dev/habarchy/backend/internal/adapters/http"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/contactimport"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/contacts"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
 )
+
+// importTemplate documents the expected upload format and serves a downloadable
+// sample. GET ?format=csv or ?format=xlsx returns the file; otherwise JSON
+// describing the columns, so the UI can show "what the file should look like"
+// before the user picks one.
+func (h *Handlers) importTemplate(c *fiber.Ctx) error {
+	switch strings.ToLower(c.Query("format")) {
+	case "csv":
+		c.Set(fiber.HeaderContentType, "text/csv; charset=utf-8")
+		c.Set(fiber.HeaderContentDisposition, `attachment; filename="habarchy-contacts-template.csv"`)
+		return c.Send(contactimport.SampleCSV())
+	case "xlsx":
+		b, err := contactimport.SampleXLSX()
+		if err != nil {
+			return err
+		}
+		c.Set(fiber.HeaderContentType, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+		c.Set(fiber.HeaderContentDisposition, `attachment; filename="habarchy-contacts-template.xlsx"`)
+		return c.Send(b)
+	}
+	return httpx.OK(c, fiber.Map{
+		"columns":  contactimport.TemplateColumns(),
+		"formats":  []string{"xlsx", "csv", "vcf", "docx", "txt"},
+		"max_rows": contactimport.MaxRows,
+		"sample": fiber.Map{
+			"csv":  "/api/v1/contacts/import/template?format=csv",
+			"xlsx": "/api/v1/contacts/import/template?format=xlsx",
+		},
+		"notes": "Birinji setir sütün atlary bolmaly, iň bolmanda `phone`. Türkmen nomerler +993... ýa-da 8 belgili (65123456). Iň köp 5000 setir.",
+	})
+}
 
 func otpInput(req otpSendRequest, ip string) otp.SendInput {
 	return otp.SendInput{Channel: req.Channel, To: req.To, Length: req.Length, TTL: time.Duration(req.TTL) * time.Second,

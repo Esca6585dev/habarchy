@@ -18,6 +18,36 @@ import (
 // MaxImportBytes caps uploaded contact files.
 const MaxImportBytes = 10 << 20
 
+// importTemplate documents the expected upload format and serves a downloadable
+// sample (?format=csv|xlsx), so the panel can show what the file should look
+// like before the user picks one.
+func (h *Handlers) importTemplate(c *fiber.Ctx) error {
+	switch strings.ToLower(c.Query("format")) {
+	case "csv":
+		c.Set(fiber.HeaderContentType, "text/csv; charset=utf-8")
+		c.Set(fiber.HeaderContentDisposition, `attachment; filename="habarchy-contacts-template.csv"`)
+		return c.Send(contactimport.SampleCSV())
+	case "xlsx":
+		b, err := contactimport.SampleXLSX()
+		if err != nil {
+			return err
+		}
+		c.Set(fiber.HeaderContentType, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+		c.Set(fiber.HeaderContentDisposition, `attachment; filename="habarchy-contacts-template.xlsx"`)
+		return c.Send(b)
+	}
+	return httpx.OK(c, fiber.Map{
+		"columns":  contactimport.TemplateColumns(),
+		"formats":  []string{"xlsx", "csv", "vcf", "docx", "txt"},
+		"max_rows": contactimport.MaxRows,
+		"sample": fiber.Map{
+			"csv":  "/api/admin/contacts/import/template?format=csv",
+			"xlsx": "/api/admin/contacts/import/template?format=xlsx",
+		},
+		"notes": "Birinji setir sütün atlary bolmaly, iň bolmanda `phone`. Türkmen nomerler +993... ýa-da 8 belgili (65123456). Iň köp 5000 setir.",
+	})
+}
+
 // importOptions reads group_id / dry_run / tag from a multipart or JSON form.
 func importOptions(c *fiber.Ctx, source string) (contactimport.Options, error) {
 	opt := contactimport.Options{Source: source, DryRun: c.FormValue("dry_run") == "true" || c.Query("dry_run") == "true", Tag: strings.TrimSpace(c.FormValue("tag"))}

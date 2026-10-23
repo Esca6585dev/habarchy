@@ -28,13 +28,13 @@ import (
 // Handlers groups the public API dependencies. Messages, OTP, Contacts,
 // Providers and Delivery may be nil in tests that only exercise templates.
 type Handlers struct {
-	Projects           *projects.Service
-	Templates          *templates.Service
-	Messages           *messages.Service
-	OTP                *otp.Service
+	Projects  *projects.Service
+	Templates *templates.Service
+	Messages  *messages.Service
+	OTP       *otp.Service
 	// PhoneAuth serves /api/auth/phone (unauthenticated client login); nil
 	// disables those routes.
-	PhoneAuth *phoneauth.Service
+	PhoneAuth          *phoneauth.Service
 	Contacts           *contacts.Service
 	Groups             *groups.Service
 	Gateway            *gateway.Service // inbound SMS listing
@@ -97,6 +97,7 @@ func (h *Handlers) Register(app fiber.Router) {
 	}
 	if h.Contacts != nil {
 		ct := r.Group("/contacts", middleware.RequireScope(domain.ScopeContacts))
+		ct.Get("/import/template", h.importTemplate)
 		if h.Imports != nil {
 			ct.Post("/import", func(c *fiber.Ctx) error { return admin.ImportFile(c, h.Imports, caller(c).Project.ID) })
 		}
