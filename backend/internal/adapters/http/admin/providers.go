@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	httpx "github.com/Esca6585dev/habarchy/backend/internal/adapters/http"
+	"github.com/Esca6585dev/habarchy/backend/internal/adapters/http/middleware"
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres/sqlcgen"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
@@ -63,9 +64,33 @@ func (h *Handlers) listProviders(c *fiber.Ctx) error {
 	return httpx.OK(c, out)
 }
 
+// isAdminOnlyProvider reports provider types reserved for the platform owner.
+// The 0796-style SMPP line is owner-only: it serves login OTP (for everyone)
+// and sending for the admin only, so only a platform admin may configure one.
+func isAdminOnlyProvider(t domain.ProviderType) bool { return t == domain.ProviderSMPP }
+
+// ensureCanConfigureProvider blocks non-owners from configuring an admin-only
+// provider (currently SMPP / 0796).
+func (h *Handlers) ensureCanConfigureProvider(c *fiber.Ctx, t domain.ProviderType) error {
+	if !isAdminOnlyProvider(t) {
+		return nil
+	}
+	u, err := h.Auth.User(c.UserContext(), middleware.UserID(c))
+	if err != nil {
+		return err
+	}
+	if !u.PlatformAdmin {
+		return domain.ErrForbiddenScope.WithMessage("only the platform admin (owner) can configure an SMPP (0796) provider")
+	}
+	return nil
+}
+
 func (h *Handlers) createProvider(c *fiber.Ctx) error {
 	var req providerRequest
 	if err := httpx.Bind(c, &req); err != nil {
+		return err
+	}
+	if err := h.ensureCanConfigureProvider(c, req.Type); err != nil {
 		return err
 	}
 	p, err := h.Providers.Create(c.UserContext(), membership(c).Project.ID, providers.Input{
@@ -96,6 +121,13 @@ func (h *Handlers) updateProvider(c *fiber.Ctx) error {
 	}
 	req := providerRequest{IsUpdate: true}
 	if err := httpx.Bind(c, &req); err != nil {
+		return err
+	}
+	existing, err := h.Providers.Get(c.UserContext(), membership(c).Project.ID, id)
+	if err != nil {
+		return err
+	}
+	if err := h.ensureCanConfigureProvider(c, domain.ProviderType(existing.Type)); err != nil {
 		return err
 	}
 	p, err := h.Providers.Update(c.UserContext(), membership(c).Project.ID, id, providers.Input{

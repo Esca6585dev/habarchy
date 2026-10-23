@@ -161,13 +161,13 @@ heartbeat, inbound forward, provider fallback by priority, asynq queues with
 rate limits, `POST /messages/batch` up to 1000.
 
 New work:
-0. **Send-route authorization (enforce the 0796 policy).** Before any route
-   work, add the server-side rule for who may send through what:
-   - `0796` (the operator `smpp` provider): usable as a **send** route **only**
-     by the owner/admin (`platform_admin`). Every other account is rejected
-     with a clear error and never sees it as an option. (0796 stays open to all
-     **only** for login OTP, which goes through the auth path, not the public
-     send API.)
+0. **Send-route authorization (enforce the 0796 policy).** [partly done]
+   - [done] Configuring an `smpp` (0796) provider is restricted to
+     `platform_admin` (owner): `POST/PUT /projects/{id}/providers` reject a
+     non-owner with 403. Since providers are per-tenant and a client's tenant
+     can therefore never hold an smpp provider, client sends and fallback can
+     never route through 0796 — login OTP still uses it via the auth path.
+   - [remaining] Provider sharing (3.3) and the owner's own-number route.
    - A regular client may send only through **phones it paired** or phones
      **shared** with it (Phase 3.3). The owner/admin may additionally use their
      **own number** and `0796`.
