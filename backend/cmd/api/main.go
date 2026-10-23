@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -123,10 +124,17 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 		return nil
 	}
 	if seedDemo {
-		s := &seed.Seeder{DB: db, Auth: authSvc, Projects: projectSvc, Templates: templateSvc}
+		s := &seed.Seeder{DB: db, Auth: authSvc, Projects: projectSvc, Templates: templateSvc, Providers: providers.New(db, cipher)}
 		res, err := s.Run(ctx, seed.Options{
 			AdminEmail: os.Getenv("HABARCHY_ADMIN_EMAIL"), AdminPassword: os.Getenv("HABARCHY_ADMIN_PASSWORD"), AdminName: os.Getenv("HABARCHY_ADMIN_NAME"),
 			ProjectSlug: os.Getenv("HABARCHY_SEED_PROJECT"), LiveKey: seedLive,
+			SMPPName:       os.Getenv("HABARCHY_SMPP_NAME"),
+			SMPPHost:       smppEnvHost(),
+			SMPPPort:       atoiDefault(smppEnv("SMPP_PORT"), 0),
+			SMPPSystemID:   smppEnv("SMPP_SYSTEM_ID", "SMPP_USERNAME"),
+			SMPPPassword:   smppEnv("SMPP_PASSWORD"),
+			SMPPSourceAddr: smppEnv("SMPP_SOURCE_ADDR", "SMPP_FROM"),
+			SMPPRequestDLR: smppEnvBool("SMPP_REQUEST_DLR"),
 		})
 		if err != nil {
 			return err
@@ -205,4 +213,33 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 	}
 	time.Sleep(50 * time.Millisecond)
 	return nil
+}
+
+// smppEnv returns the first non-empty value among the named SMPP_* variables,
+// accepting the names an operator typically hands out (SMPP_USERNAME, SMPP_FROM…).
+func smppEnv(names ...string) string {
+	for _, n := range names {
+		if v := strings.TrimSpace(os.Getenv(n)); v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+// smppEnvHost accepts either SMPP_HOST or the operator's SMPP_IP.
+func smppEnvHost() string { return smppEnv("SMPP_HOST", "SMPP_IP") }
+
+func smppEnvBool(name string) bool {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv(name))) {
+	case "1", "true", "yes":
+		return true
+	}
+	return false
+}
+
+func atoiDefault(s string, def int) int {
+	if n, err := strconv.Atoi(strings.TrimSpace(s)); err == nil {
+		return n
+	}
+	return def
 }

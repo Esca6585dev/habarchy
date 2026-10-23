@@ -6,6 +6,7 @@ package seed
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -19,6 +20,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/adapters/postgres/sqlcgen"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/auth"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/templates"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
 	"github.com/Esca6585dev/habarchy/backend/pkg/ids"
@@ -35,6 +37,18 @@ type Options struct {
 	ProjectName   string // default "Demo"
 	// LiveKey also issues an hb_live_ key (needs real providers to deliver).
 	LiveKey bool
+
+	// SMPP* create (or reuse) a live `smpp` SMS provider in the project from
+	// an operator's SMPP_* credentials, so OTP and SMS deliver through e.g.
+	// the 0796 short code. SMPPHost empty skips this step entirely; the
+	// password is never printed back. Idempotent on SMPPName.
+	SMPPName       string // default "Operator SMPP"
+	SMPPHost       string
+	SMPPPort       int
+	SMPPSystemID   string
+	SMPPPassword   string
+	SMPPSourceAddr string // sender / short code, e.g. "0796"
+	SMPPRequestDLR bool
 }
 
 // Result is what the caller prints. Plaintext keys are shown exactly once.
@@ -47,6 +61,8 @@ type Result struct {
 	TemplatesTotal   int
 	TestKey          string
 	LiveKey          string
+	SMPPProvider     string // name of the smpp provider, when one was requested
+	SMPPCreated      bool
 }
 
 // Seeder wires the application services.
@@ -55,6 +71,8 @@ type Seeder struct {
 	Auth      *auth.Service
 	Projects  *projects.Service
 	Templates *templates.Service
+	// Providers is optional; required only when Options.SMPPHost is set.
+	Providers *providers.Service
 }
 
 // Run performs the seeding.
@@ -103,6 +121,14 @@ func (s *Seeder) Run(ctx context.Context, opt Options) (*Result, error) {
 		if _, err := s.DB.Queries.CreateGroup(ctx, sqlcgen.CreateGroupParams{ID: ids.New(), ProjectID: project.ID, Name: g}); err != nil && !postgres.IsUniqueViolation(err) {
 			return nil, err
 		}
+	}
+
+	if opt.SMPPHost != "" {
+		name, created, err := s.smppProvider(ctx, project.ID, opt)
+		if err != nil {
+			return nil, err
+		}
+		res.SMPPProvider, res.SMPPCreated = name, created
 	}
 
 	stamp := time.Now().UTC().Format("2006-01-02 15:04")
@@ -168,6 +194,46 @@ func (s *Seeder) project(ctx context.Context, ownerID uuid.UUID, opt Options) (*
 		return nil, false, err
 	}
 	return p, true, nil
+}
+
+// smppProvider creates a live `smpp` SMS provider from the operator's
+// credentials, or reuses one already named the same (so re-seeding is safe).
+// It needs s.Providers; the password is taken from opt and never returned.
+func (s *Seeder) smppProvider(ctx context.Context, projectID uuid.UUID, opt Options) (string, bool, error) {
+	if s.Providers == nil {
+		return "", false, errors.New("seed: SMPP requested but provider service not wired")
+	}
+	name := strings.TrimSpace(opt.SMPPName)
+	if name == "" {
+		name = "Operator SMPP"
+	}
+	existing, err := s.Providers.List(ctx, projectID)
+	if err != nil {
+		return "", false, err
+	}
+	for i := range existing {
+		if existing[i].Name == name {
+			return name, false, nil
+		}
+	}
+	creds, err := json.Marshal(providers.SMPPConfig{
+		Host:       opt.SMPPHost,
+		Port:       opt.SMPPPort,
+		SystemID:   opt.SMPPSystemID,
+		Password:   opt.SMPPPassword,
+		SourceAddr: opt.SMPPSourceAddr,
+		RequestDLR: opt.SMPPRequestDLR,
+	})
+	if err != nil {
+		return "", false, err
+	}
+	active, priority := true, 100
+	if _, err := s.Providers.Create(ctx, projectID, providers.Input{
+		Name: name, Type: domain.ProviderSMPP, Credentials: creds, IsActive: &active, Priority: &priority,
+	}); err != nil {
+		return "", false, fmt.Errorf("create smpp provider: %w", err)
+	}
+	return name, true, nil
 }
 
 // SampleTemplates are the otp / welcome / password_reset templates in
@@ -244,6 +310,9 @@ func (r *Result) Print(w io.Writer) {
 	fmt.Fprintf(&b, "admin user   %s (%s)\n", r.Admin.Email, verb(r.AdminCreated))
 	fmt.Fprintf(&b, "project      %s  slug=%s  id=%s (%s)\n", r.Project.Name, r.Project.Slug, r.Project.ID, verb(r.ProjectCreated))
 	fmt.Fprintf(&b, "templates    %d/%d created (otp, welcome, password_reset × sms,email × tk,ru,en)\n", r.TemplatesCreated, r.TemplatesTotal)
+	if r.SMPPProvider != "" {
+		fmt.Fprintf(&b, "smpp provider %q (%s)   active · sends SMS/OTP through the operator short code\n", r.SMPPProvider, verb(r.SMPPCreated))
+	}
 	fmt.Fprintf(&b, "test api key %s   (sandbox: messages succeed instantly, nothing is sent)\n", r.TestKey)
 	if r.LiveKey != "" {
 		fmt.Fprintf(&b, "live api key %s   (add providers in the admin panel first)\n", r.LiveKey)
