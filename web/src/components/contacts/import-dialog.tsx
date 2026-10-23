@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Apple, FileSpreadsheet, Upload } from "lucide-react";
+import { Apple, Download, FileSpreadsheet, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { api, unwrap } from "@/lib/api/client";
 import { qk } from "@/lib/hooks";
@@ -116,6 +116,19 @@ export function ImportDialog({ open, onOpenChange, defaultGroupId }: { open: boo
             <TabsTrigger value="apple"><Apple className="mr-1 h-4 w-4" />{t("importApple")}</TabsTrigger>
           </TabsList>
           <TabsContent value="file" className="space-y-3">
+            <div className="space-y-2 rounded-lg border bg-muted/40 p-3 text-sm">
+              <p className="font-medium">{t("formatTitle")}</p>
+              <p className="text-muted-foreground">{t("formatHint")}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {["phone *", "name", "email", "tags", "locale"].map((c) => (
+                  <code key={c} className="rounded bg-background px-1.5 py-0.5 font-mono text-xs">{c}</code>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button asChild size="sm" variant="outline"><a href="/api/backend/api/admin/contacts/import/template?format=xlsx" download><Download className="mr-1 h-3.5 w-3.5" />{t("downloadXlsx")}</a></Button>
+                <Button asChild size="sm" variant="outline"><a href="/api/backend/api/admin/contacts/import/template?format=csv" download><Download className="mr-1 h-3.5 w-3.5" />{t("downloadCsv")}</a></Button>
+              </div>
+            </div>
             <input ref={fileRef} type="file" accept=".xlsx,.xlsm,.csv,.tsv,.txt,.vcf,.vcard,.docx" className="hidden" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setResult(null); }} data-testid="import-file" />
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload /> {t("chooseFile")}</Button>
