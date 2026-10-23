@@ -171,7 +171,9 @@
     "granteeId": "ID тенанта",
     "shareBtn": "Поделиться",
     "noShares": "Не предоставлен никому",
-    "revoke": "Отозвать"
+    "revoke": "Отозвать",
+    "sharedWithMe": "Телефоны, доступные мне",
+    "from": "От"
   },
   "templates": {
     "title": "Шаблоны",

@@ -171,7 +171,9 @@
     "granteeId": "Tenant ID",
     "shareBtn": "Share",
     "noShares": "Not shared with anyone",
-    "revoke": "Revoke"
+    "revoke": "Revoke",
+    "sharedWithMe": "Phones shared with me",
+    "from": "From"
   },
   "templates": {
     "title": "Templates",

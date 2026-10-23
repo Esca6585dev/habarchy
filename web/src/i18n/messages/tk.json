@@ -171,7 +171,9 @@
     "granteeId": "Müşderi (tenant) ID",
     "shareBtn": "Paýlaş",
     "noShares": "Hiç kim bilen paýlaşylmadyk",
-    "revoke": "Yza al"
+    "revoke": "Yza al",
+    "sharedWithMe": "Maňa paýlaşylan telefonlar",
+    "from": "Eýesi"
   },
   "templates": {
     "title": "Şablonlar",

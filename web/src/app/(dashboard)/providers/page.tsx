@@ -30,6 +30,33 @@ const types = ["http_sms", "smpp", "android_sms", "smtp", "fcm", "telegram_bot",
 
 type ShareRow = { grantee_project_id: string; name: string; slug: string; created_at: string };
 
+/** Phones other tenants have shared with this one (read-only). */
+function SharedWithMe({ projectId }: { projectId: string }) {
+  const t = useTranslations("providers");
+  const q = useQuery({
+    queryKey: ["shared-with-me", projectId],
+    queryFn: async () => {
+      const res = await fetch(`/api/backend/api/admin/projects/${projectId}/shared-providers`);
+      if (!res.ok) throw new Error(String(res.status));
+      return ((await res.json()) as { data: { provider: Provider; owner: { name: string; slug: string } }[] }).data ?? [];
+    },
+  });
+  if (!q.data?.length) return null;
+  return (
+    <div className="mb-5 rounded-lg border bg-muted/30 p-3">
+      <div className="mb-2 flex items-center gap-2 text-sm font-medium"><Share2 className="h-4 w-4" /> {t("sharedWithMe")}</div>
+      <ul className="divide-y rounded-md border bg-background text-sm">
+        {q.data.map((s) => (
+          <li key={s.provider.id} className="flex items-center justify-between gap-2 px-3 py-2">
+            <span className="flex items-center gap-2"><span className="font-medium">{s.provider.name}</span> <ChannelBadge channel={s.provider.channel} /></span>
+            <span className="text-xs text-muted-foreground">{t("from")}: {s.owner.name}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /** Manage which tenants may send through this phone. Uses the backend proxy
  *  directly (the share endpoints are not in the typed client). */
 function ProviderShares({ projectId, providerId }: { projectId: string; providerId: string }) {
@@ -153,6 +180,7 @@ export default function ProvidersPage() {
   return (
     <>
       <PageHeader title={t("title")} actions={<Button size="sm" onClick={() => setForm(empty)} data-testid="new-provider"><Plus /> {t("new")}</Button>} />
+      {projectId ? <SharedWithMe projectId={projectId} /> : null}
       {q.isLoading ? <Skeleton className="h-48" /> : !q.data?.length ? <EmptyState /> : (
         <div className="rounded-lg border">
           <Table>
