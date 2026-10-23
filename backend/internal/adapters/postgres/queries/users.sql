@@ -49,3 +49,20 @@ UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = @user_id AND revoke
 
 -- name: DeleteExpiredRefreshTokens :execrows
 DELETE FROM refresh_tokens WHERE expires_at < now() - interval '7 days';
+
+-- name: GetUserByPhone :one
+SELECT * FROM users WHERE phone = @phone AND phone <> '';
+
+-- name: CreatePhoneUser :one
+INSERT INTO users (email, password_hash, full_name, phone, phone_verified)
+VALUES ('', '', @full_name, @phone, true)
+RETURNING *;
+
+-- name: SetUserPhoneVerified :exec
+UPDATE users SET phone_verified = @phone_verified, updated_at = now() WHERE id = @id;
+
+-- name: SetPlatformAdmin :exec
+UPDATE users SET platform_admin = @platform_admin, updated_at = now() WHERE id = @id;
+
+-- name: ListUsersWithPhone :many
+SELECT * FROM users WHERE phone <> '' ORDER BY created_at DESC LIMIT @row_limit OFFSET @row_offset;

@@ -23,6 +23,40 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const createPhoneUser = `-- name: CreatePhoneUser :one
+INSERT INTO users (email, password_hash, full_name, phone, phone_verified)
+VALUES ('', '', $1, $2, true)
+RETURNING id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id, phone, phone_verified, platform_admin
+`
+
+type CreatePhoneUserParams struct {
+	FullName string
+	Phone    string
+}
+
+func (q *Queries) CreatePhoneUser(ctx context.Context, arg CreatePhoneUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, createPhoneUser, arg.FullName, arg.Phone)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.FullName,
+		&i.IsActive,
+		&i.TotpEnabled,
+		&i.TotpSecretEnc,
+		&i.LastLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Bio,
+		&i.AvatarID,
+		&i.Phone,
+		&i.PhoneVerified,
+		&i.PlatformAdmin,
+	)
+	return i, err
+}
+
 const createRefreshToken = `-- name: CreateRefreshToken :one
 INSERT INTO refresh_tokens (user_id, token_hash, user_agent, ip, expires_at)
 VALUES ($1, $2, $3, $4, $5)
@@ -63,7 +97,7 @@ func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshToken
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (email, password_hash, full_name)
 VALUES (lower($1), $2, $3)
-RETURNING id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id
+RETURNING id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id, phone, phone_verified, platform_admin
 `
 
 type CreateUserParams struct {
@@ -88,6 +122,9 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.Bio,
 		&i.AvatarID,
+		&i.Phone,
+		&i.PhoneVerified,
+		&i.PlatformAdmin,
 	)
 	return i, err
 }
@@ -126,7 +163,7 @@ func (q *Queries) GetRefreshTokenByHash(ctx context.Context, tokenHash []byte) (
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id FROM users WHERE lower(email) = lower($1)
+SELECT id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id, phone, phone_verified, platform_admin FROM users WHERE lower(email) = lower($1)
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -145,12 +182,15 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.UpdatedAt,
 		&i.Bio,
 		&i.AvatarID,
+		&i.Phone,
+		&i.PhoneVerified,
+		&i.PlatformAdmin,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id FROM users WHERE id = $1
+SELECT id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id, phone, phone_verified, platform_admin FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
@@ -169,12 +209,42 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.UpdatedAt,
 		&i.Bio,
 		&i.AvatarID,
+		&i.Phone,
+		&i.PhoneVerified,
+		&i.PlatformAdmin,
+	)
+	return i, err
+}
+
+const getUserByPhone = `-- name: GetUserByPhone :one
+SELECT id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id, phone, phone_verified, platform_admin FROM users WHERE phone = $1 AND phone <> ''
+`
+
+func (q *Queries) GetUserByPhone(ctx context.Context, phone string) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByPhone, phone)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PasswordHash,
+		&i.FullName,
+		&i.IsActive,
+		&i.TotpEnabled,
+		&i.TotpSecretEnc,
+		&i.LastLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Bio,
+		&i.AvatarID,
+		&i.Phone,
+		&i.PhoneVerified,
+		&i.PlatformAdmin,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id FROM users ORDER BY created_at DESC LIMIT $2 OFFSET $1
+SELECT id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id, phone, phone_verified, platform_admin FROM users ORDER BY created_at DESC LIMIT $2 OFFSET $1
 `
 
 type ListUsersParams struct {
@@ -204,6 +274,54 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.UpdatedAt,
 			&i.Bio,
 			&i.AvatarID,
+			&i.Phone,
+			&i.PhoneVerified,
+			&i.PlatformAdmin,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUsersWithPhone = `-- name: ListUsersWithPhone :many
+SELECT id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id, phone, phone_verified, platform_admin FROM users WHERE phone <> '' ORDER BY created_at DESC LIMIT $2 OFFSET $1
+`
+
+type ListUsersWithPhoneParams struct {
+	RowOffset int32
+	RowLimit  int32
+}
+
+func (q *Queries) ListUsersWithPhone(ctx context.Context, arg ListUsersWithPhoneParams) ([]User, error) {
+	rows, err := q.db.Query(ctx, listUsersWithPhone, arg.RowOffset, arg.RowLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []User{}
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.PasswordHash,
+			&i.FullName,
+			&i.IsActive,
+			&i.TotpEnabled,
+			&i.TotpSecretEnc,
+			&i.LastLoginAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Bio,
+			&i.AvatarID,
+			&i.Phone,
+			&i.PhoneVerified,
+			&i.PlatformAdmin,
 		); err != nil {
 			return nil, err
 		}
@@ -235,6 +353,34 @@ type RevokeRefreshTokenParams struct {
 
 func (q *Queries) RevokeRefreshToken(ctx context.Context, arg RevokeRefreshTokenParams) error {
 	_, err := q.db.Exec(ctx, revokeRefreshToken, arg.ReplacedBy, arg.ID)
+	return err
+}
+
+const setPlatformAdmin = `-- name: SetPlatformAdmin :exec
+UPDATE users SET platform_admin = $1, updated_at = now() WHERE id = $2
+`
+
+type SetPlatformAdminParams struct {
+	PlatformAdmin bool
+	ID            uuid.UUID
+}
+
+func (q *Queries) SetPlatformAdmin(ctx context.Context, arg SetPlatformAdminParams) error {
+	_, err := q.db.Exec(ctx, setPlatformAdmin, arg.PlatformAdmin, arg.ID)
+	return err
+}
+
+const setUserPhoneVerified = `-- name: SetUserPhoneVerified :exec
+UPDATE users SET phone_verified = $1, updated_at = now() WHERE id = $2
+`
+
+type SetUserPhoneVerifiedParams struct {
+	PhoneVerified bool
+	ID            uuid.UUID
+}
+
+func (q *Queries) SetUserPhoneVerified(ctx context.Context, arg SetUserPhoneVerifiedParams) error {
+	_, err := q.db.Exec(ctx, setUserPhoneVerified, arg.PhoneVerified, arg.ID)
 	return err
 }
 
@@ -279,7 +425,7 @@ func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPassword
 
 const updateUserProfile = `-- name: UpdateUserProfile :one
 UPDATE users SET full_name = $1, is_active = $2, updated_at = now()
-WHERE id = $3 RETURNING id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id
+WHERE id = $3 RETURNING id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id, phone, phone_verified, platform_admin
 `
 
 type UpdateUserProfileParams struct {
@@ -304,13 +450,16 @@ func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfilePa
 		&i.UpdatedAt,
 		&i.Bio,
 		&i.AvatarID,
+		&i.Phone,
+		&i.PhoneVerified,
+		&i.PlatformAdmin,
 	)
 	return i, err
 }
 
 const updateUserSelfProfile = `-- name: UpdateUserSelfProfile :one
 UPDATE users SET full_name = $1, bio = $2, avatar_id = $3, updated_at = now()
-WHERE id = $4 RETURNING id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id
+WHERE id = $4 RETURNING id, email, password_hash, full_name, is_active, totp_enabled, totp_secret_enc, last_login_at, created_at, updated_at, bio, avatar_id, phone, phone_verified, platform_admin
 `
 
 type UpdateUserSelfProfileParams struct {
@@ -341,6 +490,9 @@ func (q *Queries) UpdateUserSelfProfile(ctx context.Context, arg UpdateUserSelfP
 		&i.UpdatedAt,
 		&i.Bio,
 		&i.AvatarID,
+		&i.Phone,
+		&i.PhoneVerified,
+		&i.PlatformAdmin,
 	)
 	return i, err
 }

@@ -928,6 +928,9 @@ type User struct {
 	UpdatedAt     time.Time
 	Bio           string
 	AvatarID      *uuid.UUID
+	Phone         string
+	PhoneVerified bool
+	PlatformAdmin bool
 }
 
 type WebhookDelivery struct {
