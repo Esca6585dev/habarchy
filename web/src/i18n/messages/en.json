@@ -23,7 +23,8 @@
     "groups": "Groups",
     "compose": "Send message",
     "inbound": "Inbound SMS",
-    "chat": "Team chat"
+    "chat": "Team chat",
+    "platform": "Platform"
   },
   "common": {
     "save": "Save",
@@ -431,5 +432,28 @@
     "bio": "About",
     "uploadPhoto": "Upload photo",
     "profileSaved": "Profile saved"
+  },
+  "platform": {
+    "title": "Platform",
+    "subtitle": "Owner view — every tenant, user and message",
+    "tabMessages": "Messages",
+    "tabTenants": "Tenants",
+    "tabUsers": "Users",
+    "tenants": "Tenants",
+    "users": "Users",
+    "messages24h": "Msgs 24h",
+    "pending": "Pending",
+    "when": "Time",
+    "tenant": "Tenant",
+    "to": "Recipient",
+    "channel": "Channel",
+    "status": "Status",
+    "name": "Name",
+    "slug": "Slug",
+    "user": "User",
+    "phone": "Phone",
+    "role": "Role",
+    "owner": "Owner",
+    "client": "Client"
   }
 }

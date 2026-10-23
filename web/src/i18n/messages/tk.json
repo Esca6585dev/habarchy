@@ -23,7 +23,8 @@
     "groups": "Toparlar",
     "compose": "Habar iber",
     "inbound": "Gelen SMS",
-    "chat": "Topar çaty"
+    "chat": "Topar çaty",
+    "platform": "Platforma"
   },
   "common": {
     "save": "Ýatda sakla",
@@ -431,5 +432,28 @@
     "bio": "Hakynda",
     "uploadPhoto": "Surat ýükle",
     "profileSaved": "Profil ýatda saklandy"
+  },
+  "platform": {
+    "title": "Platforma",
+    "subtitle": "Eýe görnüşi — ähli müşderiler, ulanyjylar we ugradyşlar",
+    "tabMessages": "Ugradyşlar",
+    "tabTenants": "Müşderiler",
+    "tabUsers": "Ulanyjylar",
+    "tenants": "Müşderiler",
+    "users": "Ulanyjylar",
+    "messages24h": "24s habar",
+    "pending": "Nobatda",
+    "when": "Wagt",
+    "tenant": "Müşderi",
+    "to": "Alyjy",
+    "channel": "Kanal",
+    "status": "Ýagdaý",
+    "name": "At",
+    "slug": "Slug",
+    "user": "Ulanyjy",
+    "phone": "Telefon",
+    "role": "Rol",
+    "owner": "Eýe",
+    "client": "Müşderi"
   }
 }

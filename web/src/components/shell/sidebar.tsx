@@ -3,16 +3,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
-  Activity, BookOpen, Contact, FileText, Gauge, KeyRound, LayoutDashboard, ListOrdered, MessageSquare, Plug, Settings, ShieldCheck, Webhook, Send, Users, Inbox, MessagesSquare } from "lucide-react";
+  Activity, BookOpen, Contact, FileText, Gauge, Globe, KeyRound, LayoutDashboard, ListOrdered, MessageSquare, Plug, Settings, ShieldCheck, Webhook, Send, Users, Inbox, MessagesSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/brand-mark";
 import { ProjectSwitcher } from "./project-switcher";
 import { useProject } from "@/components/project-context";
+import { useMe } from "@/lib/hooks";
 
 export function Sidebar({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const { can } = useProject();
+  const { data: me } = useMe();
+  const platformAdmin = !!(me as { platform_admin?: boolean } | undefined)?.platform_admin;
   const items = [
     { href: "/", label: t("dashboard"), icon: LayoutDashboard },
     { href: "/messages", label: t("messages"), icon: MessageSquare },
@@ -59,6 +62,19 @@ export function Sidebar({ className, onNavigate }: { className?: string; onNavig
               </Link>
             );
           })}
+        {platformAdmin ? (
+          <Link
+            href="/platform"
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
+              pathname.startsWith("/platform") ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground",
+            )}
+          >
+            <Globe className="h-4 w-4" />
+            {t("platform")}
+          </Link>
+        ) : null}
       </nav>
       <div className="flex flex-col gap-0.5 border-t pt-3 text-sm">
         <a href="/api-docs" target="_blank" rel="noreferrer" className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-muted-foreground hover:bg-accent">
