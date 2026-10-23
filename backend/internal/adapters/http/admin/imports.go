@@ -38,7 +38,7 @@ func (h *Handlers) importTemplate(c *fiber.Ctx) error {
 	}
 	return httpx.OK(c, fiber.Map{
 		"columns":  contactimport.TemplateColumns(),
-		"formats":  []string{"xlsx", "csv", "vcf", "docx", "txt"},
+		"formats":  []string{"xlsx", "csv", "vcf", "docx", "sqlite", "txt"},
 		"max_rows": contactimport.MaxRows,
 		"sample": fiber.Map{
 			"csv":  "/api/admin/contacts/import/template?format=csv",

@@ -129,7 +129,7 @@ export function ImportDialog({ open, onOpenChange, defaultGroupId }: { open: boo
                 <Button asChild size="sm" variant="outline"><a href="/api/backend/api/admin/contacts/import/template?format=csv" download><Download className="mr-1 h-3.5 w-3.5" />{t("downloadCsv")}</a></Button>
               </div>
             </div>
-            <input ref={fileRef} type="file" accept=".xlsx,.xlsm,.csv,.tsv,.txt,.vcf,.vcard,.docx" className="hidden" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setResult(null); }} data-testid="import-file" />
+            <input ref={fileRef} type="file" accept=".xlsx,.xlsm,.csv,.tsv,.txt,.vcf,.vcard,.docx,.db,.sqlite,.sqlite3" className="hidden" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setResult(null); }} data-testid="import-file" />
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload /> {t("chooseFile")}</Button>
               <span className="text-sm text-muted-foreground">{file ? `${file.name} · ${Math.round(file.size / 1024)} KB` : "—"}</span>

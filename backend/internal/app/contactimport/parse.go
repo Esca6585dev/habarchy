@@ -41,8 +41,10 @@ func Parse(filename string, r io.Reader) ([]contacts.Input, []RowError, error) {
 		return ParseVCard(r)
 	case ".docx":
 		return ParseDOCX(r)
+	case ".db", ".sqlite", ".sqlite3":
+		return ParseSQLite(r)
 	}
-	return nil, nil, fmt.Errorf("unsupported file type %q (use .xlsx, .csv, .vcf, .docx or .txt)", ext)
+	return nil, nil, fmt.Errorf("unsupported file type %q (use .xlsx, .csv, .vcf, .docx, .sqlite or .txt)", ext)
 }
 
 var (
@@ -52,8 +54,8 @@ var (
 	chatIDRe  = regexp.MustCompile(`^-?\d{5,}$`)
 	digitsRe  = regexp.MustCompile(`\D`)
 	headerMap = map[string]string{
-		"name": "name", "ady": "name", "ad": "name", "имя": "name", "фио": "name", "full name": "name", "fullname": "name", "contact": "name", "customer": "name", "müşderi": "name", "musderi": "name",
-		"phone": "phone", "telefon": "phone", "tel": "phone", "mobile": "phone", "mobil": "phone", "телефон": "phone", "nomer": "phone", "number": "phone", "belgi": "phone", "msisdn": "phone", "gsm": "phone",
+		"name": "name", "ady": "name", "ad": "name", "имя": "name", "фио": "name", "full name": "name", "fullname": "name", "contact": "name", "customer": "name", "müşderi": "name", "musderi": "name", "title": "name", "at": "name",
+		"phone": "phone", "telefon": "phone", "tel": "phone", "mobile": "phone", "mobil": "phone", "телефон": "phone", "nomer": "phone", "number": "phone", "belgi": "phone", "msisdn": "phone", "gsm": "phone", "phone_number": "phone", "phonenumber": "phone", "phone number": "phone", "nomer_belgi": "phone",
 		"email": "email", "e-mail": "email", "mail": "email", "почта": "email", "poçta": "email",
 		"whatsapp": "whatsapp", "wa": "whatsapp",
 		"telegram": "telegram", "telegram_chat_id": "telegram", "chat_id": "telegram", "tg": "telegram",
