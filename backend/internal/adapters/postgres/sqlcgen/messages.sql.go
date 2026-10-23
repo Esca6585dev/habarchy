@@ -460,6 +460,87 @@ func (q *Queries) GetMessageByProviderMessageID(ctx context.Context, arg GetMess
 	return i, err
 }
 
+const listAllMessages = `-- name: ListAllMessages :many
+SELECT m.id, m.project_id, m.batch_id, m.channel, m.to_address, m.contact_id, m.template_key, m.template_version, m.rendered_subject, m.rendered_body, m.status, m.priority, m.provider_id, m.provider_message_id, m.error_code, m.error_message, m.attempts, m.scheduled_at, m.sent_at, m.delivered_at, m.cost_micros, m.currency, m.metadata, m.idempotency_key, m.is_test, m.created_at, m.updated_at, p.name AS project_name, p.slug AS project_slug
+FROM messages m
+JOIN projects p ON p.id = m.project_id
+WHERE ($1::message_status IS NULL OR m.status = $1::message_status)
+  AND ($2::channel IS NULL OR m.channel = $2::channel)
+  AND ($3::uuid IS NULL OR m.id < $3::uuid)
+ORDER BY m.id DESC
+LIMIT $4
+`
+
+type ListAllMessagesParams struct {
+	Status   NullMessageStatus
+	Channel  NullChannel
+	CursorID *uuid.UUID
+	RowLimit int32
+}
+
+type ListAllMessagesRow struct {
+	Message     Message
+	ProjectName string
+	ProjectSlug string
+}
+
+// Platform-wide message log (owner only): who sent what, to whom, via which
+// tenant. Cursor on id for keyset pagination.
+func (q *Queries) ListAllMessages(ctx context.Context, arg ListAllMessagesParams) ([]ListAllMessagesRow, error) {
+	rows, err := q.db.Query(ctx, listAllMessages,
+		arg.Status,
+		arg.Channel,
+		arg.CursorID,
+		arg.RowLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAllMessagesRow{}
+	for rows.Next() {
+		var i ListAllMessagesRow
+		if err := rows.Scan(
+			&i.Message.ID,
+			&i.Message.ProjectID,
+			&i.Message.BatchID,
+			&i.Message.Channel,
+			&i.Message.ToAddress,
+			&i.Message.ContactID,
+			&i.Message.TemplateKey,
+			&i.Message.TemplateVersion,
+			&i.Message.RenderedSubject,
+			&i.Message.RenderedBody,
+			&i.Message.Status,
+			&i.Message.Priority,
+			&i.Message.ProviderID,
+			&i.Message.ProviderMessageID,
+			&i.Message.ErrorCode,
+			&i.Message.ErrorMessage,
+			&i.Message.Attempts,
+			&i.Message.ScheduledAt,
+			&i.Message.SentAt,
+			&i.Message.DeliveredAt,
+			&i.Message.CostMicros,
+			&i.Message.Currency,
+			&i.Message.Metadata,
+			&i.Message.IdempotencyKey,
+			&i.Message.IsTest,
+			&i.Message.CreatedAt,
+			&i.Message.UpdatedAt,
+			&i.ProjectName,
+			&i.ProjectSlug,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listBatches = `-- name: ListBatches :many
 SELECT id, project_id, template_key, channel, total, queued, sent, delivered, failed, status, idempotency_key, created_at, completed_at FROM batches WHERE project_id = $1 ORDER BY created_at DESC LIMIT $3 OFFSET $2
 `

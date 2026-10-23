@@ -81,6 +81,14 @@ func (h *Handlers) Register(app fiber.Router) {
 		r.Get("/users", h.listUsers)
 		r.Post("/users", h.createUser)
 		r.Get("/overview", h.overview)
+
+		// Platform (owner / platform_admin only): cross-tenant visibility —
+		// every tenant, every user, and the whole message log.
+		plat := r.Group("/platform", middleware.RequirePlatformAdmin(h.Auth))
+		plat.Get("/overview", h.overview)
+		plat.Get("/tenants", h.platformTenants)
+		plat.Get("/users", h.platformUsers)
+		plat.Get("/messages", h.platformMessages)
 	}
 
 	r.Get("/me", h.me)

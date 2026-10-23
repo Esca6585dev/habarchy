@@ -148,3 +148,15 @@ SELECT * FROM batches WHERE project_id = @project_id ORDER BY created_at DESC LI
 SELECT * FROM webhook_deliveries
 WHERE delivered_at IS NULL AND next_retry_at IS NOT NULL AND next_retry_at <= now()
 ORDER BY next_retry_at LIMIT @row_limit;
+
+-- name: ListAllMessages :many
+-- Platform-wide message log (owner only): who sent what, to whom, via which
+-- tenant. Cursor on id for keyset pagination.
+SELECT sqlc.embed(m), p.name AS project_name, p.slug AS project_slug
+FROM messages m
+JOIN projects p ON p.id = m.project_id
+WHERE (sqlc.narg('status')::message_status IS NULL OR m.status = sqlc.narg('status')::message_status)
+  AND (sqlc.narg('channel')::channel IS NULL OR m.channel = sqlc.narg('channel')::channel)
+  AND (sqlc.narg('cursor_id')::uuid IS NULL OR m.id < sqlc.narg('cursor_id')::uuid)
+ORDER BY m.id DESC
+LIMIT @row_limit;

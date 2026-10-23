@@ -37,19 +37,21 @@ type passwordRequest struct {
 
 // UserResponse is the public shape of a user.
 type UserResponse struct {
-	ID          uuid.UUID  `json:"id"`
-	Email       string     `json:"email"`
-	FullName    string     `json:"full_name"`
-	IsActive    bool       `json:"is_active"`
-	TOTPEnabled bool       `json:"totp_enabled"`
-	LastLoginAt *time.Time `json:"last_login_at"`
-	CreatedAt   time.Time  `json:"created_at"`
-	Bio         string     `json:"bio"`
-	AvatarID    *uuid.UUID `json:"avatar_id,omitempty"`
+	ID            uuid.UUID  `json:"id"`
+	Email         string     `json:"email"`
+	Phone         string     `json:"phone,omitempty"`
+	PlatformAdmin bool       `json:"platform_admin"`
+	FullName      string     `json:"full_name"`
+	IsActive      bool       `json:"is_active"`
+	TOTPEnabled   bool       `json:"totp_enabled"`
+	LastLoginAt   *time.Time `json:"last_login_at"`
+	CreatedAt     time.Time  `json:"created_at"`
+	Bio           string     `json:"bio"`
+	AvatarID      *uuid.UUID `json:"avatar_id,omitempty"`
 }
 
 func toUser(u *sqlcgen.User) UserResponse {
-	return UserResponse{ID: u.ID, Email: u.Email, FullName: u.FullName, IsActive: u.IsActive, TOTPEnabled: u.TotpEnabled, LastLoginAt: u.LastLoginAt, CreatedAt: u.CreatedAt, Bio: u.Bio, AvatarID: u.AvatarID}
+	return UserResponse{ID: u.ID, Email: u.Email, Phone: u.Phone, PlatformAdmin: u.PlatformAdmin, FullName: u.FullName, IsActive: u.IsActive, TOTPEnabled: u.TotpEnabled, LastLoginAt: u.LastLoginAt, CreatedAt: u.CreatedAt, Bio: u.Bio, AvatarID: u.AvatarID}
 }
 
 // ---- projects ----

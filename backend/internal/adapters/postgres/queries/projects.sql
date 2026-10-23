@@ -60,3 +60,6 @@ DELETE FROM project_members WHERE project_id = @project_id AND user_id = @user_i
 
 -- name: CountProjectOwners :one
 SELECT count(*) FROM project_members WHERE project_id = @project_id AND role = 'owner';
+
+-- name: CountProjects :one
+SELECT count(*) FROM projects;

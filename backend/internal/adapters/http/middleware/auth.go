@@ -47,6 +47,25 @@ func UserID(c *fiber.Ctx) uuid.UUID {
 	return id
 }
 
+// RequirePlatformAdmin allows only the platform owner (users with
+// platform_admin). It must run after RequireJWT, which sets the user id.
+func RequirePlatformAdmin(svc *auth.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		uid := UserID(c)
+		if uid == uuid.Nil {
+			return domain.ErrUnauthorized
+		}
+		u, err := svc.User(c.UserContext(), uid)
+		if err != nil {
+			return err
+		}
+		if !u.PlatformAdmin {
+			return domain.ErrForbiddenScope.WithMessage("platform admin only")
+		}
+		return c.Next()
+	}
+}
+
 // APIKeyConfig tunes RequireAPIKey.
 type APIKeyConfig struct {
 	SignatureTolerance timeDuration
