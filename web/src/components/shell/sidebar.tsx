@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   Activity, BookOpen, Contact, FileText, Gauge, KeyRound, LayoutDashboard, ListOrdered, MessageSquare, Plug, Settings, ShieldCheck, Webhook, Send, Users, Inbox, MessagesSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BrandMark } from "@/components/brand-mark";
 import { ProjectSwitcher } from "./project-switcher";
 import { useProject } from "@/components/project-context";
 
@@ -33,10 +34,7 @@ export function Sidebar({ className, onNavigate }: { className?: string; onNavig
     <aside className={cn("flex h-full w-64 flex-col gap-4 border-r bg-sidebar p-4", className)}>
       <Link href="/" className="flex items-center gap-2 px-1 text-lg font-semibold tracking-tight" onClick={onNavigate}>
         <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M21 14a2 2 0 0 1-2 2H9l-4 3.5V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z" />
-            <path d="M8.5 8.5h7M8.5 11.5h4" />
-          </svg>
+          <BrandMark className="h-[18px] w-[18px]" />
         </span>
         Habarçy SMS
       </Link>

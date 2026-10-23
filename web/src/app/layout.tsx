@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -19,6 +19,10 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: { default: "Habarçy SMS", template: "%s · Habarçy SMS" },
   description: "Habarçy SMS — operator SMPP (0796) we telefon şlýuzy arkaly SMS, OTP we habar ugratmak.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1366c4",
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
