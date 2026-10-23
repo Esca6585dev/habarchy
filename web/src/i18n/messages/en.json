@@ -72,7 +72,15 @@
     "totpHint": "Two-factor authentication is enabled for this account.",
     "signIn": "Sign in",
     "signingIn": "Signing in…",
-    "invalid": "Invalid email or password"
+    "invalid": "Invalid email or password",
+    "emailTab": "Email",
+    "phoneTab": "Phone",
+    "country": "Country",
+    "phoneNumber": "Phone number",
+    "codeLabel": "SMS code",
+    "codeSentHint": "A code was sent by SMS (0796).",
+    "sendCode": "Send code",
+    "back": "Back"
   },
   "dashboard": {
     "title": "Dashboard",

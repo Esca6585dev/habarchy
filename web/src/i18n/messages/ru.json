@@ -72,7 +72,15 @@
     "totpHint": "Для этого аккаунта включена двухфакторная аутентификация.",
     "signIn": "Войти",
     "signingIn": "Вход…",
-    "invalid": "Неверный e-mail или пароль"
+    "invalid": "Неверный e-mail или пароль",
+    "emailTab": "E-mail",
+    "phoneTab": "Телефон",
+    "country": "Страна",
+    "phoneNumber": "Номер телефона",
+    "codeLabel": "Код из SMS",
+    "codeSentHint": "Код отправлен по SMS (0796).",
+    "sendCode": "Отправить код",
+    "back": "Назад"
   },
   "dashboard": {
     "title": "Панель",

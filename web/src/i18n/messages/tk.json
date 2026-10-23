@@ -72,7 +72,15 @@
     "totpHint": "Bu hasap üçin iki basgançakly tassyklama açyk.",
     "signIn": "Gir",
     "signingIn": "Girilýär…",
-    "invalid": "E-mail ýa-da parol nädogry"
+    "invalid": "E-mail ýa-da parol nädogry",
+    "emailTab": "E-mail",
+    "phoneTab": "Telefon",
+    "country": "Ýurt",
+    "phoneNumber": "Telefon belgiň",
+    "codeLabel": "SMS kody",
+    "codeSentHint": "Kod SMS arkaly iberildi (0796).",
+    "sendCode": "Kod iber",
+    "back": "Yza"
   },
   "dashboard": {
     "title": "Panel",
