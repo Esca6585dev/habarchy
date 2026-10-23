@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Habarchy",
+    "name": "Habarçy SMS",
     "tagline": "Один API для SMS, e-mail, push и Telegram"
   },
   "nav": {
@@ -63,7 +63,7 @@
     "system": "Системная"
   },
   "auth": {
-    "title": "Вход в Habarchy",
+    "title": "Вход в Habarçy SMS",
     "subtitle": "Панель администратора",
     "email": "E-mail",
     "password": "Пароль",

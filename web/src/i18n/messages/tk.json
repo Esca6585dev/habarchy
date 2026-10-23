@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Habarçy",
+    "name": "Habarçy SMS",
     "tagline": "SMS, e-mail, push we Telegram üçin ýeke API"
   },
   "nav": {
@@ -63,7 +63,7 @@
     "system": "Ulgam"
   },
   "auth": {
-    "title": "Habarçy-a giriň",
+    "title": "Habarçy SMS-e giriň",
     "subtitle": "Admin paneli",
     "email": "E-mail",
     "password": "Parol",

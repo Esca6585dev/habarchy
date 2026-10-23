@@ -32,8 +32,13 @@ export function Sidebar({ className, onNavigate }: { className?: string; onNavig
   return (
     <aside className={cn("flex h-full w-64 flex-col gap-4 border-r bg-sidebar p-4", className)}>
       <Link href="/" className="flex items-center gap-2 px-1 text-lg font-semibold tracking-tight" onClick={onNavigate}>
-        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm">H</span>
-        Habarchy
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 14a2 2 0 0 1-2 2H9l-4 3.5V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z" />
+            <path d="M8.5 8.5h7M8.5 11.5h4" />
+          </svg>
+        </span>
+        Habarçy SMS
       </Link>
       <ProjectSwitcher />
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">

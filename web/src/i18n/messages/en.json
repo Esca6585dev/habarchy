@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "Habarchy",
+    "name": "Habarçy SMS",
     "tagline": "One API for SMS, email, push and Telegram"
   },
   "nav": {
@@ -63,7 +63,7 @@
     "system": "System"
   },
   "auth": {
-    "title": "Sign in to Habarchy",
+    "title": "Sign in to Habarçy SMS",
     "subtitle": "Admin panel",
     "email": "Email",
     "password": "Password",

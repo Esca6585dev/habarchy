@@ -52,6 +52,12 @@ function LoginForm() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
+        <span className="mb-1 flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 14a2 2 0 0 1-2 2H9l-4 3.5V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z" />
+            <path d="M8.5 8.5h7M8.5 11.5h4" />
+          </svg>
+        </span>
         <CardTitle className="text-xl">{t("title")}</CardTitle>
         <CardDescription>{t("subtitle")}</CardDescription>
       </CardHeader>
