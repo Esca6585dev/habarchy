@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FlaskConical, Pencil, Plus, Smartphone } from "lucide-react";
+import { FlaskConical, Pencil, Plus, Share2, Smartphone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, unwrap, ApiError } from "@/lib/api/client";
 import { qk } from "@/lib/hooks";
@@ -27,6 +27,63 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 
 const types = ["http_sms", "smpp", "android_sms", "smtp", "fcm", "telegram_bot", "whatsapp_cloud", "slack"] as const;
+
+type ShareRow = { grantee_project_id: string; name: string; slug: string; created_at: string };
+
+/** Manage which tenants may send through this phone. Uses the backend proxy
+ *  directly (the share endpoints are not in the typed client). */
+function ProviderShares({ projectId, providerId }: { projectId: string; providerId: string }) {
+  const t = useTranslations("providers");
+  const qc = useQueryClient();
+  const [grantee, setGrantee] = useState("");
+  const [busy, setBusy] = useState(false);
+  const key = ["provider-shares", projectId, providerId];
+  const shares = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const res = await fetch(`/api/backend/api/admin/projects/${projectId}/providers/${providerId}/shares`);
+      if (!res.ok) throw new Error(String(res.status));
+      return ((await res.json()) as { data: ShareRow[] }).data ?? [];
+    },
+  });
+  const add = async () => {
+    const id = grantee.trim();
+    if (!id) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/backend/api/admin/projects/${projectId}/providers/${providerId}/share`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ grantee_project_id: id }),
+      });
+      if (!res.ok) { const b = (await res.json().catch(() => null)) as { error?: { message?: string } } | null; toast.error(b?.error?.message ?? res.statusText); return; }
+      setGrantee("");
+      void qc.invalidateQueries({ queryKey: key });
+    } finally { setBusy(false); }
+  };
+  const revoke = async (gid: string) => {
+    const res = await fetch(`/api/backend/api/admin/projects/${projectId}/providers/${providerId}/share/${gid}`, { method: "DELETE" });
+    if (res.ok) void qc.invalidateQueries({ queryKey: key }); else toast.error(res.statusText);
+  };
+  return (
+    <div className="space-y-3 rounded-lg border bg-muted/40 p-4 text-sm">
+      <div className="flex items-center gap-2 font-medium"><Share2 className="h-4 w-4" /> {t("shareTitle")}</div>
+      <p className="text-muted-foreground">{t("shareHint")}</p>
+      <div className="flex flex-wrap gap-2">
+        <Input value={grantee} onChange={(e) => setGrantee(e.target.value)} placeholder={t("granteeId")} className="max-w-xs font-mono" />
+        <Button size="sm" disabled={busy || !grantee.trim()} onClick={add}>{t("shareBtn")}</Button>
+      </div>
+      {shares.data?.length ? (
+        <ul className="divide-y rounded-md border bg-background">
+          {shares.data.map((s) => (
+            <li key={s.grantee_project_id} className="flex items-center justify-between gap-2 px-3 py-2">
+              <span><span className="font-medium">{s.name}</span> <code className="text-xs text-muted-foreground">{s.slug}</code></span>
+              <Button size="icon" variant="ghost" onClick={() => revoke(s.grantee_project_id)} aria-label={t("revoke")}><Trash2 className="h-4 w-4" /></Button>
+            </li>
+          ))}
+        </ul>
+      ) : <p className="text-xs text-muted-foreground">{t("noShares")}</p>}
+    </div>
+  );
+}
 const samples: Record<string, string> = {
   http_sms: JSON.stringify({ url: "https://sms.example.tm/api/send", method: "POST", headers: { Authorization: "Bearer TOKEN" }, body_template: '{"to":"{{.To}}","text":{{.TextJSON}},"from":"{{.Sender}}"}', sender: "HABARCHY", success: { json_path: "status", json_equals: "OK" }, message_id: { json_path: "id" }, dlr: { message_id_param: "msgid", status_param: "status", delivered_values: ["DELIVRD"], failed_values: ["UNDELIV", "EXPIRED"] } }, null, 2),
   smpp: JSON.stringify({ host: "smsc.operator.tm", port: 2775, system_id: "habarchy", password: "secret", source_addr: "HABARCHY", source_ton: 5, source_npi: 0, dest_ton: 1, dest_npi: 1, enquire_link_sec: 60, request_dlr: true }, null, 2),
@@ -183,6 +240,9 @@ export default function ProvidersPage() {
                 </div>
               ) : <Skeleton className="h-16" />}
             </div>
+          ) : null}
+          {detail?.type === "android_sms" && projectId && detail.id ? (
+            <ProviderShares projectId={projectId} providerId={detail.id} />
           ) : null}
           {detail?.type === "http_sms" ? (
             <div className="flex items-center gap-2 text-sm">

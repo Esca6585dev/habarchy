@@ -165,7 +165,13 @@
     "offline": "Phone offline",
     "lastSeen": "Last seen",
     "pendingSms": "SMS waiting on phone",
-    "inbound": "Inbound SMS"
+    "inbound": "Inbound SMS",
+    "shareTitle": "Share phone",
+    "shareHint": "Another tenant can send through this phone. Add their tenant ID.",
+    "granteeId": "Tenant ID",
+    "shareBtn": "Share",
+    "noShares": "Not shared with anyone",
+    "revoke": "Revoke"
   },
   "templates": {
     "title": "Templates",

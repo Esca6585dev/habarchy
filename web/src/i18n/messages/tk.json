@@ -165,7 +165,13 @@
     "offline": "Telefon oflaýn",
     "lastSeen": "Soňky habar",
     "pendingSms": "Telefonda garaşýan SMS",
-    "inbound": "Gelen SMS"
+    "inbound": "Gelen SMS",
+    "shareTitle": "Telefon paýlaşmak",
+    "shareHint": "Bu telefonyň üsti bilen başga müşderi SMS ugradyp bilýär. Müşderiniň tenant ID-sini goş.",
+    "granteeId": "Müşderi (tenant) ID",
+    "shareBtn": "Paýlaş",
+    "noShares": "Hiç kim bilen paýlaşylmadyk",
+    "revoke": "Yza al"
   },
   "templates": {
     "title": "Şablonlar",
