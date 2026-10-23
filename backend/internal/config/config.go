@@ -77,6 +77,9 @@ type Auth struct {
 	JWTIssuer       string        `envconfig:"JWT_ISSUER" default:"habarchy"`
 	AccessTokenTTL  time.Duration `envconfig:"ACCESS_TOKEN_TTL" default:"15m"`
 	RefreshTokenTTL time.Duration `envconfig:"REFRESH_TOKEN_TTL" default:"720h"` // 30 days
+	// PhoneAuthProjectSlug is the tenant whose SMS provider (e.g. the 0796
+	// SMPP) delivers client phone-login codes. Empty disables phone login.
+	PhoneAuthProjectSlug string `envconfig:"PHONE_AUTH_PROJECT_SLUG" default:"demo"`
 }
 
 // Security configures encryption at rest and request signing.

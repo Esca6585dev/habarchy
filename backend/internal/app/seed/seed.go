@@ -24,6 +24,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/app/templates"
 	"github.com/Esca6585dev/habarchy/backend/internal/domain"
 	"github.com/Esca6585dev/habarchy/backend/pkg/ids"
+	"github.com/Esca6585dev/habarchy/backend/pkg/phone"
 )
 
 // Options control what the seeder creates.
@@ -49,6 +50,10 @@ type Options struct {
 	SMPPPassword   string
 	SMPPSourceAddr string // sender / short code, e.g. "0796"
 	SMPPRequestDLR bool
+
+	// OwnerPhone, when set, creates (or finds) that phone user and makes it a
+	// platform admin (the owner who sees every tenant). E.g. "65656585".
+	OwnerPhone string
 }
 
 // Result is what the caller prints. Plaintext keys are shown exactly once.
@@ -63,6 +68,8 @@ type Result struct {
 	LiveKey          string
 	SMPPProvider     string // name of the smpp provider, when one was requested
 	SMPPCreated      bool
+	OwnerPhone       string // the platform-admin owner phone, when requested
+	OwnerCreated     bool
 }
 
 // Seeder wires the application services.
@@ -131,6 +138,14 @@ func (s *Seeder) Run(ctx context.Context, opt Options) (*Result, error) {
 		res.SMPPProvider, res.SMPPCreated = name, created
 	}
 
+	if opt.OwnerPhone != "" {
+		p, created, err := s.ownerAdmin(ctx, opt.OwnerPhone)
+		if err != nil {
+			return nil, err
+		}
+		res.OwnerPhone, res.OwnerCreated = p, created
+	}
+
 	stamp := time.Now().UTC().Format("2006-01-02 15:04")
 	testKey, err := s.Projects.CreateAPIKey(ctx, admin.ID, project.ID, projects.APIKeyInput{Name: "seed test " + stamp, Live: false, Scopes: domain.AllScopes})
 	if err != nil {
@@ -194,6 +209,53 @@ func (s *Seeder) project(ctx context.Context, ownerID uuid.UUID, opt Options) (*
 		return nil, false, err
 	}
 	return p, true, nil
+}
+
+// ownerAdmin finds or creates the owner's phone user and marks it a platform
+// admin, giving it a personal tenant on first creation. Idempotent.
+func (s *Seeder) ownerAdmin(ctx context.Context, rawPhone string) (string, bool, error) {
+	p, err := phone.Normalize(rawPhone, "")
+	if err != nil {
+		return "", false, fmt.Errorf("owner phone %q: %w", rawPhone, err)
+	}
+	user, err := s.DB.Queries.GetUserByPhone(ctx, p)
+	created := false
+	switch {
+	case err == nil:
+	case errors.Is(err, pgx.ErrNoRows):
+		user, err = s.DB.Queries.CreatePhoneUser(ctx, sqlcgen.CreatePhoneUserParams{FullName: "Owner", Phone: p})
+		if err != nil {
+			return "", false, err
+		}
+		created = true
+		if s.Projects != nil {
+			slug := "u-" + digitsOnly(p)
+			if _, perr := s.Projects.Create(ctx, user.ID, projects.CreateInput{Name: p, Slug: slug}); perr != nil && !postgres.IsUniqueViolation(perr) {
+				var de *domain.Error
+				if !errors.As(perr, &de) || de.Code != domain.CodeConflict {
+					return "", false, perr
+				}
+			}
+		}
+	default:
+		return "", false, err
+	}
+	if !user.PlatformAdmin {
+		if err := s.DB.Queries.SetPlatformAdmin(ctx, sqlcgen.SetPlatformAdminParams{ID: user.ID, PlatformAdmin: true}); err != nil {
+			return "", false, err
+		}
+	}
+	return p, created, nil
+}
+
+func digitsOnly(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		if r >= '0' && r <= '9' {
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }
 
 // smppProvider creates a live `smpp` SMS provider from the operator's
@@ -312,6 +374,9 @@ func (r *Result) Print(w io.Writer) {
 	fmt.Fprintf(&b, "templates    %d/%d created (otp, welcome, password_reset × sms,email × tk,ru,en)\n", r.TemplatesCreated, r.TemplatesTotal)
 	if r.SMPPProvider != "" {
 		fmt.Fprintf(&b, "smpp provider %q (%s)   active · sends SMS/OTP through the operator short code\n", r.SMPPProvider, verb(r.SMPPCreated))
+	}
+	if r.OwnerPhone != "" {
+		fmt.Fprintf(&b, "owner admin  %s (%s)   platform_admin · logs in with phone + OTP\n", r.OwnerPhone, verb(r.OwnerCreated))
 	}
 	fmt.Fprintf(&b, "test api key %s   (sandbox: messages succeed instantly, nothing is sent)\n", r.TestKey)
 	if r.LiveKey != "" {

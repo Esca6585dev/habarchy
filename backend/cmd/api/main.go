@@ -33,6 +33,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/app/groups"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/phoneauth"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/seed"
@@ -135,6 +136,7 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 			SMPPPassword:   smppEnv("SMPP_PASSWORD"),
 			SMPPSourceAddr: smppEnv("SMPP_SOURCE_ADDR", "SMPP_FROM"),
 			SMPPRequestDLR: smppEnvBool("SMPP_REQUEST_DLR"),
+			OwnerPhone:     os.Getenv("HABARCHY_OWNER_PHONE"),
 		})
 		if err != nil {
 			return err
@@ -189,10 +191,23 @@ func run(migrateOnly, createAdmin, seedDemo, seedLive bool) error {
 		Webhooks: webhookSvc, Stats: statsSvc, DB: db, Redis: rdb.Raw(), QueueUI: queueUI, PublicURL: cfg.HTTP.PublicURL,
 	}).Register(app)
 	(&gatewayhttp.Handlers{Gateway: gatewaySvc}).Register(app)
+
+	// Client phone+OTP login: codes go out through the auth project's SMS
+	// provider (e.g. the 0796 SMPP). Missing project only disables the routes.
+	var phoneAuthSvc *phoneauth.Service
+	if slug := cfg.Auth.PhoneAuthProjectSlug; slug != "" {
+		if authProject, err := db.Queries.GetProjectBySlug(ctx, slug); err != nil {
+			log.Warn().Err(err).Str("slug", slug).Msg("phone login disabled: auth project not found (run -seed with SMPP_* set)")
+		} else {
+			phoneAuthSvc = phoneauth.New(db, authSvc, otpSvc, projectSvc, authProject)
+			log.Info().Str("project", authProject.Slug).Msg("client phone+OTP login enabled")
+		}
+	}
+
 	(&public.Handlers{
 		Projects: projectSvc, Templates: templateSvc, Messages: messageSvc, OTP: otpSvc, Contacts: contactSvc, Groups: groupSvc, Gateway: gatewaySvc, Imports: importSvc,
 		Providers: providerSvc, Delivery: deliverySvc, Stats: statsSvc, SignatureTolerance: cfg.Security.SignatureTolerance,
-		APIRatePerSec: cfg.Limits.APIRatePerSec, Limiter: rdb,
+		APIRatePerSec: cfg.Limits.APIRatePerSec, Limiter: rdb, PhoneAuth: phoneAuthSvc,
 	}).Register(app)
 
 	errCh := make(chan error, 1)

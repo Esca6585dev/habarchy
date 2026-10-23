@@ -17,6 +17,7 @@ import (
 	"github.com/Esca6585dev/habarchy/backend/internal/app/groups"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/messages"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/otp"
+	"github.com/Esca6585dev/habarchy/backend/internal/app/phoneauth"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/projects"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/providers"
 	"github.com/Esca6585dev/habarchy/backend/internal/app/stats"
@@ -31,6 +32,9 @@ type Handlers struct {
 	Templates          *templates.Service
 	Messages           *messages.Service
 	OTP                *otp.Service
+	// PhoneAuth serves /api/auth/phone (unauthenticated client login); nil
+	// disables those routes.
+	PhoneAuth *phoneauth.Service
 	Contacts           *contacts.Service
 	Groups             *groups.Service
 	Gateway            *gateway.Service // inbound SMS listing
@@ -47,6 +51,14 @@ type Handlers struct {
 // Register mounts the public API under /api/v1 and callbacks under
 // /callbacks.
 func (h *Handlers) Register(app fiber.Router) {
+	// Client phone login is unauthenticated (no API key): it is how an end
+	// user gets their first token.
+	if h.PhoneAuth != nil {
+		pa := app.Group("/api/auth/phone")
+		pa.Post("/start", h.phoneStart)
+		pa.Post("/verify", h.phoneVerify)
+	}
+
 	r := app.Group("/api/v1", middleware.RequireAPIKey(h.Projects, middleware.APIKeyConfig{SignatureTolerance: h.SignatureTolerance}))
 	if h.Limiter != nil && h.APIRatePerSec > 0 {
 		r.Use(middleware.RateLimitByKey(h.Limiter, h.APIRatePerSec))

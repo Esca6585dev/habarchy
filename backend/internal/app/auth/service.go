@@ -156,6 +156,28 @@ func (s *Service) LogoutAll(ctx context.Context, userID uuid.UUID) error {
 	return s.db.Queries.RevokeAllUserRefreshTokens(ctx, userID)
 }
 
+// IssueTokens loads a user and issues a fresh access+refresh pair. It is for
+// alternative login flows (e.g. phone + OTP) that have already proven the
+// caller's identity by other means; it does not check a password.
+func (s *Service) IssueTokens(ctx context.Context, userID uuid.UUID, sess Session) (*Tokens, *sqlcgen.User, error) {
+	user, err := s.db.Queries.GetUserByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil, domain.ErrUnauthorized.WithMessage("user not found")
+		}
+		return nil, nil, err
+	}
+	if !user.IsActive {
+		return nil, nil, domain.ErrUnauthorized.WithMessage("account disabled")
+	}
+	tokens, err := s.issue(ctx, &user, sess)
+	if err != nil {
+		return nil, nil, err
+	}
+	_ = s.db.Queries.TouchUserLogin(ctx, user.ID)
+	return tokens, &user, nil
+}
+
 // CreateUser registers an admin user.
 func (s *Service) CreateUser(ctx context.Context, email, pass, fullName string) (*sqlcgen.User, error) {
 	hash, err := s.hash(pass)
