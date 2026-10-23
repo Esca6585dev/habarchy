@@ -8,7 +8,7 @@ BIN      := bin
 DB_URL   ?= $(HABARCHY_DATABASE_URL)
 PKGS     := ./...
 
-.PHONY: all build run run-worker run-scheduler smpptest test test-unit test-integration lint fmt tidy sqlc openapi migrate migrate-down migrate-status tools genkey clean
+.PHONY: all build run run-worker run-scheduler smpptest import-smssender test test-unit test-integration lint fmt tidy sqlc openapi migrate migrate-down migrate-status tools genkey clean
 
 all: lint test build
 
@@ -28,6 +28,9 @@ run-scheduler:
 
 smpptest:       ## bind to the operator SMPP (0796); add ARGS='-to 65656585 -text Salam' to send one SMS
 	set -a && . ./.env && set +a && $(GO) run ./cmd/smpptest $(ARGS)
+
+import-smssender: ## import contacts from the sms-sender backend; ARGS='-project demo -key <Integration-Key>' (or set SMSSENDER_KEY)
+	set -a && . ./.env && set +a && $(GO) run ./cmd/import-smssender $(ARGS)
 
 test:           ## unit + integration (integration skipped without HABARCHY_TEST_DATABASE_URL / HABARCHY_TEST_REDIS_URL)
 	$(GO) test -race -count=1 $(PKGS)
