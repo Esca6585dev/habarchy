@@ -313,7 +313,50 @@ func mask(s string) string {
 // ActiveForChannel lists active providers of a project for a channel in
 // fallback order.
 func (s *Service) ActiveForChannel(ctx context.Context, projectID uuid.UUID, ch domain.Channel) ([]sqlcgen.Provider, error) {
-	return s.db.Queries.ListActiveProvidersForChannel(ctx, sqlcgen.ListActiveProvidersForChannelParams{ProjectID: projectID, Channel: sqlcgen.Channel(ch)})
+	// Includes providers (phones) shared with this tenant by others; the
+	// tenant's own providers are returned first.
+	return s.db.Queries.ListActiveProvidersForChannelWithShared(ctx, sqlcgen.ListActiveProvidersForChannelWithSharedParams{ProjectID: projectID, Channel: sqlcgen.Channel(ch)})
+}
+
+// AdminOnly reports provider types that only the platform owner may configure
+// or that must never be shared (the 0796 SMPP line).
+func AdminOnly(t domain.ProviderType) bool { return t == domain.ProviderSMPP }
+
+// Share lets granteeProjectID send through a provider owned by ownerProjectID.
+// Admin-only providers (SMPP / 0796) can never be shared.
+func (s *Service) Share(ctx context.Context, ownerProjectID, providerID, granteeProjectID uuid.UUID) error {
+	if ownerProjectID == granteeProjectID {
+		return domain.ErrValidation.WithMessage("cannot share a provider with its own tenant")
+	}
+	p, err := s.Get(ctx, ownerProjectID, providerID)
+	if err != nil {
+		return err
+	}
+	if AdminOnly(domain.ProviderType(p.Type)) {
+		return domain.ErrForbiddenScope.WithMessage("the 0796 (SMPP) provider cannot be shared")
+	}
+	return s.db.Queries.ShareProvider(ctx, sqlcgen.ShareProviderParams{ProviderID: providerID, OwnerProjectID: ownerProjectID, GranteeProjectID: granteeProjectID})
+}
+
+// Revoke removes a share.
+func (s *Service) Revoke(ctx context.Context, ownerProjectID, providerID, granteeProjectID uuid.UUID) error {
+	if _, err := s.Get(ctx, ownerProjectID, providerID); err != nil {
+		return err
+	}
+	return s.db.Queries.RevokeProviderShare(ctx, sqlcgen.RevokeProviderShareParams{ProviderID: providerID, GranteeProjectID: granteeProjectID})
+}
+
+// Shares lists the tenants a provider is shared with.
+func (s *Service) Shares(ctx context.Context, ownerProjectID, providerID uuid.UUID) ([]sqlcgen.ListProviderSharesRow, error) {
+	if _, err := s.Get(ctx, ownerProjectID, providerID); err != nil {
+		return nil, err
+	}
+	return s.db.Queries.ListProviderShares(ctx, providerID)
+}
+
+// SharedWith lists providers (phones) other tenants have shared with this one.
+func (s *Service) SharedWith(ctx context.Context, granteeProjectID uuid.UUID) ([]sqlcgen.ListSharedProvidersForProjectRow, error) {
+	return s.db.Queries.ListSharedProvidersForProject(ctx, granteeProjectID)
 }
 
 // Build returns the adapter for a provider row, cached until the row's

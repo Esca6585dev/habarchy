@@ -207,6 +207,12 @@ func (h *Handlers) Register(app fiber.Router) {
 		pv.Delete("/:provider_id", h.deleteProvider)
 		pv.Post("/:provider_id/test", h.testSendProvider)
 		pv.Get("/:provider_id/pairing", h.gatewayPairing)
+		// Sharing: let another tenant send through this tenant's phone.
+		pv.Get("/:provider_id/shares", h.listProviderShares)
+		pv.Post("/:provider_id/share", h.shareProvider)
+		pv.Delete("/:provider_id/share/:grantee_project_id", h.revokeProviderShare)
+		// Phones other tenants shared with this one.
+		p.Get("/shared-providers", h.requireRole(domain.RoleViewer), h.listSharedProviders)
 		p.Get("/inbound", h.requireRole(domain.RoleViewer), h.listInbound)
 	}
 }

@@ -183,10 +183,12 @@ New work:
 2. **Manage own phones.** Client screen listing their paired phones (name,
    battery, network, operator, online/offline from heartbeat), with rename,
    disable, re-pair, delete. Reuse `GET /providers/{pid}/pairing`, health.
-3. **Send from other accounts' phones (sharing).** A phone owner can **share**
-   a sender phone with another account; the grantee can enqueue through it
-   (scoped, revocable, audited). New `provider_shares` table + endpoints;
-   enforce in the send path and in fallback selection.
+3. **Send from other accounts' phones (sharing).** [done] A phone owner can
+   **share** a sender phone with another tenant; the grantee sends through it.
+   `provider_shares` table; admin endpoints `POST/GET /providers/{pid}/share[s]`,
+   `DELETE /providers/{pid}/share/{grantee}`, `GET /projects/{id}/shared-
+   providers`; the send path (ActiveForChannel) now returns own providers first,
+   then shared ones. The 0796 SMPP line can never be shared (enforced).
 4. **100-at-a-time fan-out + management.** Group sends split into batches of
    **100** (like sms-sender-app's groups), round-robin across the selected/
    available phones, with per-batch send/continue/reset, live counters

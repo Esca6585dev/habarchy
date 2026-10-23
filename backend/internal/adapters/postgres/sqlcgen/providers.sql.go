@@ -7,6 +7,7 @@ package sqlcgen
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -169,6 +170,92 @@ func (q *Queries) ListActiveProvidersForChannel(ctx context.Context, arg ListAct
 	return items, nil
 }
 
+const listActiveProvidersForChannelWithShared = `-- name: ListActiveProvidersForChannelWithShared :many
+SELECT p.id, p.project_id, p.name, p.channel, p.type, p.priority, p.is_active, p.credentials_enc, p.rate_limit_per_sec, p.created_at, p.updated_at FROM providers p
+WHERE p.channel = $1 AND p.is_active
+  AND (p.project_id = $2
+       OR p.id IN (SELECT provider_id FROM provider_shares WHERE grantee_project_id = $2))
+ORDER BY (p.project_id = $2) DESC, p.priority, p.created_at
+`
+
+type ListActiveProvidersForChannelWithSharedParams struct {
+	Channel   Channel
+	ProjectID uuid.UUID
+}
+
+// The project's own active providers first (by priority), then any active
+// providers shared with it by other tenants.
+func (q *Queries) ListActiveProvidersForChannelWithShared(ctx context.Context, arg ListActiveProvidersForChannelWithSharedParams) ([]Provider, error) {
+	rows, err := q.db.Query(ctx, listActiveProvidersForChannelWithShared, arg.Channel, arg.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Provider{}
+	for rows.Next() {
+		var i Provider
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProjectID,
+			&i.Name,
+			&i.Channel,
+			&i.Type,
+			&i.Priority,
+			&i.IsActive,
+			&i.CredentialsEnc,
+			&i.RateLimitPerSec,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProviderShares = `-- name: ListProviderShares :many
+SELECT ps.grantee_project_id, pr.name AS grantee_name, pr.slug AS grantee_slug, ps.created_at
+FROM provider_shares ps JOIN projects pr ON pr.id = ps.grantee_project_id
+WHERE ps.provider_id = $1
+ORDER BY ps.created_at DESC
+`
+
+type ListProviderSharesRow struct {
+	GranteeProjectID uuid.UUID
+	GranteeName      string
+	GranteeSlug      string
+	CreatedAt        time.Time
+}
+
+func (q *Queries) ListProviderShares(ctx context.Context, providerID uuid.UUID) ([]ListProviderSharesRow, error) {
+	rows, err := q.db.Query(ctx, listProviderShares, providerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListProviderSharesRow{}
+	for rows.Next() {
+		var i ListProviderSharesRow
+		if err := rows.Scan(
+			&i.GranteeProjectID,
+			&i.GranteeName,
+			&i.GranteeSlug,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listProviders = `-- name: ListProviders :many
 SELECT id, project_id, name, channel, type, priority, is_active, credentials_enc, rate_limit_per_sec, created_at, updated_at FROM providers WHERE project_id = $1 ORDER BY channel, priority, created_at
 `
@@ -203,6 +290,86 @@ func (q *Queries) ListProviders(ctx context.Context, projectID uuid.UUID) ([]Pro
 		return nil, err
 	}
 	return items, nil
+}
+
+const listSharedProvidersForProject = `-- name: ListSharedProvidersForProject :many
+SELECT p.id, p.project_id, p.name, p.channel, p.type, p.priority, p.is_active, p.credentials_enc, p.rate_limit_per_sec, p.created_at, p.updated_at, op.name AS owner_name, op.slug AS owner_slug
+FROM provider_shares ps
+JOIN providers p ON p.id = ps.provider_id
+JOIN projects op ON op.id = p.project_id
+WHERE ps.grantee_project_id = $1 AND p.is_active
+ORDER BY p.created_at DESC
+`
+
+type ListSharedProvidersForProjectRow struct {
+	Provider  Provider
+	OwnerName string
+	OwnerSlug string
+}
+
+func (q *Queries) ListSharedProvidersForProject(ctx context.Context, granteeProjectID uuid.UUID) ([]ListSharedProvidersForProjectRow, error) {
+	rows, err := q.db.Query(ctx, listSharedProvidersForProject, granteeProjectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSharedProvidersForProjectRow{}
+	for rows.Next() {
+		var i ListSharedProvidersForProjectRow
+		if err := rows.Scan(
+			&i.Provider.ID,
+			&i.Provider.ProjectID,
+			&i.Provider.Name,
+			&i.Provider.Channel,
+			&i.Provider.Type,
+			&i.Provider.Priority,
+			&i.Provider.IsActive,
+			&i.Provider.CredentialsEnc,
+			&i.Provider.RateLimitPerSec,
+			&i.Provider.CreatedAt,
+			&i.Provider.UpdatedAt,
+			&i.OwnerName,
+			&i.OwnerSlug,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const revokeProviderShare = `-- name: RevokeProviderShare :exec
+DELETE FROM provider_shares WHERE provider_id = $1 AND grantee_project_id = $2
+`
+
+type RevokeProviderShareParams struct {
+	ProviderID       uuid.UUID
+	GranteeProjectID uuid.UUID
+}
+
+func (q *Queries) RevokeProviderShare(ctx context.Context, arg RevokeProviderShareParams) error {
+	_, err := q.db.Exec(ctx, revokeProviderShare, arg.ProviderID, arg.GranteeProjectID)
+	return err
+}
+
+const shareProvider = `-- name: ShareProvider :exec
+INSERT INTO provider_shares (provider_id, owner_project_id, grantee_project_id)
+VALUES ($1, $2, $3)
+ON CONFLICT (provider_id, grantee_project_id) DO NOTHING
+`
+
+type ShareProviderParams struct {
+	ProviderID       uuid.UUID
+	OwnerProjectID   uuid.UUID
+	GranteeProjectID uuid.UUID
+}
+
+func (q *Queries) ShareProvider(ctx context.Context, arg ShareProviderParams) error {
+	_, err := q.db.Exec(ctx, shareProvider, arg.ProviderID, arg.OwnerProjectID, arg.GranteeProjectID)
+	return err
 }
 
 const updateProvider = `-- name: UpdateProvider :one

@@ -865,6 +865,13 @@ type Provider struct {
 	UpdatedAt       time.Time
 }
 
+type ProviderShare struct {
+	ProviderID       uuid.UUID
+	OwnerProjectID   uuid.UUID
+	GranteeProjectID uuid.UUID
+	CreatedAt        time.Time
+}
+
 type RefreshToken struct {
 	ID         uuid.UUID
 	UserID     uuid.UUID

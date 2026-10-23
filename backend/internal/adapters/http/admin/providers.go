@@ -3,6 +3,7 @@ package admin
 import (
 	"encoding/json"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -67,7 +68,7 @@ func (h *Handlers) listProviders(c *fiber.Ctx) error {
 // isAdminOnlyProvider reports provider types reserved for the platform owner.
 // The 0796-style SMPP line is owner-only: it serves login OTP (for everyone)
 // and sending for the admin only, so only a platform admin may configure one.
-func isAdminOnlyProvider(t domain.ProviderType) bool { return t == domain.ProviderSMPP }
+func isAdminOnlyProvider(t domain.ProviderType) bool { return providers.AdminOnly(t) }
 
 // ensureCanConfigureProvider blocks non-owners from configuring an admin-only
 // provider (currently SMPP / 0796).
@@ -287,4 +288,73 @@ func (h *Handlers) listInbound(c *fiber.Ctx) error {
 		out = append(out, ToInbound(&rows[i]))
 	}
 	return httpx.JSON(c, fiber.StatusOK, out, fiber.Map{"total": total, "limit": page.Limit, "offset": page.Offset})
+}
+
+// shareProvider lets another tenant send through this provider (a phone).
+func (h *Handlers) shareProvider(c *fiber.Ctx) error {
+	pid, err := httpx.ParamUUID(c, "provider_id")
+	if err != nil {
+		return err
+	}
+	var req struct {
+		GranteeProjectID string `json:"grantee_project_id"`
+	}
+	if err := httpx.Bind(c, &req); err != nil {
+		return err
+	}
+	gid, err := uuid.Parse(strings.TrimSpace(req.GranteeProjectID))
+	if err != nil {
+		return domain.ErrValidation.WithDetails(map[string]any{"grantee_project_id": "must be a uuid"})
+	}
+	if err := h.Providers.Share(c.UserContext(), membership(c).Project.ID, pid, gid); err != nil {
+		return err
+	}
+	return httpx.NoContent(c)
+}
+
+// revokeProviderShare removes a share.
+func (h *Handlers) revokeProviderShare(c *fiber.Ctx) error {
+	pid, err := httpx.ParamUUID(c, "provider_id")
+	if err != nil {
+		return err
+	}
+	gid, err := httpx.ParamUUID(c, "grantee_project_id")
+	if err != nil {
+		return err
+	}
+	if err := h.Providers.Revoke(c.UserContext(), membership(c).Project.ID, pid, gid); err != nil {
+		return err
+	}
+	return httpx.NoContent(c)
+}
+
+// listProviderShares lists the tenants a provider is shared with.
+func (h *Handlers) listProviderShares(c *fiber.Ctx) error {
+	pid, err := httpx.ParamUUID(c, "provider_id")
+	if err != nil {
+		return err
+	}
+	rows, err := h.Providers.Shares(c.UserContext(), membership(c).Project.ID, pid)
+	if err != nil {
+		return err
+	}
+	out := make([]fiber.Map, 0, len(rows))
+	for i := range rows {
+		out = append(out, fiber.Map{"grantee_project_id": rows[i].GranteeProjectID, "name": rows[i].GranteeName, "slug": rows[i].GranteeSlug, "created_at": rows[i].CreatedAt})
+	}
+	return httpx.OK(c, out)
+}
+
+// listSharedProviders lists phones other tenants shared with this one.
+func (h *Handlers) listSharedProviders(c *fiber.Ctx) error {
+	rows, err := h.Providers.SharedWith(c.UserContext(), membership(c).Project.ID)
+	if err != nil {
+		return err
+	}
+	out := make([]fiber.Map, 0, len(rows))
+	for i := range rows {
+		p := rows[i].Provider
+		out = append(out, fiber.Map{"provider": h.toProvider(&p, false), "owner": fiber.Map{"name": rows[i].OwnerName, "slug": rows[i].OwnerSlug}})
+	}
+	return httpx.OK(c, out)
 }
